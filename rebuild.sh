@@ -3,4 +3,4 @@ rm pyzim/pyzim.cpp
 rm -rf build/
 rm pyzim.so
 
-python setup.py build_ext -i
+python3 setup.py build_ext -i
