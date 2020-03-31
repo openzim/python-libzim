@@ -50,7 +50,7 @@ class TestZimArticle(unittest.TestCase):
                                         <html class="client-js"><head>
                                         <meta charset="UTF-8">
                                         <title>Monadical SAS</title>
-                                            <h1> Hello it, works </h1>
+                                            <h1> Hello it, works áíÓññññññ</h1>
                                         </html>
                                     '''
 
@@ -228,18 +228,6 @@ class TestZimCreator(unittest.TestCase):
 
         return written_article
 
-        
-    def test_write_article_read_from_zim_file(self):
-
-        # Read article from first test zim file
-        article = self.zim_reader.get_article(self.zim_test_article_long_url)
-        self.assertEqual(article.can_write, True)
-
-        # Write article and Read back article from second test zim file
-        written_article = self._add_article_to_test_zim_file_read_it_back(article)
-
-        # Assert all article properties
-        self._assert_article_properties(written_article,article)
 
 
     def test_write_article_created_filled(self):
@@ -247,6 +235,8 @@ class TestZimCreator(unittest.TestCase):
         article = pyzim.ZimArticle(namespace='A', url = self.test_article_url, title=self.test_article_title, content= self.test_article_content, mimetype = self.test_article_mimetype, should_index = True)
         self.assertIsInstance(article, pyzim.ZimArticle) 
         self.assertEqual(article.can_write, True)
+
+        self.assertEqual(article.content,self.test_article_content)
 
 
         # Write article and Read back article from second test zim file
@@ -269,7 +259,7 @@ class TestZimCreator(unittest.TestCase):
 
         self.assertEqual(article.can_write, True)
 
-        written_article = self._add_article_to_test_zim_file_read_it_back(article, True) 
+        written_article = self._add_article_to_test_zim_file_read_it_back(article, False) 
 
         # Assert all article properties
         self._assert_article_properties(written_article,article)
@@ -313,7 +303,7 @@ class TestZimCreator(unittest.TestCase):
         self.assertTrue(written_redirect_article.is_redirect)
         self.assertEqual(written_article.longurl, written_redirect_article.redirect_longurl)
 
-        #os.remove(self.test_zim_file_path + '-' + rnd_str + '.zim')
+        os.remove(self.test_zim_file_path + '-' + rnd_str + '.zim')
 
     def test_zim_file_writen_metadata(self):
         import uuid
@@ -338,7 +328,7 @@ class TestZimCreator(unittest.TestCase):
 
         test_date = datetime.date(1900, 1, 1)
 
-
+        zim_creator.add_article(article)
         zim_creator.set_metadata(date=test_date)
         zim_creator.set_metadata(title="Monadical SAS",creator="python-libzim",language="spa,eng,ces")
         zim_creator.finalise()
@@ -358,9 +348,60 @@ class TestZimCreator(unittest.TestCase):
         self.assertEqual(metadata_language.content, u"spa,eng,ces")
 
         metadata_counter =  test_zim_reader.get_article("M/Counter")
-        print(metadata_counter.content)
 
-                
+        os.remove(self.test_zim_file_path + '-' + rnd_str + '.zim')
+    
+    def test_add_art(self):
+
+        zim_file_path = "/opt/python-libzim/tests/wikipedia_es_physics_mini.zim"
+        zim_reader = pyzim.ZimReader(zim_file_path)
+
+        # article = pyzim.ZimArticle()
+
+        # # article content
+
+        # article_title = u"Monadical SAS"
+        # article_url = u"Monadical_SAS"
+        # article_longurl =u"A/Monadical_SAS"
+        # article_mimetype = u"text/html"
+        # article_content =  u'''<!DOCTYPE html> <html class="client-js"><head><meta charset="UTF-8">
+        # <title>Monadical SAS</title> <h1> Hello, it works Monadical ñññ Afuera </h1></html>'''
+
+        # article.title = article_title
+        # article.url = article_url
+        # article.mimetype = article_mimetype
+        # article.content = article_content
+
+
+        import uuid
+
+        rnd_str = str(uuid.uuid1()) 
+        test_zim_file_path = "/opt/python-libzim/tests/kiwix-test"
+        zim_creator = pyzim.ZimCreator(test_zim_file_path + '-' + rnd_str + '.zim',"welcome","spa",2048)
+
+        out_content = '''<!DOCTYPE html>
+        <html class="client-js"><head>
+        <meta charset="UTF-8">
+        <title>Albert Einstein</title>
+        <h1> Hola Funciona ññññ Afueerraaaa</h1>
+        </html>
+        '''
+
+
+        zim_creator.add_art(out_content)
+        zim_creator.finalise()
+            
+    def test_write_article_read_from_zim_file(self):
+
+        # Read article from first test zim file
+        article = self.zim_reader.get_article(self.zim_test_article_long_url)
+        self.assertEqual(article.can_write, True)
+
+        # Write article and Read back article from second test zim file
+        written_article = self._add_article_to_test_zim_file_read_it_back(article, False)
+
+        # Assert all article properties
+        self._assert_article_properties(written_article,article)
 
 if __name__ == '__main__':
     unittest.main()
