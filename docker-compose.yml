@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  libzim:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: kiwix:python-libzim
+    working_dir: /opt/python-libzim
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/opt/python-libzim
