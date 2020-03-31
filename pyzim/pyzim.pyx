@@ -67,28 +67,25 @@ cdef class ZimArticle:
     VALID_NAMESPACES = ["-","A","B","I","J","M","U","V","W","X"]
 
 
-    def __cinit__(self, url="", content="", namespace= "A", mimetype= "text/html", title="", redirect_article_url= "", article_id = "",filename="", should_index=True ):
+    def __cinit__(self, url="", str content="", namespace= "A", mimetype= "text/html", title="", redirect_article_url= "", article_id = "",filename="", should_index=True ):
 
-        # Encoding must be set to utf-8 
+        # Encoding must be set to UTF-8 
         cdef bytes py_bytes = content.encode(encoding='UTF-8')
         cdef char* c_string = py_bytes
         
-        if not article_id:
-            article_id = f"{namespace}/{url}"
-
         if namespace not in self.VALID_NAMESPACES:
             raise RuntimeError("Invalid Namespace")
 
         c_zim_art = new zim.ZimArticle(ord(namespace),                     # Namespace
-                                       article_id.encode('utf-8'),         # Article index
-                                       url.encode('utf-8'),                # url
-                                       title.encode('utf-8'),              # title
-                                       mimetype.encode('utf-8'),           # mimeType
-                                       redirect_article_url.encode('utf-8'),# redirectUrl
-                                       filename.encode('utf-8'),           # filename
-                                       should_index,                       # shouldIndex
+                                       article_id.encode('UTF-8'),         # Article index
+                                       url.encode('UTF-8'),                # url
+                                       title.encode('UTF-8'),              # title
+                                       mimetype.encode('UTF-8'),           # mimeType
+                                       redirect_article_url.encode('UTF-8'),# redirectUrl
+                                       filename.encode('UTF-8'),           # filename
+                                       True,                       # shouldIndex
                                        c_string,                           # data buffer
-                                       len(c_string))                      # data buffer lengt   
+                                       len(c_string))                      # data buffer length   
     
         self.__setup(c_zim_art)
 
@@ -124,19 +121,21 @@ cdef class ZimArticle:
         self.c_zim_article = art
 
         # Setup members
-        self._title = self.c_zim_article.getTitle().decode('utf-8') 
+        self._title = self.c_zim_article.getTitle().decode("UTF-8", "strict") 
 
         b = self.c_zim_article.getData()
-        self._content = b.data()[:b.size()]
+        #print("******************     B.DATA() de %s ***********************" % self._title)
+        #print(b.data())
+        self._content = b.data()[:b.size()].decode("UTF-8", "strict")
 
-        self._longurl = self.c_zim_article.getUrl().getLongUrl().decode('utf-8') 
+        self._longurl = self.c_zim_article.getUrl().getLongUrl().decode("UTF-8", "strict") 
         self._url = self._longurl[2:]        
         self._namespace = self._longurl[0]
 
-        self._redirect_longurl = self.c_zim_article.getRedirectUrl().getLongUrl().decode('utf-8')
+        self._redirect_longurl = self.c_zim_article.getRedirectUrl().getLongUrl().decode("UTF-8", "strict")
         self._redirect_url = self._redirect_longurl[2:]  
 
-        self._mimetype = self.c_zim_article.getMimeType()
+        self._mimetype = self.c_zim_article.getMimeType().decode("UTF-8", "strict")
         self._is_redirect = self.c_zim_article.isRedirect()
         
         # An article must have at least non empty url to be writable
@@ -150,10 +149,10 @@ cdef class ZimArticle:
         return dict((name, getattr(self, name)) for name in dir(self) if not name.startswith('__') )
 
     # props is a dictionary, Cython cdef can't use **kwargs
-    cdef update_c_zim_article_from_properties(self, props):
+    cdef update_c_zim_article_from_properties(self, dict props):
 
-        # Encoding must be set to utf-8 
-        cdef bytes py_bytes = props.get("content","").encode(encoding='UTF-8')
+        # Encoding must be set to UTF-8 
+        cdef bytes py_bytes = props.get("content",u"").encode()
         cdef char* c_string = py_bytes
 
         ns = ord(props["namespace"])
@@ -167,12 +166,12 @@ cdef class ZimArticle:
 
 
         c_zim_art = new zim.ZimArticle(ns,                                 # Namespace
-                                       article_id.encode('utf-8'),         # Article index
-                                       url.encode('utf-8'),                # url
-                                       title.encode('utf-8'),              # title
-                                       mimetype.encode('utf-8'),           # mimeType
-                                       redirect_article_url.encode('utf-8'),# redirectAid
-                                       filename.encode('utf-8'),           # filename
+                                       "".encode('UTF-8'),                 # Article index
+                                       url.encode('UTF-8'),                # url
+                                       title.encode('UTF-8'),              # title
+                                       mimetype.encode('UTF-8'),           # mimeType
+                                       redirect_article_url.encode('UTF-8'),# redirectAid
+                                       "".encode('UTF-8'),                  # filename
                                        should_index,                       # shouldIndex
                                        c_string,                           # data buffer
                                        len(c_string))                      # data buffer lengt  
@@ -310,11 +309,11 @@ cdef class ZimReader:
     cdef zim.ZimSearch *c_search
     cdef object _filename
 
-    def __cinit__(self, string filename):
-        self.c_file = new zim.File(filename.encode('utf-8'))
+    def __cinit__(self, str filename):
+        self.c_file = new zim.File(filename.encode('UTF-8'))
         self.c_search = new zim.ZimSearch(self.c_file)
 
-        self._filename = self.c_file.getFilename().decode('utf-8')
+        self._filename = self.c_file.getFilename().decode("UTF-8", "strict")
 
     def __dealloc__(self):
         if self.c_file != NULL:
@@ -326,7 +325,7 @@ cdef class ZimReader:
 
     def get_article(self, url):
         # Read to a zim::Article
-        cdef zim.Article art = self.c_file.getArticleByUrl(url.encode('utf-8'))
+        cdef zim.Article art = self.c_file.getArticleByUrl(url.encode('UTF-8'))
         if not art.good():
             raise RuntimeError("Article not found for url")
 
@@ -343,7 +342,7 @@ cdef class ZimReader:
         return article
 
     def get_redirect_article(self, ZimArticle article):
-        cdef zim.Article art = self.c_file.getArticleByUrl(article.redirect_longurl.encode('utf-8'))
+        cdef zim.Article art = self.c_file.getArticleByUrl(article.redirect_longurl.encode('UTF-8'))
 
         if article.is_redirect:
             if not art.good():
@@ -358,34 +357,34 @@ cdef class ZimReader:
         cdef zim.Article article
         if header.hasMainPage():
             article = self.c_file.getArticle(header.getMainPage())
-            return article.getLongUrl();
+            return article.getLongUrl().decode("UTF-8", "strict");
 
         # TODO Ask about the old format, check libzim for tests
         # Handle old zim where header has no mainPage.
         # (We need to get first article in the zim)
         article = self.c_file.getArticle(<int> 0)
         if article.good():
-            return article.getLongUrl()
+            return article.getLongUrl().decode("UTF-8", "strict")
 
     def get_checksum(self):
-        return self.c_file.getChecksum().encode('utf-8')
+        return self.c_file.getChecksum().decode("UTF-8", "strict")
 
     def get_article_count(self):
         return self.c_file.getCountArticles()
 
-    def get_namespaces(self):
-        return self.c_file.getNamespaces()
+    def get_namespaces(self) -> str:
+        return self.c_file.getNamespaces().decode("UTF-8", "strict")
 
-    def get_namespaces_count(self, ns):
-        return self.c_file.getNamespaceCount(ord(ns))
+    def get_namespaces_count(self, str ns):
+        return self.c_file.getNamespaceCount(ord(ns[0]))
 
     def suggest(self, query):
-        results = self.c_search.suggest(query.encode('utf-8')) 
-        return results
+        results = self.c_search.suggest(query.encode('UTF-8')) 
+        return [r.decode("UTF-8", "strict") for r in results]
 
     def search(self, query):
-        results = self.c_search.search(query.encode('utf-8')) 
-        return results
+        results = self.c_search.search(query.encode('UTF-8')) 
+        return [r.decode("UTF-8", "strict") for r in results]
 
 
 #########################
@@ -394,6 +393,7 @@ cdef class ZimReader:
 
 cdef class ZimCreator:
     cdef zim.ZimCreator *c_creator
+    cdef object _finalised
 
     _metadata ={
         "Name":"", 
@@ -414,10 +414,10 @@ cdef class ZimCreator:
 
     _article_counter = defaultdict(int)
 
-    def __cinit__(self, filename, main_page = '', index_language = 'eng', min_chunk_size = 2048):
-        self.c_creator = zim.ZimCreator.create(filename, main_page, index_language, <int> min_chunk_size)
-
+    def __cinit__(self, str filename, str main_page = '', str index_language = 'eng', min_chunk_size = 2048):
+        self.c_creator = zim.ZimCreator.create(filename.encode("UTF-8"), main_page.encode("UTF-8"), index_language.encode("UTF-8"), min_chunk_size)
         self.set_metadata(date=datetime.date.today(), language= index_language)
+        self._finalised = False
 
     #def __dealloc__(self):
     #    if self.c_creator != NULL:
@@ -443,11 +443,18 @@ cdef class ZimCreator:
     def get_article_counter_string(self):
         return ";".join(["%s=%s" % (k,v) for (k,v) in self._article_counter.items()])
 
-    def _write_metadata(self):
+    def get_metadata(self):
         # Select non empty keys from _metadata
         metadata = {k: str(v) for k, v in self._metadata.items() if v}
-        metadata['Counter'] = self.get_article_counter_string()
 
+        counter_string = self.get_article_counter_string() 
+        if counter_string:
+            metadata['Counter'] = counter_string
+
+        return metadata
+
+    def _write_metadata(self, dict metadata):
+      
         for key in metadata:
             metadata_article = ZimArticle(url=key, content=metadata[key], namespace= "M",
              mimetype= "text/plain", title=key )
@@ -460,9 +467,34 @@ cdef class ZimCreator:
         if "date" in kwargs and isinstance(kwargs['date'],datetime.date):
             kwargs['date'] = kwargs['date'].strftime('%Y-%m-%d')
 
-        metadata = {pascalize(key): value for key, value in kwargs.items()}
-        self._metadata.update(metadata)
+        new_metadata = {pascalize(key): value for key, value in kwargs.items()}
+        self._metadata.update(new_metadata)
+
+    def add_art(self, str out_content):
+
+        cdef bytes py_bytes = out_content.encode()
+        cdef char* c_string = py_bytes
+
+        c_zim_art = new zim.ZimArticle(ord("A"),                    # NS
+                                       "".encode(),                 # aid
+                                       "Hola".encode(),             # url
+                                       "JDC HOLA".encode(),         # title
+                                       "text/html".encode(),         # mimeType
+                                       "".encode(),                 # redirectAid
+                                       "".encode(),                 # filename
+                                       True,                        # shouldIndex
+                                       c_string,                    # data buffer
+                                       len(c_string))               # data buffer length
+        # print(c_zim_art.getTitle())
+        #b = c_zim_art.getData()
+        #print(b.data()[:b.size()])
+        cdef shared_ptr[zim.ZimArticle] art = make_shared[zim.ZimArticle](dereference(c_zim_art));
+        self.c_creator.addArticle(art)
 
     def finalise(self):
-        self._write_metadata()
-        self.c_creator.finalise()
+        if not self._finalised:
+            #TODO uncomment after debug
+            self._write_metadata(self.get_metadata())
+            self.c_creator.finalise()
+        else:
+            raise RuntimeError("ZimCreator was already finalised")
