@@ -23,6 +23,6 @@ setup(
                   libraries=["zim"],
                   language="c++"),
     ],
-    compiler_directives={'language_level' : "2"}
+    compiler_directives={'language_level' : "3"}
     )
 )
