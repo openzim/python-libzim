@@ -4,7 +4,7 @@ from distutils.extension import Extension
 from Cython.Build import cythonize
 
 # Utility function to read the README file.
-# Used for the long_description.  It's nice, because now 1) we have a top level
+# Used for the long_description.  It's nice, because now 1) we have a top levegit checkout masterl
 # README file and 2) it's easier to type in the README file than to put a raw
 # string in below ...
 def read(fname):
@@ -17,7 +17,7 @@ setup(
     author_email = "hello@monadical.com",
     description = ("A python-facing API for creating and interacting with ZIM files"),
     license = "GPLv3",
-    long_description=read('README.rst'),
+    long_description=read('README.md'),
     ext_modules = cythonize([
         Extension("pyzim",  ["pyzim/*.pyx","pyzim/wrappers.cpp"],
                   libraries=["zim"],
