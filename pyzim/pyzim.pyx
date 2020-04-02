@@ -103,12 +103,6 @@ cdef class ZimArticle:
         # Set new internal C zim.ZimArticle article
         self.c_zim_article = art
 
-        # An article must have at least non empty url to be writable
-        # Content can be empty if article is a redirect
-        if self.longurl and (self.content or self.is_redirect):
-            self._can_write = True
-        else:
-            self._can_write = False
 
     def get_article_properties(self):
         return dict((name, getattr(self, name)) for name in dir(self) if not name.startswith('__') )
@@ -210,6 +204,8 @@ cdef class ZimArticle:
     @property
     def can_write(self):
         """Get if the article is valid for writing"""
+        # An article must have at least non empty url to be writable
+        # Content can be empty if article is a redirect
         if self.longurl and (self.content or self.is_redirect):
             self._can_write = True
         else:
@@ -224,6 +220,23 @@ cdef class ZimReader:
     cdef zim.File *c_file
     cdef zim.ZimSearch *c_search
     cdef object _filename
+
+    _metadata_keys =[
+        "Name", 
+        "Title", 
+        "Creator",
+        "Publisher",
+        "Date",
+        "Description",
+        "Language",
+        # Optional
+        "LongDescription",
+        "Licence",
+        "Tags",
+        "Flavour",
+        "Source",
+        "Counter",
+        "Scraper"]
 
     def __cinit__(self, str filename):
         self.c_file = new zim.File(filename.encode('UTF-8'))
@@ -247,6 +260,17 @@ cdef class ZimReader:
 
         article = ZimArticle.from_read_article(art)
         return article
+
+    def get_metadata(self):
+        metadata = dict()
+        for key in self._metadata_keys:
+            try:
+                meta_art = self.get_article(f"M/{key}")
+            except:
+                pass
+            else:
+                metadata[key] = meta_art.content
+        return metadata
 
     def get_article_by_id(self, id):
         # Read to a zim::Article
@@ -330,7 +354,7 @@ cdef class ZimCreator:
 
     _article_counter = defaultdict(int)
 
-    def __cinit__(self, str filename, str main_page = '', str index_language = 'eng', min_chunk_size = 2048):
+    def __cinit__(self, str filename, str main_page = "", str index_language = "eng", min_chunk_size = 2048):
         self.c_creator = zim.ZimCreator.create(filename.encode("UTF-8"), main_page.encode("UTF-8"), index_language.encode("UTF-8"), min_chunk_size)
         self.set_metadata(date=datetime.date.today(), language= index_language)
         self._finalised = False
