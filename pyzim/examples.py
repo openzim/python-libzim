@@ -7,7 +7,7 @@ content = '''<!DOCTYPE html>
 <h1> Hola Funciona </h1></html>'''
 
 
-article = pyzim.ZimArticle(ns='A', url = 'Monadical', title='Monadical SAS', content=content.encode(), should_index = True)
+article = pyzim.ZimArticle(namespace='A', url = 'Monadical', title='Monadical SAS', content=content, should_index = True)
 
 import uuid
 
@@ -17,6 +17,7 @@ test_zim_file_path = "/opt/python-libzim/tests/kiwix-test"
 
 zim_creator = pyzim.ZimCreator(test_zim_file_path + '-' + rnd_str + '.zim',"welcome","eng",2048)
 zim_creator.add_article(article)
+zim_creator.finalise()
 
 test_zim_reader = pyzim.ZimReader(test_zim_file_path + '-' + rnd_str + '.zim')
 
