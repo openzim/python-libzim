@@ -12,9 +12,7 @@
 #include <zim/writer/creator.h>
 
 //  Article class to be passed to the zimwriter.
-//  Contains an internal zim::Article class to be able to add artiles read with File
-
-//  Overloads the constructor to create new zim::Articles to use with Creator addArticle
+//  Overloads the constructor to create ZimArticles from zim::Articles to use with Creator addArticle
 
 class ZimArticle : public zim::writer::Article
 {
@@ -23,62 +21,47 @@ class ZimArticle : public zim::writer::Article
 public:
     explicit ZimArticle(const zim::Article a) : Ar(a)
     {
+        ns = a.getNamespace();
+        url = a.getUrl();
+        title = a.getTitle();
+        mimeType = getMimeTypeFromReadArticle();
+        redirectUrl = getRedirectUrlFromReadArticle();
+        content = a.getData();
+        _shouldIndex = getMimeType().find("text/html") == 0;
     }
 
-    explicit ZimArticle(char ns,                                   // namespace
-                        std::string aid,                           // article 
-                        std::string url,                            
+    explicit ZimArticle(char ns, // namespace
+                        std::string url,
                         std::string title,
                         std::string mimeType,
                         std::string redirectUrl,
-                        std::string fileName,
                         bool _shouldIndex,
-                        char *bufferData,
-                        size_t bufferLength) : ns(ns),
-                                               aid(aid),
+                        std::string content) : ns(ns),
                                                url(url),
                                                title(title),
                                                mimeType(mimeType),
                                                redirectUrl(redirectUrl),
-                                               fileName(fileName),
                                                _shouldIndex(_shouldIndex),
-                                               bufferData(bufferData),
-                                               bufferLength(bufferLength)
+                                               content(content)
     {
-        _data = zim::Blob(bufferData, bufferLength);
     }
 
     char ns;
-    std::string aid;
     std::string url;
     std::string title;
     std::string mimeType;
     std::string redirectUrl;
-    std::string fileName;
     bool _shouldIndex;
-    char *bufferData;
-    size_t bufferLength;
-    zim::Blob _data;
+    std::string content;
+    std::string fileName;
 
     virtual zim::writer::Url getUrl() const
     {
-        if (Ar.good())
-            return zim::writer::Url(Ar.getNamespace(), Ar.getUrl());
         return zim::writer::Url(ns, url);
     }
 
-    // virtual zim::writer::Url getUrl() const
-    // {
-    //     if(Ar.good())
-    //         return zim::writer::Url((char) 0,Ar.getUrl());
-
-    //     return zim::writer::Url((char) 0,url);
-    // }
-
     virtual std::string getTitle() const
     {
-        if (Ar.good())
-            return Ar.getTitle();
         return title;
     }
 
@@ -90,7 +73,7 @@ public:
         return !redirectUrl.empty();
     }
 
-    virtual std::string getMimeType() const
+    std::string getMimeTypeFromReadArticle() const
     {
         if (Ar.good())
         {
@@ -100,43 +83,42 @@ public:
             }
             return Ar.getMimeType();
         }
+        return "";
+    }
+
+    virtual std::string getMimeType() const
+    {
+        
         return mimeType;
     }
 
-    virtual zim::writer::Url getRedirectUrl() const
+    std::string getRedirectUrlFromReadArticle()
     {
         if (Ar.good())
         {
             auto redirectArticle = Ar.getRedirectArticle();
-            return zim::writer::Url(redirectArticle.getNamespace(), redirectArticle.getUrl());
+            return redirectArticle.getNamespace() + "/" + redirectArticle.getUrl();
         }
-
-        return zim::writer::Url(ns, redirectUrl);
+        return "";
     }
 
-    virtual std::string getParameter() const
+    virtual zim::writer::Url getRedirectUrl() const
     {
-        return Ar.getParameter();
+        return zim::writer::Url(ns, redirectUrl);
     }
 
     zim::Blob getData() const
     {
-        if (Ar.good())
-            return Ar.getData();
-        return _data;
+        return zim::Blob(&content[0], content.size());
     }
 
     zim::size_type getSize() const
     {
-        if (Ar.good())
-            return Ar.getArticleSize();
-        return _data.size();
+        return content.size();
     }
 
     std::string getFilename() const
     {
-        if (Ar.good())
-            return "";
         return fileName;
     }
 
