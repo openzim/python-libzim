@@ -69,21 +69,24 @@ cdef extern from "wrappers.cpp":
     cdef cppclass ZimArticle:
         ZimArticle(const Article article) except +
         ZimArticle(char ns,
-                        string aid,
                         string url,
                         string title,
                         string mimeType,
                         string redirectAid,
-                        string fileName,
                         bool _shouldIndex,
-                        char *bufferData,
-                        size_t bufferLength) except +
+                        string content) except +
         string getTitle()
         const Blob getData()
         string getMimeType()
         bool isRedirect()
         Url getUrl()
         Url getRedirectUrl()
+        char ns
+        string url
+        string title
+        string mimeType
+        string redirectUrl
+        string content
 
     cdef cppclass ZimSearch:
         ZimSearch(File *f) except +
