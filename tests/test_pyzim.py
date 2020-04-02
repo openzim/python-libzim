@@ -83,7 +83,7 @@ class TestZimArticle(unittest.TestCase):
     
     def test_redirect_article(self):
         article = pyzim.ZimArticle()
-        #article.namespace = "A"
+        article.namespace = "A"
         article.redirect_url = "Hola"
 
         self.assertTrue(article.is_redirect)        
@@ -259,7 +259,7 @@ class TestZimCreator(unittest.TestCase):
 
         self.assertEqual(article.can_write, True)
 
-        written_article = self._add_article_to_test_zim_file_read_it_back(article, False) 
+        written_article = self._add_article_to_test_zim_file_read_it_back(article, True) 
 
         # Assert all article properties
         self._assert_article_properties(written_article,article)
@@ -351,45 +351,6 @@ class TestZimCreator(unittest.TestCase):
 
         os.remove(self.test_zim_file_path + '-' + rnd_str + '.zim')
     
-    def test_add_art(self):
-
-        zim_file_path = "/opt/python-libzim/tests/wikipedia_es_physics_mini.zim"
-        zim_reader = pyzim.ZimReader(zim_file_path)
-
-        # article = pyzim.ZimArticle()
-
-        # # article content
-
-        # article_title = u"Monadical SAS"
-        # article_url = u"Monadical_SAS"
-        # article_longurl =u"A/Monadical_SAS"
-        # article_mimetype = u"text/html"
-        # article_content =  u'''<!DOCTYPE html> <html class="client-js"><head><meta charset="UTF-8">
-        # <title>Monadical SAS</title> <h1> Hello, it works Monadical ñññ Afuera </h1></html>'''
-
-        # article.title = article_title
-        # article.url = article_url
-        # article.mimetype = article_mimetype
-        # article.content = article_content
-
-
-        import uuid
-
-        rnd_str = str(uuid.uuid1()) 
-        test_zim_file_path = "/opt/python-libzim/tests/kiwix-test"
-        zim_creator = pyzim.ZimCreator(test_zim_file_path + '-' + rnd_str + '.zim',"welcome","spa",2048)
-
-        out_content = '''<!DOCTYPE html>
-        <html class="client-js"><head>
-        <meta charset="UTF-8">
-        <title>Albert Einstein</title>
-        <h1> Hola Funciona ññññ Afueerraaaa</h1>
-        </html>
-        '''
-
-
-        zim_creator.add_art(out_content)
-        zim_creator.finalise()
             
     def test_write_article_read_from_zim_file(self):
 
