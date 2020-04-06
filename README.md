@@ -27,11 +27,11 @@ article = pyzim.ZimArticle()
 
 # article content
 
-article_title = u"Monadical SAS"
-article_url = u"Monadical_SAS"
-article_longurl =u"A/Monadical_SAS"
-article_mimetype = u"text/html"
-article_content =  u'''<!DOCTYPE html> <html class="client-js"><head><meta charset="UTF-8">
+article_title = "Monadical SAS"
+article_url = "Monadical_SAS"
+article_longurl ="A/Monadical_SAS"
+article_mimetype = "text/html"
+article_content =  '''<!DOCTYPE html> <html class="client-js"><head><meta charset="UTF-8">
 <title>Monadical SAS</title> <h1> Hello, it works Monadical ñññ </h1></html>'''
 
 article.title = article_title
