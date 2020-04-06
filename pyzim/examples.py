@@ -9,9 +9,9 @@ test_content = '''<!DOCTYPE html>
 
 # Read an article from a zim file
 
-zim_file_path = u"/opt/python-libzim/tests/wikipedia_es_physics_mini.zim"
+zim_file_path = "/opt/python-libzim/tests/wikipedia_es_physics_mini.zim"
 zim_reader = pyzim.ZimReader(zim_file_path)
-zim_test_article_long_url = u"A/Albert_Einstein"
+zim_test_article_long_url = "A/Albert_Einstein"
 
 read_article = zim_reader.get_article(zim_test_article_long_url)
 
@@ -46,7 +46,7 @@ print(f"Main Page URL: {zim_reader.get_main_page_url()}")
 
 # Create a filled article
 
-article = pyzim.ZimArticle(namespace='A', url = 'Monadical', title='Monadical', content=test_content, should_index = True)
+article = pyzim.ZimArticle(namespace="A", url = "Monadical", title="Monadical", content=test_content, should_index = True)
 
 print(article.longurl)
 print(article.url)
@@ -69,7 +69,7 @@ article3.title = "Our Einstein's bio"
 # Create a redirect article
 
 article4 = pyzim.ZimArticle()
-article4.namespace = 'A'
+article4.namespace = "A"
 article4.url = "Our_Einstein_redirect"
 article4.title = "Redirect to Einstein"
 article4.redirect_url = read_article.url
