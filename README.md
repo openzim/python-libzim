@@ -2,8 +2,8 @@
 # Setup
 
 ```bash
-     $ docker-compose build
-    $ docker-compose run libzim /bin/bash
+docker-compose build
+docker-compose run libzim /bin/bash
 ```
 ```bash
 python setup.py build_ext -i
@@ -17,6 +17,7 @@ python tests/test_pyzim.py
 
 Example:
 
+```python3
 import pyzim
 
 zim_file_path = "/opt/python-libzim/tests/wikipedia_es_physics_mini.zim"
@@ -61,3 +62,4 @@ zim_creator.add_art(out_content)
 # Add and write article to second test zim file
 zim_creator.add_article(article)
 zim_creator.finalise()
+```
