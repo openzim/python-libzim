@@ -3269,7 +3269,7 @@ std::string string_cy_call_fct(void *__pyx_v_ptr, std::string __pyx_v_method, in
  *             return value.encode('UTF-8')
  * 
  *     Blob blob_cy_call_fct(void *ptr, string method, int *error):             # <<<<<<<<<<<<<<
- *         """Lookup and execute a pure virtual method on ZimArticle returning a string"""
+ *         """Lookup and execute a pure virtual method on ZimArticle returning a Blob"""
  *         cdef ZimArticle art = <ZimArticle>(ptr)
  */
 
@@ -3290,7 +3290,7 @@ zim::Blob blob_cy_call_fct(void *__pyx_v_ptr, std::string __pyx_v_method, int *_
 
   /* "pyzim.pyx":97
  *     Blob blob_cy_call_fct(void *ptr, string method, int *error):
- *         """Lookup and execute a pure virtual method on ZimArticle returning a string"""
+ *         """Lookup and execute a pure virtual method on ZimArticle returning a Blob"""
  *         cdef ZimArticle art = <ZimArticle>(ptr)             # <<<<<<<<<<<<<<
  *         cdef ZimBlob blob = ZimBlob(b'\x00')
  *         try:
@@ -3301,7 +3301,7 @@ zim::Blob blob_cy_call_fct(void *__pyx_v_ptr, std::string __pyx_v_method, int *_
   __pyx_t_1 = 0;
 
   /* "pyzim.pyx":98
- *         """Lookup and execute a pure virtual method on ZimArticle returning a string"""
+ *         """Lookup and execute a pure virtual method on ZimArticle returning a Blob"""
  *         cdef ZimArticle art = <ZimArticle>(ptr)
  *         cdef ZimBlob blob = ZimBlob(b'\x00')             # <<<<<<<<<<<<<<
  *         try:
@@ -3468,7 +3468,7 @@ zim::Blob blob_cy_call_fct(void *__pyx_v_ptr, std::string __pyx_v_method, int *_
  *             return value.encode('UTF-8')
  * 
  *     Blob blob_cy_call_fct(void *ptr, string method, int *error):             # <<<<<<<<<<<<<<
- *         """Lookup and execute a pure virtual method on ZimArticle returning a string"""
+ *         """Lookup and execute a pure virtual method on ZimArticle returning a Blob"""
  *         cdef ZimArticle art = <ZimArticle>(ptr)
  */
 
@@ -6404,7 +6404,7 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_GIVEREF(__pyx_tuple__4);
 
   /* "pyzim.pyx":98
- *         """Lookup and execute a pure virtual method on ZimArticle returning a string"""
+ *         """Lookup and execute a pure virtual method on ZimArticle returning a Blob"""
  *         cdef ZimArticle art = <ZimArticle>(ptr)
  *         cdef ZimBlob blob = ZimBlob(b'\x00')             # <<<<<<<<<<<<<<
  *         try:
