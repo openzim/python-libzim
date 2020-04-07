@@ -1,5 +1,14 @@
 
-# Setup
+python-libzim
+===========
+
+This is the python binding to the [libzim](https://github.com/openzim/libzim).  Read and write
+[ZIM](https://openzim.org) files easily in Python.
+
+## Dependencies
+
+
+## Setup
 
 ```bash
 docker-compose build
@@ -15,9 +24,11 @@ python tests/test_pyzim.py
 ./run_tests
 ```
 
-Example:
+## Usage
 
-```python3
+### Writing a Zim file
+
+```python
 import pyzim
 
 zim_file_path = "/opt/python-libzim/tests/wikipedia_es_physics_mini.zim"
@@ -53,3 +64,41 @@ zim_creator = pyzim.ZimCreator(test_zim_file_path + '-' + rnd_str + '.zim',"welc
 zim_creator.add_article(article)
 zim_creator.finalise()
 ```
+
+### Reading a Zim file
+
+```python
+import pyzim
+
+# Read an article from a zim file
+
+zim_file_path = "/opt/python-libzim/tests/wikipedia_es_physics_mini.zim"
+zim_reader = pyzim.ZimReader(zim_file_path)
+zim_test_article_long_url = "A/Albert_Einstein"
+
+read_article = zim_reader.get_article(zim_test_article_long_url)
+
+# Read article properties
+
+print(read_article.longurl)
+print (read_article.title)
+print(read_article.is_redirect)
+print(read_article.can_write)
+print(read_article.content[:100])
+
+# Search or get suggestions from a zim file
+search = zim_reader.search("Einstein")
+print(search)
+suggestions = zim_reader.suggest("Einstein")
+print(suggestions)
+
+```
+
+## Cookbook
+
+Visit [examples.py](pyzim/examples.py)
+
+## License
+
+[GPLv3](https://www.gnu.org/licenses/gpl-3.0) or later, see
+[LICENSE](LICENSE) for more details.
