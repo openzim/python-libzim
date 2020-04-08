@@ -28,7 +28,7 @@ cdef class ZimArticle:
 
     Properties
     -----------
-    namespace: str
+    namespace : str
         the article namespace
     title : str
         the article title
@@ -43,16 +43,15 @@ cdef class ZimArticle:
     is_redirect : bool
         flag if the article is a redirect 
     redirect_longurl: str
-        the long redirect url i.e {NAMESPACE}/{redirect_url}
+        the long redirect article url i.e {NAMESPACE}/{redirect_url}
     redirect_url : str
-        the article url
+        the redirect article url
 
     Methods
     -------
 
-    gamma(n=1.0)
-        Change the photo's gamma exposure.
-
+    from_read_article(zim.Article art)
+        Creates a python ZimArticle from a C++ zim.Article article.
     """
     cdef zim.ZimArticle *c_zim_article
     cdef object _can_write
@@ -88,7 +87,7 @@ cdef class ZimArticle:
     #    return False
 
     cdef __setup(self, zim.ZimArticle *art):
-        """Assigns an internal pointer to the wrapped C++ article object and sets property values.
+        """Assigns an internal pointer to the wrapped C++ article object.
 
         A python ZimArticle always maintains a pointer to a wrapped zim.ZimArticle C++ object. 
         The python object reflects the state, accessible with properties, of a wrapped C++ zim.ZimArticle,
@@ -116,6 +115,10 @@ cdef class ZimArticle:
         ----------
         art : zim.ZimArticle
             A C++ zim.Article read with File
+
+        Return
+        ------
+        
 
         """
         cdef ZimArticle article = ZimArticle()
@@ -217,6 +220,19 @@ cdef class ZimArticle:
 #########################
 
 cdef class ZimReader:
+    """ 
+    A class to represent a Zim File Reader. 
+    
+    Attributes
+    ----------
+    *c_file : zim.File
+        a pointer to a C++ File object
+    *c_search : zim.ZimSearch
+        a pointer to a C++ ZimSearch object
+    _filename : str
+        the file name of the File Reader object
+    """
+
     cdef zim.File *c_file
     cdef zim.ZimSearch *c_search
     cdef object _filename
@@ -250,9 +266,28 @@ cdef class ZimReader:
 
     @property
     def filename(self):
+        """Get the filename of the ZimReader object"""
         return self._filename
 
     def get_article(self, url):
+        """Get a ZimArticle with a copy of the file article by full url i.e including namespace
+        
+        Parameters
+        ----------
+        url : str
+            The full url, including namespace, of the article
+
+        Returns
+        -------
+        ZimArticle
+            The ZimArticle object
+
+        Raises
+        ------
+            RuntimeError
+                If an article with the provided long url is not found in the file
+
+        """
         # Read to a zim::Article
         cdef zim.Article art = self.c_file.getArticleByUrl(url.encode('UTF-8'))
         if not art.good():
@@ -262,6 +297,13 @@ cdef class ZimReader:
         return article
 
     def get_metadata(self):
+        """Get the file metadata.
+
+        Returns
+        -------
+        dict
+            A dictionary with the file metadata
+        """
         metadata = dict()
         for key in self._metadata_keys:
             try:
@@ -273,15 +315,54 @@ cdef class ZimReader:
         return metadata
 
     def get_article_by_id(self, id):
+        """Get a ZimArticle with a copy of the file article by article id.
+        
+        Parameters
+        ----------
+        id : int
+            The id of the article
+
+        Returns
+        -------
+        ZimArticle
+            The ZimArticle object
+
+        Raises
+        ------
+            RuntimeError
+                If an article with the provided id is not found in the file
+
+        """
+
         # Read to a zim::Article
         cdef zim.Article art = self.c_file.getArticle(<int> id)
         if not art.good():
-            raise RuntimeError("Article not found for url")
+            raise RuntimeError("Article not found for id")
 
         article = ZimArticle.from_read_article(art)
         return article
 
     def get_redirect_article(self, ZimArticle article):
+        """Get a ZimArticle with a copy of the file pointed article, if any, from a redirecting ZimArticle.
+        
+        Parameters
+        ----------
+        article : ZimArticle
+            The redirecting article 
+
+        Returns
+        -------
+        ZimArticle
+            The ZimArticle copy of the file redirected article
+
+        Raises
+        ------
+            RuntimeError
+                If the ZimArticle provided is not a redirect article
+            RuntimeError
+                If the pointed article is not present in the file
+
+        """
         cdef zim.Article art = self.c_file.getArticleByUrl(article.redirect_longurl.encode('UTF-8'))
 
         if article.is_redirect:
@@ -293,6 +374,16 @@ cdef class ZimReader:
             raise RuntimeError("Article is not a redirect article")
 
     def get_main_page_url(self):
+        """Get the file main page url.
+
+        Returns
+        -------
+        str
+            The url of the main page
+
+        TODO Check old formats
+
+        """ 
         cdef zim.Fileheader header = self.c_file.getFileheader()
         cdef zim.Article article
         if header.hasMainPage():
@@ -307,22 +398,68 @@ cdef class ZimReader:
             return article.getLongUrl().decode("UTF-8", "strict")
 
     def get_checksum(self):
+        """Get the file checksum.
+
+        Returns
+        -------
+        str
+            The file checksum
+        """
         return self.c_file.getChecksum().decode("UTF-8", "strict")
 
     def get_article_count(self):
+        """Get the file article count.
+
+        Returns
+        -------
+        int
+            The total number of articles from the file
+
+        """
         return self.c_file.getCountArticles()
 
     def get_namespaces(self) -> str:
+        """Get the namespaces.
+
+        Returns
+        -------
+        str
+            A string containing all namespaces in the file
+
+        """
         return self.c_file.getNamespaces().decode("UTF-8", "strict")
 
     def get_namespaces_count(self, str ns):
+        """Get article count from a namespaces.
+
+        Returns
+        -------
+        int
+            The total number of articles from the namespace
+        """
         return self.c_file.getNamespaceCount(ord(ns[0]))
 
     def suggest(self, query):
+        """Get a list of the full urls of suggested articles in the file from a query.
+
+        Returns
+        -------
+        list
+            A list with the urls of suggested articles
+
+        """
         results = self.c_search.suggest(query.encode('UTF-8')) 
         return [r.decode("UTF-8", "strict") for r in results]
 
     def search(self, query):
+        """Get a list of the full urls of articles in the file from a search query.
+
+        Returns
+        -------
+        list
+            A list with the urls of articles matching the search query
+        """
+
         results = self.c_search.search(query.encode('UTF-8')) 
         return [r.decode("UTF-8", "strict") for r in results]
 
@@ -332,6 +469,18 @@ cdef class ZimReader:
 #########################
 
 cdef class ZimCreator:
+    """ 
+    A class to represent a Zim Creator. 
+    
+    Attributes
+    ----------
+    *c_creator : zim.ZimCreator
+        a pointer to the C++ Creator object
+    _finalised : bool
+        flag if the creator was finalised
+
+    """
+
     cdef zim.ZimCreator *c_creator
     cdef object _finalised
 
@@ -364,6 +513,18 @@ cdef class ZimCreator:
     #        del self.c_creator
 
     def add_article(self, ZimArticle article):
+        """Add a ZimArticle to the Creator object.
+        
+        Parameters
+        ----------
+        article : ZimArticle
+            The article to add to the file
+
+        Raises
+        ------
+            RuntimeError
+                If the ZimArticle provided is not ready for writing
+        """
         if not article.can_write:
             raise RuntimeError("Article is not good for writing")
 
@@ -411,6 +572,14 @@ cdef class ZimCreator:
         self._metadata.update(new_metadata)
 
     def finalise(self):
+        """Finalise and write added articles to the file.
+        
+        Raises
+        ------
+            RuntimeError
+                If the ZimCreator was already finalised
+
+        """
         if not self._finalised:
             self._write_metadata(self.get_metadata())
             self.c_creator.finalise()
