@@ -7,6 +7,11 @@ This is the python binding to the [libzim](https://github.com/openzim/libzim).  
 
 ## Dependencies
 
+This package uses [Cython](https://github.com/cython/cython).
+
+You will need to install [libzim](https://github.com/openzim/libzim).
+
+
 
 ## Setup
 
@@ -30,9 +35,6 @@ python tests/test_pyzim.py
 
 ```python
 import pyzim
-
-zim_file_path = "/opt/python-libzim/tests/wikipedia_es_physics_mini.zim"
-zim_reader = pyzim.ZimReader(zim_file_path)
 
 article = pyzim.ZimArticle()
 
