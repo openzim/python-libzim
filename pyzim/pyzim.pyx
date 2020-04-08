@@ -442,6 +442,11 @@ cdef class ZimReader:
     def suggest(self, query):
         """Get a list of the full urls of suggested articles in the file from a query.
 
+        Parameters
+        ----------
+        query : str
+            Query string
+
         Returns
         -------
         list
@@ -453,6 +458,11 @@ cdef class ZimReader:
 
     def search(self, query):
         """Get a list of the full urls of articles in the file from a search query.
+
+        Parameters
+        ----------
+        query : str
+            Query string
 
         Returns
         -------
