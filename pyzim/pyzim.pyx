@@ -499,13 +499,13 @@ cdef class ZimCreator:
     ----------
     *c_creator : zim.ZimCreator
         a pointer to the C++ Creator object
-    _finalised : bool
-        flag if the creator was finalised
+    _finalized : bool
+        flag if the creator was finalized
 
     """
 
     cdef zim.ZimCreator *c_creator
-    cdef object _finalised
+    cdef object _finalized
 
     _metadata ={
         "Name":"", 
@@ -529,7 +529,7 @@ cdef class ZimCreator:
     def __cinit__(self, str filename, str main_page = "", str index_language = "eng", min_chunk_size = 2048):
         self.c_creator = zim.ZimCreator.create(filename.encode("UTF-8"), main_page.encode("UTF-8"), index_language.encode("UTF-8"), min_chunk_size)
         self.set_metadata(date=datetime.date.today(), language= index_language)
-        self._finalised = False
+        self._finalized = False
 
     #def __dealloc__(self):
     #    if self.c_creator != NULL:
@@ -548,10 +548,10 @@ cdef class ZimCreator:
             RuntimeError
                 If the ZimArticle provided is not ready for writing
             RuntimeError
-                If the ZimCreator was already finalised
+                If the ZimCreator was already finalized
         """
-        if self._finalised:
-            raise RuntimeError("ZimCreator already finalised")
+        if self._finalized:
+            raise RuntimeError("ZimCreator already finalized")
 
         if not article.can_write:
             raise RuntimeError("Article is not good for writing")
@@ -600,18 +600,18 @@ cdef class ZimCreator:
         new_metadata = {pascalize(key): value for key, value in kwargs.items()}
         self._metadata.update(new_metadata)
 
-    def finalise(self):
-        """Finalise and write added articles to the file.
+    def finalize(self):
+        """finalize and write added articles to the file.
         
         Raises
         ------
             RuntimeError
-                If the ZimCreator was already finalised
+                If the ZimCreator was already finalized
 
         """
-        if not self._finalised:
+        if not self._finalized:
             self._write_metadata(self.get_metadata())
-            self.c_creator.finalise()
-            self._finalised = True
+            self.c_creator.finalize()
+            self._finalized = True
         else:
-            raise RuntimeError("ZimCreator already finalised")
+            raise RuntimeError("ZimCreator already finalized")
