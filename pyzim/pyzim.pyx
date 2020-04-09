@@ -489,6 +489,8 @@ cdef class ZimReader:
         results = self.c_search.search(query.encode('UTF-8')) 
         return [r.decode("UTF-8", "strict") for r in results]
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}(filename={self.filename})"
 
 #########################
 #       ZimCreator      #
@@ -504,11 +506,14 @@ cdef class ZimCreator:
         a pointer to the C++ Creator object
     _finalized : bool
         flag if the creator was finalized
+    _filename : str
+        zim filename
 
     """
 
     cdef zim.ZimCreator *c_creator
     cdef object _finalized
+    cdef object _filename
 
     _metadata ={
         "Name":"", 
@@ -533,10 +538,16 @@ cdef class ZimCreator:
         self.c_creator = zim.ZimCreator.create(filename.encode("UTF-8"), main_page.encode("UTF-8"), index_language.encode("UTF-8"), min_chunk_size)
         self.set_metadata(date=datetime.date.today(), language= index_language)
         self._finalized = False
+        self._filename = filename
 
     #def __dealloc__(self):
     #    if self.c_creator != NULL:
     #        del self.c_creator
+
+    @property
+    def filename(self):
+        """Get the filename of the ZimCreator object"""
+        return self._filename
 
     def add_article(self, ZimArticle article):
         """Add a ZimArticle to the Creator object.
@@ -618,3 +629,6 @@ cdef class ZimCreator:
             self._finalized = True
         else:
             raise RuntimeError("ZimCreator already finalized")
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(filename={self.filename})"
