@@ -212,7 +212,7 @@ class TestZimCreator(unittest.TestCase):
 
          # Add and write article to second test zim file
         zim_creator.add_article(article)
-        zim_creator.finalise()
+        zim_creator.finalize()
         del(zim_creator)
 
 
@@ -291,7 +291,7 @@ class TestZimCreator(unittest.TestCase):
         zim_creator.add_article(redirect_article)
 
         # Write both articles
-        zim_creator.finalise()
+        zim_creator.finalize()
         del(zim_creator)
 
         # Read back article and redirect from second test zim file
@@ -331,7 +331,7 @@ class TestZimCreator(unittest.TestCase):
         zim_creator.add_article(article)
         zim_creator.set_metadata(date=test_date)
         zim_creator.set_metadata(title="Monadical SAS",creator="python-libzim",language="spa,eng,ces")
-        zim_creator.finalise()
+        zim_creator.finalize()
         
         test_zim_reader = pyzim.ZimReader(self.test_zim_file_path + '-' + rnd_str + '.zim')
 

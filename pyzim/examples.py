@@ -92,7 +92,7 @@ zim_creator.add_article(article4)
 zim_creator.add_article(read_article)
 
 # Write articles to zim file
-zim_creator.finalise()
+zim_creator.finalize()
 
 # Read written articles
 

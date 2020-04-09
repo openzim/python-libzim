@@ -878,12 +878,12 @@ struct __pyx_obj_5pyzim_ZimArticle {
 };
 
 
-/* "pyzim.pyx":219
+/* "pyzim.pyx":235
  * #########################
  * 
  * cdef class ZimReader:             # <<<<<<<<<<<<<<
- *     cdef zim.File *c_file
- *     cdef zim.ZimSearch *c_search
+ *     """
+ *     A class to represent a Zim File Reader.
  */
 struct __pyx_obj_5pyzim_ZimReader {
   PyObject_HEAD
@@ -893,21 +893,21 @@ struct __pyx_obj_5pyzim_ZimReader {
 };
 
 
-/* "pyzim.pyx":334
+/* "pyzim.pyx":494
  * #########################
  * 
  * cdef class ZimCreator:             # <<<<<<<<<<<<<<
- *     cdef zim.ZimCreator *c_creator
- *     cdef object _finalised
+ *     """
+ *     A class to represent a Zim Creator.
  */
 struct __pyx_obj_5pyzim_ZimCreator {
   PyObject_HEAD
   ZimCreator *c_creator;
-  PyObject *_finalised;
+  PyObject *_finalized;
 };
 
 
-/* "pyzim.pyx":107
+/* "pyzim.pyx":112
  * 
  * 
  *     def get_article_properties(self):             # <<<<<<<<<<<<<<
@@ -920,7 +920,7 @@ struct __pyx_obj_5pyzim___pyx_scope_struct__get_article_properties {
 };
 
 
-/* "pyzim.pyx":108
+/* "pyzim.pyx":113
  * 
  *     def get_article_properties(self):
  *         return dict((name, getattr(self, name)) for name in dir(self) if not name.startswith('__') )             # <<<<<<<<<<<<<<
@@ -1035,17 +1035,35 @@ static int __Pyx_ParseOptionalKeywords(PyObject *kwds, PyObject **argnames[],\
 static void __Pyx_RaiseArgtupleInvalid(const char* func_name, int exact,
     Py_ssize_t num_min, Py_ssize_t num_max, Py_ssize_t num_found);
 
-/* ArgTypeTest.proto */
-#define __Pyx_ArgTypeTest(obj, type, none_allowed, name, exact)\
-    ((likely((Py_TYPE(obj) == type) | (none_allowed && (obj == Py_None)))) ? 1 :\
-        __Pyx__ArgTypeTest(obj, type, name, exact))
-static int __Pyx__ArgTypeTest(PyObject *obj, PyTypeObject *type, const char *name, int exact);
+/* PyCFunctionFastCall.proto */
+#if CYTHON_FAST_PYCCALL
+static CYTHON_INLINE PyObject *__Pyx_PyCFunction_FastCall(PyObject *func, PyObject **args, Py_ssize_t nargs);
+#else
+#define __Pyx_PyCFunction_FastCall(func, args, nargs)  (assert(0), NULL)
+#endif
 
-/* PySequenceContains.proto */
-static CYTHON_INLINE int __Pyx_PySequence_ContainsTF(PyObject* item, PyObject* seq, int eq) {
-    int result = PySequence_Contains(seq, item);
-    return unlikely(result < 0) ? result : (result == (eq == Py_EQ));
-}
+/* PyFunctionFastCall.proto */
+#if CYTHON_FAST_PYCALL
+#define __Pyx_PyFunction_FastCall(func, args, nargs)\
+    __Pyx_PyFunction_FastCallDict((func), (args), (nargs), NULL)
+#if 1 || PY_VERSION_HEX < 0x030600B1
+static PyObject *__Pyx_PyFunction_FastCallDict(PyObject *func, PyObject **args, Py_ssize_t nargs, PyObject *kwargs);
+#else
+#define __Pyx_PyFunction_FastCallDict(func, args, nargs, kwargs) _PyFunction_FastCallDict(func, args, nargs, kwargs)
+#endif
+#define __Pyx_BUILD_ASSERT_EXPR(cond)\
+    (sizeof(char [1 - 2*!(cond)]) - 1)
+#ifndef Py_MEMBER_SIZE
+#define Py_MEMBER_SIZE(type, member) sizeof(((type *)0)->member)
+#endif
+  static size_t __pyx_pyframe_localsplus_offset = 0;
+  #include "frameobject.h"
+  #define __Pxy_PyFrame_Initialize_Offsets()\
+    ((void)__Pyx_BUILD_ASSERT_EXPR(sizeof(PyFrameObject) == offsetof(PyFrameObject, f_localsplus) + Py_MEMBER_SIZE(PyFrameObject, f_localsplus)),\
+     (void)(__pyx_pyframe_localsplus_offset = ((size_t)PyFrame_Type.tp_basicsize) - Py_MEMBER_SIZE(PyFrameObject, f_localsplus)))
+  #define __Pyx_PyFrame_GetLocalsplus(frame)\
+    (assert(__pyx_pyframe_localsplus_offset), (PyObject **)(((char *)(frame)) + __pyx_pyframe_localsplus_offset))
+#endif
 
 /* PyObjectCall.proto */
 #if CYTHON_COMPILING_IN_CPYTHON
@@ -1053,6 +1071,23 @@ static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg
 #else
 #define __Pyx_PyObject_Call(func, arg, kw) PyObject_Call(func, arg, kw)
 #endif
+
+/* PyObjectCall2Args.proto */
+static CYTHON_UNUSED PyObject* __Pyx_PyObject_Call2Args(PyObject* function, PyObject* arg1, PyObject* arg2);
+
+/* PyObjectCallMethO.proto */
+#if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject *arg);
+#endif
+
+/* PyObjectCallOneArg.proto */
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg);
+
+/* PySequenceContains.proto */
+static CYTHON_INLINE int __Pyx_PySequence_ContainsTF(PyObject* item, PyObject* seq, int eq) {
+    int result = PySequence_Contains(seq, item);
+    return unlikely(result < 0) ? result : (result == (eq == Py_EQ));
+}
 
 /* PyThreadStateGet.proto */
 #if CYTHON_FAST_THREAD_STATE
@@ -1104,47 +1139,6 @@ static CYTHON_INLINE Py_UCS4 __Pyx_PyUnicode_AsPy_UCS4(PyObject*);
 #define __Pyx_PyObject_Ord(c) __Pyx__PyObject_Ord(c)
 #endif
 static long __Pyx__PyObject_Ord(PyObject* c);
-
-/* PyCFunctionFastCall.proto */
-#if CYTHON_FAST_PYCCALL
-static CYTHON_INLINE PyObject *__Pyx_PyCFunction_FastCall(PyObject *func, PyObject **args, Py_ssize_t nargs);
-#else
-#define __Pyx_PyCFunction_FastCall(func, args, nargs)  (assert(0), NULL)
-#endif
-
-/* PyFunctionFastCall.proto */
-#if CYTHON_FAST_PYCALL
-#define __Pyx_PyFunction_FastCall(func, args, nargs)\
-    __Pyx_PyFunction_FastCallDict((func), (args), (nargs), NULL)
-#if 1 || PY_VERSION_HEX < 0x030600B1
-static PyObject *__Pyx_PyFunction_FastCallDict(PyObject *func, PyObject **args, Py_ssize_t nargs, PyObject *kwargs);
-#else
-#define __Pyx_PyFunction_FastCallDict(func, args, nargs, kwargs) _PyFunction_FastCallDict(func, args, nargs, kwargs)
-#endif
-#define __Pyx_BUILD_ASSERT_EXPR(cond)\
-    (sizeof(char [1 - 2*!(cond)]) - 1)
-#ifndef Py_MEMBER_SIZE
-#define Py_MEMBER_SIZE(type, member) sizeof(((type *)0)->member)
-#endif
-  static size_t __pyx_pyframe_localsplus_offset = 0;
-  #include "frameobject.h"
-  #define __Pxy_PyFrame_Initialize_Offsets()\
-    ((void)__Pyx_BUILD_ASSERT_EXPR(sizeof(PyFrameObject) == offsetof(PyFrameObject, f_localsplus) + Py_MEMBER_SIZE(PyFrameObject, f_localsplus)),\
-     (void)(__pyx_pyframe_localsplus_offset = ((size_t)PyFrame_Type.tp_basicsize) - Py_MEMBER_SIZE(PyFrameObject, f_localsplus)))
-  #define __Pyx_PyFrame_GetLocalsplus(frame)\
-    (assert(__pyx_pyframe_localsplus_offset), (PyObject **)(((char *)(frame)) + __pyx_pyframe_localsplus_offset))
-#endif
-
-/* PyObjectCall2Args.proto */
-static CYTHON_UNUSED PyObject* __Pyx_PyObject_Call2Args(PyObject* function, PyObject* arg1, PyObject* arg2);
-
-/* PyObjectCallMethO.proto */
-#if CYTHON_COMPILING_IN_CPYTHON
-static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject *arg);
-#endif
-
-/* PyObjectCallOneArg.proto */
-static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg);
 
 /* None.proto */
 static CYTHON_INLINE void __Pyx_RaiseClosureNameError(const char *varname);
@@ -1213,6 +1207,44 @@ static CYTHON_INLINE PyObject* __Pyx_decode_cpp_string(
         cppstring.data(), cppstring.size(), start, stop, encoding, errors, decode_func);
 }
 
+/* GetTopmostException.proto */
+#if CYTHON_USE_EXC_INFO_STACK
+static _PyErr_StackItem * __Pyx_PyErr_GetTopmostException(PyThreadState *tstate);
+#endif
+
+/* SaveResetException.proto */
+#if CYTHON_FAST_THREAD_STATE
+#define __Pyx_ExceptionSave(type, value, tb)  __Pyx__ExceptionSave(__pyx_tstate, type, value, tb)
+static CYTHON_INLINE void __Pyx__ExceptionSave(PyThreadState *tstate, PyObject **type, PyObject **value, PyObject **tb);
+#define __Pyx_ExceptionReset(type, value, tb)  __Pyx__ExceptionReset(__pyx_tstate, type, value, tb)
+static CYTHON_INLINE void __Pyx__ExceptionReset(PyThreadState *tstate, PyObject *type, PyObject *value, PyObject *tb);
+#else
+#define __Pyx_ExceptionSave(type, value, tb)   PyErr_GetExcInfo(type, value, tb)
+#define __Pyx_ExceptionReset(type, value, tb)  PyErr_SetExcInfo(type, value, tb)
+#endif
+
+/* PyErrExceptionMatches.proto */
+#if CYTHON_FAST_THREAD_STATE
+#define __Pyx_PyErr_ExceptionMatches(err) __Pyx_PyErr_ExceptionMatchesInState(__pyx_tstate, err)
+static CYTHON_INLINE int __Pyx_PyErr_ExceptionMatchesInState(PyThreadState* tstate, PyObject* err);
+#else
+#define __Pyx_PyErr_ExceptionMatches(err)  PyErr_ExceptionMatches(err)
+#endif
+
+/* GetException.proto */
+#if CYTHON_FAST_THREAD_STATE
+#define __Pyx_GetException(type, value, tb)  __Pyx__GetException(__pyx_tstate, type, value, tb)
+static int __Pyx__GetException(PyThreadState *tstate, PyObject **type, PyObject **value, PyObject **tb);
+#else
+static int __Pyx_GetException(PyObject **type, PyObject **value, PyObject **tb);
+#endif
+
+/* ArgTypeTest.proto */
+#define __Pyx_ArgTypeTest(obj, type, none_allowed, name, exact)\
+    ((likely((Py_TYPE(obj) == type) | (none_allowed && (obj == Py_None)))) ? 1 :\
+        __Pyx__ArgTypeTest(obj, type, name, exact))
+static int __Pyx__ArgTypeTest(PyObject *obj, PyTypeObject *type, const char *name, int exact);
+
 /* PyObjectFormatSimple.proto */
 #if CYTHON_COMPILING_IN_PYPY
     #define __Pyx_PyObject_FormatSimple(s, f) (\
@@ -1233,22 +1265,6 @@ static CYTHON_INLINE PyObject* __Pyx_decode_cpp_string(
     #define __Pyx_PyObject_FormatSimple(s, f) (\
         likely(PyUnicode_CheckExact(s)) ? (Py_INCREF(s), s) :\
         PyObject_Format(s, f))
-#endif
-
-/* GetTopmostException.proto */
-#if CYTHON_USE_EXC_INFO_STACK
-static _PyErr_StackItem * __Pyx_PyErr_GetTopmostException(PyThreadState *tstate);
-#endif
-
-/* SaveResetException.proto */
-#if CYTHON_FAST_THREAD_STATE
-#define __Pyx_ExceptionSave(type, value, tb)  __Pyx__ExceptionSave(__pyx_tstate, type, value, tb)
-static CYTHON_INLINE void __Pyx__ExceptionSave(PyThreadState *tstate, PyObject **type, PyObject **value, PyObject **tb);
-#define __Pyx_ExceptionReset(type, value, tb)  __Pyx__ExceptionReset(__pyx_tstate, type, value, tb)
-static CYTHON_INLINE void __Pyx__ExceptionReset(PyThreadState *tstate, PyObject *type, PyObject *value, PyObject *tb);
-#else
-#define __Pyx_ExceptionSave(type, value, tb)   PyErr_GetExcInfo(type, value, tb)
-#define __Pyx_ExceptionReset(type, value, tb)  PyErr_SetExcInfo(type, value, tb)
 #endif
 
 /* ExtTypeTest.proto */
@@ -1722,6 +1738,7 @@ int __pyx_module_is_main_pyzim = 0;
 /* Implementation of 'pyzim' */
 static PyObject *__pyx_builtin_RuntimeError;
 static PyObject *__pyx_builtin_chr;
+static PyObject *__pyx_builtin_UnicodeDecodeError;
 static PyObject *__pyx_builtin_TypeError;
 static const char __pyx_k_[] = "";
 static const char __pyx_k_A[] = "A";
@@ -1735,10 +1752,10 @@ static const char __pyx_k_W[] = "W";
 static const char __pyx_k_X[] = "X";
 static const char __pyx_k__3[] = "__";
 static const char __pyx_k_M_2[] = "M";
-static const char __pyx_k__12[] = ";";
-static const char __pyx_k__13[] = "=";
-static const char __pyx_k__14[] = "_";
-static const char __pyx_k__18[] = "-";
+static const char __pyx_k__14[] = ";";
+static const char __pyx_k__15[] = "=";
+static const char __pyx_k__16[] = "_";
+static const char __pyx_k__19[] = "-";
 static const char __pyx_k_chr[] = "chr";
 static const char __pyx_k_eng[] = "eng";
 static const char __pyx_k_url[] = "url";
@@ -1817,22 +1834,26 @@ static const char __pyx_k_setstate_cython[] = "__setstate_cython__";
 static const char __pyx_k_VALID_NAMESPACES[] = "VALID_NAMESPACES";
 static const char __pyx_k_redirect_longurl[] = "redirect_longurl";
 static const char __pyx_k_Invalid_Namespace[] = "Invalid Namespace";
+static const char __pyx_k_UnicodeDecodeError[] = "UnicodeDecodeError";
 static const char __pyx_k_cline_in_traceback[] = "cline_in_traceback";
 static const char __pyx_k_redirect_article_url[] = "redirect_article_url";
 static const char __pyx_k_update_article_counter[] = "_update_article_counter";
+static const char __pyx_k_Article_not_found_for_id[] = "Article not found for id";
 static const char __pyx_k_Article_not_found_for_url[] = "Article not found for url";
 static const char __pyx_k_get_article_counter_string[] = "get_article_counter_string";
 static const char __pyx_k_set_metadata_locals_lambda[] = "set_metadata.<locals>.<lambda>";
-static const char __pyx_k_ZimCreator_already_finalised[] = "ZimCreator already finalised";
+static const char __pyx_k_ZimCreator_already_finalized[] = "ZimCreator already finalized";
 static const char __pyx_k_Article_is_not_good_for_writing[] = "Article is not good for writing";
 static const char __pyx_k_Article_is_not_a_redirect_articl[] = "Article is not a redirect article";
 static const char __pyx_k_Article_not_found_for_redirect_u[] = "Article not found for redirect url";
 static const char __pyx_k_get_article_properties_locals_ge[] = "get_article_properties.<locals>.genexpr";
 static const char __pyx_k_no_default___reduce___due_to_non[] = "no default __reduce__ due to non-trivial __cinit__";
+static PyObject *__pyx_kp_b_;
 static PyObject *__pyx_kp_u_;
 static PyObject *__pyx_n_u_A;
 static PyObject *__pyx_kp_u_Article_is_not_a_redirect_articl;
 static PyObject *__pyx_kp_u_Article_is_not_good_for_writing;
+static PyObject *__pyx_kp_u_Article_not_found_for_id;
 static PyObject *__pyx_kp_u_Article_not_found_for_redirect_u;
 static PyObject *__pyx_kp_u_Article_not_found_for_url;
 static PyObject *__pyx_n_u_B;
@@ -1859,6 +1880,7 @@ static PyObject *__pyx_n_u_Title;
 static PyObject *__pyx_n_s_TypeError;
 static PyObject *__pyx_n_u_U;
 static PyObject *__pyx_kp_u_UTF_8;
+static PyObject *__pyx_n_s_UnicodeDecodeError;
 static PyObject *__pyx_n_u_V;
 static PyObject *__pyx_n_s_VALID_NAMESPACES;
 static PyObject *__pyx_n_u_W;
@@ -1866,12 +1888,12 @@ static PyObject *__pyx_n_u_X;
 static PyObject *__pyx_kp_u_Y_m_d;
 static PyObject *__pyx_n_s_ZimArticle;
 static PyObject *__pyx_n_s_ZimCreator;
-static PyObject *__pyx_kp_u_ZimCreator_already_finalised;
+static PyObject *__pyx_kp_u_ZimCreator_already_finalized;
 static PyObject *__pyx_n_s_ZimReader;
-static PyObject *__pyx_kp_u__12;
-static PyObject *__pyx_kp_u__13;
-static PyObject *__pyx_n_u__14;
-static PyObject *__pyx_kp_u__18;
+static PyObject *__pyx_kp_u__14;
+static PyObject *__pyx_kp_u__15;
+static PyObject *__pyx_n_u__16;
+static PyObject *__pyx_kp_u__19;
 static PyObject *__pyx_n_u__3;
 static PyObject *__pyx_n_s_add_article;
 static PyObject *__pyx_n_s_args;
@@ -1982,7 +2004,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_8get_metadata(struct __pyx_obj_5py
 static PyObject *__pyx_pf_5pyzim_10ZimCreator_10_write_metadata(struct __pyx_obj_5pyzim_ZimCreator *__pyx_v_self, PyObject *__pyx_v_metadata); /* proto */
 static PyObject *__pyx_lambda_funcdef_lambda1(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_keyword); /* proto */
 static PyObject *__pyx_pf_5pyzim_10ZimCreator_12set_metadata(struct __pyx_obj_5pyzim_ZimCreator *__pyx_v_self, PyObject *__pyx_v_kwargs); /* proto */
-static PyObject *__pyx_pf_5pyzim_10ZimCreator_14finalise(struct __pyx_obj_5pyzim_ZimCreator *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_5pyzim_10ZimCreator_14finalize(struct __pyx_obj_5pyzim_ZimCreator *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_5pyzim_10ZimCreator_16__reduce_cython__(CYTHON_UNUSED struct __pyx_obj_5pyzim_ZimCreator *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_5pyzim_10ZimCreator_18__setstate_cython__(CYTHON_UNUSED struct __pyx_obj_5pyzim_ZimCreator *__pyx_v_self, CYTHON_UNUSED PyObject *__pyx_v___pyx_state); /* proto */
 static PyObject *__pyx_tp_new_5pyzim_ZimArticle(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
@@ -2001,15 +2023,16 @@ static PyObject *__pyx_tuple__8;
 static PyObject *__pyx_tuple__9;
 static PyObject *__pyx_tuple__10;
 static PyObject *__pyx_tuple__11;
-static PyObject *__pyx_tuple__15;
-static PyObject *__pyx_tuple__16;
+static PyObject *__pyx_tuple__12;
+static PyObject *__pyx_tuple__13;
 static PyObject *__pyx_tuple__17;
+static PyObject *__pyx_tuple__18;
 /* Late includes */
 
-/* "pyzim.pyx":63
+/* "pyzim.pyx":62
  * 
  * 
- *     def __cinit__(self, url="", str content="", namespace= "A", mimetype= "text/html", title="", redirect_article_url= "",filename="", should_index=True ):             # <<<<<<<<<<<<<<
+ *     def __cinit__(self, url="", content="", namespace= "A", mimetype= "text/html", title="", redirect_article_url= "",filename="", should_index=True ):             # <<<<<<<<<<<<<<
  * 
  *         # Encoding must be set to UTF-8
  */
@@ -2032,7 +2055,7 @@ static int __pyx_pw_5pyzim_10ZimArticle_1__cinit__(PyObject *__pyx_v_self, PyObj
     static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_url,&__pyx_n_s_content,&__pyx_n_s_namespace,&__pyx_n_s_mimetype,&__pyx_n_s_title,&__pyx_n_s_redirect_article_url,&__pyx_n_s_filename,&__pyx_n_s_should_index,0};
     PyObject* values[8] = {0,0,0,0,0,0,0,0};
     values[0] = ((PyObject *)__pyx_kp_u_);
-    values[1] = ((PyObject*)__pyx_kp_u_);
+    values[1] = ((PyObject *)__pyx_kp_u_);
     values[2] = ((PyObject *)__pyx_n_u_A);
     values[3] = ((PyObject *)__pyx_kp_u_text_html);
     values[4] = ((PyObject *)__pyx_kp_u_);
@@ -2113,7 +2136,7 @@ static int __pyx_pw_5pyzim_10ZimArticle_1__cinit__(PyObject *__pyx_v_self, PyObj
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__cinit__") < 0)) __PYX_ERR(0, 63, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__cinit__") < 0)) __PYX_ERR(0, 62, __pyx_L3_error)
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -2138,7 +2161,7 @@ static int __pyx_pw_5pyzim_10ZimArticle_1__cinit__(PyObject *__pyx_v_self, PyObj
       }
     }
     __pyx_v_url = values[0];
-    __pyx_v_content = ((PyObject*)values[1]);
+    __pyx_v_content = values[1];
     __pyx_v_namespace = values[2];
     __pyx_v_mimetype = values[3];
     __pyx_v_title = values[4];
@@ -2148,34 +2171,30 @@ static int __pyx_pw_5pyzim_10ZimArticle_1__cinit__(PyObject *__pyx_v_self, PyObj
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__cinit__", 0, 0, 8, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 63, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("__cinit__", 0, 0, 8, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 62, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("pyzim.ZimArticle.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return -1;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_content), (&PyUnicode_Type), 1, "content", 1))) __PYX_ERR(0, 63, __pyx_L1_error)
   __pyx_r = __pyx_pf_5pyzim_10ZimArticle___cinit__(((struct __pyx_obj_5pyzim_ZimArticle *)__pyx_v_self), __pyx_v_url, __pyx_v_content, __pyx_v_namespace, __pyx_v_mimetype, __pyx_v_title, __pyx_v_redirect_article_url, __pyx_v_filename, __pyx_v_should_index);
 
   /* function exit code */
-  goto __pyx_L0;
-  __pyx_L1_error:;
-  __pyx_r = -1;
-  __pyx_L0:;
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
 static int __pyx_pf_5pyzim_10ZimArticle___cinit__(struct __pyx_obj_5pyzim_ZimArticle *__pyx_v_self, PyObject *__pyx_v_url, PyObject *__pyx_v_content, PyObject *__pyx_v_namespace, PyObject *__pyx_v_mimetype, PyObject *__pyx_v_title, PyObject *__pyx_v_redirect_article_url, CYTHON_UNUSED PyObject *__pyx_v_filename, PyObject *__pyx_v_should_index) {
+  PyObject *__pyx_v_bytes_content = NULL;
   ZimArticle *__pyx_v_c_zim_art;
   int __pyx_r;
   __Pyx_RefNannyDeclarations
-  PyObject *__pyx_t_1 = NULL;
+  int __pyx_t_1;
   int __pyx_t_2;
-  int __pyx_t_3;
-  long __pyx_t_4;
+  PyObject *__pyx_t_3 = NULL;
+  PyObject *__pyx_t_4 = NULL;
   PyObject *__pyx_t_5 = NULL;
-  PyObject *__pyx_t_6 = NULL;
+  long __pyx_t_6;
   std::string __pyx_t_7;
   std::string __pyx_t_8;
   std::string __pyx_t_9;
@@ -2185,35 +2204,106 @@ static int __pyx_pf_5pyzim_10ZimArticle___cinit__(struct __pyx_obj_5pyzim_ZimArt
   ZimArticle *__pyx_t_13;
   __Pyx_RefNannySetupContext("__cinit__", 0);
 
-  /* "pyzim.pyx":69
+  /* "pyzim.pyx":68
  *         #cdef char* c_string = py_bytes
+ * 
+ *         bytes_content =b''             # <<<<<<<<<<<<<<
+ *         if isinstance(content, str):
+ *             bytes_content = content.encode('UTF-8')
+ */
+  __Pyx_INCREF(__pyx_kp_b_);
+  __pyx_v_bytes_content = __pyx_kp_b_;
+
+  /* "pyzim.pyx":69
+ * 
+ *         bytes_content =b''
+ *         if isinstance(content, str):             # <<<<<<<<<<<<<<
+ *             bytes_content = content.encode('UTF-8')
+ *         else:
+ */
+  __pyx_t_1 = PyUnicode_Check(__pyx_v_content); 
+  __pyx_t_2 = (__pyx_t_1 != 0);
+  if (__pyx_t_2) {
+
+    /* "pyzim.pyx":70
+ *         bytes_content =b''
+ *         if isinstance(content, str):
+ *             bytes_content = content.encode('UTF-8')             # <<<<<<<<<<<<<<
+ *         else:
+ *             bytes_content = content
+ */
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_content, __pyx_n_s_encode); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 70, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
+    __pyx_t_5 = NULL;
+    if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_4))) {
+      __pyx_t_5 = PyMethod_GET_SELF(__pyx_t_4);
+      if (likely(__pyx_t_5)) {
+        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_4);
+        __Pyx_INCREF(__pyx_t_5);
+        __Pyx_INCREF(function);
+        __Pyx_DECREF_SET(__pyx_t_4, function);
+      }
+    }
+    __pyx_t_3 = (__pyx_t_5) ? __Pyx_PyObject_Call2Args(__pyx_t_4, __pyx_t_5, __pyx_kp_u_UTF_8) : __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_kp_u_UTF_8);
+    __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
+    if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 70, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    __Pyx_DECREF_SET(__pyx_v_bytes_content, __pyx_t_3);
+    __pyx_t_3 = 0;
+
+    /* "pyzim.pyx":69
+ * 
+ *         bytes_content =b''
+ *         if isinstance(content, str):             # <<<<<<<<<<<<<<
+ *             bytes_content = content.encode('UTF-8')
+ *         else:
+ */
+    goto __pyx_L3;
+  }
+
+  /* "pyzim.pyx":72
+ *             bytes_content = content.encode('UTF-8')
+ *         else:
+ *             bytes_content = content             # <<<<<<<<<<<<<<
+ * 
+ *         if namespace not in self.VALID_NAMESPACES:
+ */
+  /*else*/ {
+    __Pyx_INCREF(__pyx_v_content);
+    __Pyx_DECREF_SET(__pyx_v_bytes_content, __pyx_v_content);
+  }
+  __pyx_L3:;
+
+  /* "pyzim.pyx":74
+ *             bytes_content = content
  * 
  *         if namespace not in self.VALID_NAMESPACES:             # <<<<<<<<<<<<<<
  *             raise RuntimeError("Invalid Namespace")
  * 
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_VALID_NAMESPACES); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 69, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = (__Pyx_PySequence_ContainsTF(__pyx_v_namespace, __pyx_t_1, Py_NE)); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 69, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_3 = (__pyx_t_2 != 0);
-  if (unlikely(__pyx_t_3)) {
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_VALID_NAMESPACES); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 74, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_2 = (__Pyx_PySequence_ContainsTF(__pyx_v_namespace, __pyx_t_3, Py_NE)); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 74, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_1 = (__pyx_t_2 != 0);
+  if (unlikely(__pyx_t_1)) {
 
-    /* "pyzim.pyx":70
+    /* "pyzim.pyx":75
  * 
  *         if namespace not in self.VALID_NAMESPACES:
  *             raise RuntimeError("Invalid Namespace")             # <<<<<<<<<<<<<<
  * 
  *         c_zim_art = new zim.ZimArticle(ord(namespace),                     # Namespace
  */
-    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 70, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_1);
-    __Pyx_Raise(__pyx_t_1, 0, 0, 0);
-    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __PYX_ERR(0, 70, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 75, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_Raise(__pyx_t_3, 0, 0, 0);
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __PYX_ERR(0, 75, __pyx_L1_error)
 
-    /* "pyzim.pyx":69
- *         #cdef char* c_string = py_bytes
+    /* "pyzim.pyx":74
+ *             bytes_content = content
  * 
  *         if namespace not in self.VALID_NAMESPACES:             # <<<<<<<<<<<<<<
  *             raise RuntimeError("Invalid Namespace")
@@ -2221,149 +2311,142 @@ static int __pyx_pf_5pyzim_10ZimArticle___cinit__(struct __pyx_obj_5pyzim_ZimArt
  */
   }
 
-  /* "pyzim.pyx":72
+  /* "pyzim.pyx":77
  *             raise RuntimeError("Invalid Namespace")
  * 
  *         c_zim_art = new zim.ZimArticle(ord(namespace),                     # Namespace             # <<<<<<<<<<<<<<
  *                                        url.encode('UTF-8'),                # url
  *                                        title.encode('UTF-8'),              # title
  */
-  __pyx_t_4 = __Pyx_PyObject_Ord(__pyx_v_namespace); if (unlikely(__pyx_t_4 == ((long)(long)(Py_UCS4)-1))) __PYX_ERR(0, 72, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyObject_Ord(__pyx_v_namespace); if (unlikely(__pyx_t_6 == ((long)(long)(Py_UCS4)-1))) __PYX_ERR(0, 77, __pyx_L1_error)
 
-  /* "pyzim.pyx":73
+  /* "pyzim.pyx":78
  * 
  *         c_zim_art = new zim.ZimArticle(ord(namespace),                     # Namespace
  *                                        url.encode('UTF-8'),                # url             # <<<<<<<<<<<<<<
  *                                        title.encode('UTF-8'),              # title
  *                                        mimetype.encode('UTF-8'),           # mimeType
  */
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_url, __pyx_n_s_encode); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 73, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_6 = NULL;
-  if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_5))) {
-    __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_5);
-    if (likely(__pyx_t_6)) {
-      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_5);
-      __Pyx_INCREF(__pyx_t_6);
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_url, __pyx_n_s_encode); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 78, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  __pyx_t_5 = NULL;
+  if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_4))) {
+    __pyx_t_5 = PyMethod_GET_SELF(__pyx_t_4);
+    if (likely(__pyx_t_5)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_4);
+      __Pyx_INCREF(__pyx_t_5);
       __Pyx_INCREF(function);
-      __Pyx_DECREF_SET(__pyx_t_5, function);
+      __Pyx_DECREF_SET(__pyx_t_4, function);
     }
   }
-  __pyx_t_1 = (__pyx_t_6) ? __Pyx_PyObject_Call2Args(__pyx_t_5, __pyx_t_6, __pyx_kp_u_UTF_8) : __Pyx_PyObject_CallOneArg(__pyx_t_5, __pyx_kp_u_UTF_8);
-  __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 73, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_7 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 73, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_3 = (__pyx_t_5) ? __Pyx_PyObject_Call2Args(__pyx_t_4, __pyx_t_5, __pyx_kp_u_UTF_8) : __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_kp_u_UTF_8);
+  __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
+  if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 78, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __pyx_t_7 = __pyx_convert_string_from_py_std__in_string(__pyx_t_3); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 78, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "pyzim.pyx":74
+  /* "pyzim.pyx":79
  *         c_zim_art = new zim.ZimArticle(ord(namespace),                     # Namespace
  *                                        url.encode('UTF-8'),                # url
  *                                        title.encode('UTF-8'),              # title             # <<<<<<<<<<<<<<
  *                                        mimetype.encode('UTF-8'),           # mimeType
  *                                        redirect_article_url.encode('UTF-8'),# redirectUrl
  */
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_title, __pyx_n_s_encode); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 74, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_6 = NULL;
-  if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_5))) {
-    __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_5);
-    if (likely(__pyx_t_6)) {
-      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_5);
-      __Pyx_INCREF(__pyx_t_6);
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_title, __pyx_n_s_encode); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 79, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  __pyx_t_5 = NULL;
+  if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_4))) {
+    __pyx_t_5 = PyMethod_GET_SELF(__pyx_t_4);
+    if (likely(__pyx_t_5)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_4);
+      __Pyx_INCREF(__pyx_t_5);
       __Pyx_INCREF(function);
-      __Pyx_DECREF_SET(__pyx_t_5, function);
+      __Pyx_DECREF_SET(__pyx_t_4, function);
     }
   }
-  __pyx_t_1 = (__pyx_t_6) ? __Pyx_PyObject_Call2Args(__pyx_t_5, __pyx_t_6, __pyx_kp_u_UTF_8) : __Pyx_PyObject_CallOneArg(__pyx_t_5, __pyx_kp_u_UTF_8);
-  __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 74, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_8 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 74, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_3 = (__pyx_t_5) ? __Pyx_PyObject_Call2Args(__pyx_t_4, __pyx_t_5, __pyx_kp_u_UTF_8) : __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_kp_u_UTF_8);
+  __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
+  if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 79, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __pyx_t_8 = __pyx_convert_string_from_py_std__in_string(__pyx_t_3); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 79, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "pyzim.pyx":75
+  /* "pyzim.pyx":80
  *                                        url.encode('UTF-8'),                # url
  *                                        title.encode('UTF-8'),              # title
  *                                        mimetype.encode('UTF-8'),           # mimeType             # <<<<<<<<<<<<<<
  *                                        redirect_article_url.encode('UTF-8'),# redirectUrl
  *                                        should_index,                                # shouldIndex
  */
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_mimetype, __pyx_n_s_encode); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 75, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_6 = NULL;
-  if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_5))) {
-    __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_5);
-    if (likely(__pyx_t_6)) {
-      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_5);
-      __Pyx_INCREF(__pyx_t_6);
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_mimetype, __pyx_n_s_encode); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 80, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  __pyx_t_5 = NULL;
+  if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_4))) {
+    __pyx_t_5 = PyMethod_GET_SELF(__pyx_t_4);
+    if (likely(__pyx_t_5)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_4);
+      __Pyx_INCREF(__pyx_t_5);
       __Pyx_INCREF(function);
-      __Pyx_DECREF_SET(__pyx_t_5, function);
+      __Pyx_DECREF_SET(__pyx_t_4, function);
     }
   }
-  __pyx_t_1 = (__pyx_t_6) ? __Pyx_PyObject_Call2Args(__pyx_t_5, __pyx_t_6, __pyx_kp_u_UTF_8) : __Pyx_PyObject_CallOneArg(__pyx_t_5, __pyx_kp_u_UTF_8);
-  __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 75, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_9 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 75, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_3 = (__pyx_t_5) ? __Pyx_PyObject_Call2Args(__pyx_t_4, __pyx_t_5, __pyx_kp_u_UTF_8) : __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_kp_u_UTF_8);
+  __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
+  if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 80, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __pyx_t_9 = __pyx_convert_string_from_py_std__in_string(__pyx_t_3); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 80, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "pyzim.pyx":76
+  /* "pyzim.pyx":81
  *                                        title.encode('UTF-8'),              # title
  *                                        mimetype.encode('UTF-8'),           # mimeType
  *                                        redirect_article_url.encode('UTF-8'),# redirectUrl             # <<<<<<<<<<<<<<
  *                                        should_index,                                # shouldIndex
- *                                        content.encode('UTF-8'))
+ *                                        bytes_content)
  */
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_redirect_article_url, __pyx_n_s_encode); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 76, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_6 = NULL;
-  if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_5))) {
-    __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_5);
-    if (likely(__pyx_t_6)) {
-      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_5);
-      __Pyx_INCREF(__pyx_t_6);
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_redirect_article_url, __pyx_n_s_encode); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 81, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  __pyx_t_5 = NULL;
+  if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_4))) {
+    __pyx_t_5 = PyMethod_GET_SELF(__pyx_t_4);
+    if (likely(__pyx_t_5)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_4);
+      __Pyx_INCREF(__pyx_t_5);
       __Pyx_INCREF(function);
-      __Pyx_DECREF_SET(__pyx_t_5, function);
+      __Pyx_DECREF_SET(__pyx_t_4, function);
     }
   }
-  __pyx_t_1 = (__pyx_t_6) ? __Pyx_PyObject_Call2Args(__pyx_t_5, __pyx_t_6, __pyx_kp_u_UTF_8) : __Pyx_PyObject_CallOneArg(__pyx_t_5, __pyx_kp_u_UTF_8);
-  __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 76, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_10 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 76, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_3 = (__pyx_t_5) ? __Pyx_PyObject_Call2Args(__pyx_t_4, __pyx_t_5, __pyx_kp_u_UTF_8) : __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_kp_u_UTF_8);
+  __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
+  if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 81, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __pyx_t_10 = __pyx_convert_string_from_py_std__in_string(__pyx_t_3); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 81, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "pyzim.pyx":77
+  /* "pyzim.pyx":82
  *                                        mimetype.encode('UTF-8'),           # mimeType
  *                                        redirect_article_url.encode('UTF-8'),# redirectUrl
  *                                        should_index,                                # shouldIndex             # <<<<<<<<<<<<<<
- *                                        content.encode('UTF-8'))
+ *                                        bytes_content)
  *         self.__setup(c_zim_art)
  */
-  __pyx_t_11 = __Pyx_PyObject_IsTrue(__pyx_v_should_index); if (unlikely((__pyx_t_11 == ((bool)-1)) && PyErr_Occurred())) __PYX_ERR(0, 77, __pyx_L1_error)
+  __pyx_t_11 = __Pyx_PyObject_IsTrue(__pyx_v_should_index); if (unlikely((__pyx_t_11 == ((bool)-1)) && PyErr_Occurred())) __PYX_ERR(0, 82, __pyx_L1_error)
 
-  /* "pyzim.pyx":78
+  /* "pyzim.pyx":83
  *                                        redirect_article_url.encode('UTF-8'),# redirectUrl
  *                                        should_index,                                # shouldIndex
- *                                        content.encode('UTF-8'))             # <<<<<<<<<<<<<<
+ *                                        bytes_content)             # <<<<<<<<<<<<<<
  *         self.__setup(c_zim_art)
  * 
  */
-  if (unlikely(__pyx_v_content == Py_None)) {
-    PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%.30s'", "encode");
-    __PYX_ERR(0, 78, __pyx_L1_error)
-  }
-  __pyx_t_1 = PyUnicode_AsUTF8String(__pyx_v_content); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 78, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_12 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 78, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_12 = __pyx_convert_string_from_py_std__in_string(__pyx_v_bytes_content); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 83, __pyx_L1_error)
 
-  /* "pyzim.pyx":72
+  /* "pyzim.pyx":77
  *             raise RuntimeError("Invalid Namespace")
  * 
  *         c_zim_art = new zim.ZimArticle(ord(namespace),                     # Namespace             # <<<<<<<<<<<<<<
@@ -2371,28 +2454,28 @@ static int __pyx_pf_5pyzim_10ZimArticle___cinit__(struct __pyx_obj_5pyzim_ZimArt
  *                                        title.encode('UTF-8'),              # title
  */
   try {
-    __pyx_t_13 = new ZimArticle(__pyx_t_4, __pyx_t_7, __pyx_t_8, __pyx_t_9, __pyx_t_10, __pyx_t_11, __pyx_t_12);
+    __pyx_t_13 = new ZimArticle(__pyx_t_6, __pyx_t_7, __pyx_t_8, __pyx_t_9, __pyx_t_10, __pyx_t_11, __pyx_t_12);
   } catch(...) {
     __Pyx_CppExn2PyErr();
-    __PYX_ERR(0, 72, __pyx_L1_error)
+    __PYX_ERR(0, 77, __pyx_L1_error)
   }
   __pyx_v_c_zim_art = __pyx_t_13;
 
-  /* "pyzim.pyx":79
+  /* "pyzim.pyx":84
  *                                        should_index,                                # shouldIndex
- *                                        content.encode('UTF-8'))
+ *                                        bytes_content)
  *         self.__setup(c_zim_art)             # <<<<<<<<<<<<<<
  * 
  *     def __dealloc__(self):
  */
-  __pyx_t_1 = ((struct __pyx_vtabstruct_5pyzim_ZimArticle *)__pyx_v_self->__pyx_vtab)->__pyx___setup(__pyx_v_self, __pyx_v_c_zim_art); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 79, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_3 = ((struct __pyx_vtabstruct_5pyzim_ZimArticle *)__pyx_v_self->__pyx_vtab)->__pyx___setup(__pyx_v_self, __pyx_v_c_zim_art); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 84, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "pyzim.pyx":63
+  /* "pyzim.pyx":62
  * 
  * 
- *     def __cinit__(self, url="", str content="", namespace= "A", mimetype= "text/html", title="", redirect_article_url= "",filename="", should_index=True ):             # <<<<<<<<<<<<<<
+ *     def __cinit__(self, url="", content="", namespace= "A", mimetype= "text/html", title="", redirect_article_url= "",filename="", should_index=True ):             # <<<<<<<<<<<<<<
  * 
  *         # Encoding must be set to UTF-8
  */
@@ -2401,17 +2484,18 @@ static int __pyx_pf_5pyzim_10ZimArticle___cinit__(struct __pyx_obj_5pyzim_ZimArt
   __pyx_r = 0;
   goto __pyx_L0;
   __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_XDECREF(__pyx_t_6);
   __Pyx_AddTraceback("pyzim.ZimArticle.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
+  __Pyx_XDECREF(__pyx_v_bytes_content);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-/* "pyzim.pyx":81
+/* "pyzim.pyx":86
  *         self.__setup(c_zim_art)
  * 
  *     def __dealloc__(self):             # <<<<<<<<<<<<<<
@@ -2435,7 +2519,7 @@ static void __pyx_pf_5pyzim_10ZimArticle_2__dealloc__(struct __pyx_obj_5pyzim_Zi
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("__dealloc__", 0);
 
-  /* "pyzim.pyx":82
+  /* "pyzim.pyx":87
  * 
  *     def __dealloc__(self):
  *         if self.c_zim_article != NULL:             # <<<<<<<<<<<<<<
@@ -2445,7 +2529,7 @@ static void __pyx_pf_5pyzim_10ZimArticle_2__dealloc__(struct __pyx_obj_5pyzim_Zi
   __pyx_t_1 = ((__pyx_v_self->c_zim_article != NULL) != 0);
   if (__pyx_t_1) {
 
-    /* "pyzim.pyx":83
+    /* "pyzim.pyx":88
  *     def __dealloc__(self):
  *         if self.c_zim_article != NULL:
  *             del self.c_zim_article             # <<<<<<<<<<<<<<
@@ -2454,7 +2538,7 @@ static void __pyx_pf_5pyzim_10ZimArticle_2__dealloc__(struct __pyx_obj_5pyzim_Zi
  */
     delete __pyx_v_self->c_zim_article;
 
-    /* "pyzim.pyx":82
+    /* "pyzim.pyx":87
  * 
  *     def __dealloc__(self):
  *         if self.c_zim_article != NULL:             # <<<<<<<<<<<<<<
@@ -2463,7 +2547,7 @@ static void __pyx_pf_5pyzim_10ZimArticle_2__dealloc__(struct __pyx_obj_5pyzim_Zi
  */
   }
 
-  /* "pyzim.pyx":81
+  /* "pyzim.pyx":86
  *         self.__setup(c_zim_art)
  * 
  *     def __dealloc__(self):             # <<<<<<<<<<<<<<
@@ -2475,7 +2559,7 @@ static void __pyx_pf_5pyzim_10ZimArticle_2__dealloc__(struct __pyx_obj_5pyzim_Zi
   __Pyx_RefNannyFinishContext();
 }
 
-/* "pyzim.pyx":90
+/* "pyzim.pyx":95
  *     #    return False
  * 
  *     cdef __setup(self, zim.ZimArticle *art):             # <<<<<<<<<<<<<<
@@ -2488,7 +2572,7 @@ static PyObject *__pyx_f_5pyzim_10ZimArticle___setup(struct __pyx_obj_5pyzim_Zim
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__setup", 0);
 
-  /* "pyzim.pyx":104
+  /* "pyzim.pyx":109
  *         """
  *         # Set new internal C zim.ZimArticle article
  *         self.c_zim_article = art             # <<<<<<<<<<<<<<
@@ -2497,7 +2581,7 @@ static PyObject *__pyx_f_5pyzim_10ZimArticle___setup(struct __pyx_obj_5pyzim_Zim
  */
   __pyx_v_self->c_zim_article = __pyx_v_art;
 
-  /* "pyzim.pyx":90
+  /* "pyzim.pyx":95
  *     #    return False
  * 
  *     cdef __setup(self, zim.ZimArticle *art):             # <<<<<<<<<<<<<<
@@ -2512,7 +2596,7 @@ static PyObject *__pyx_f_5pyzim_10ZimArticle___setup(struct __pyx_obj_5pyzim_Zim
   return __pyx_r;
 }
 
-/* "pyzim.pyx":107
+/* "pyzim.pyx":112
  * 
  * 
  *     def get_article_properties(self):             # <<<<<<<<<<<<<<
@@ -2534,7 +2618,7 @@ static PyObject *__pyx_pw_5pyzim_10ZimArticle_5get_article_properties(PyObject *
 }
 static PyObject *__pyx_gb_5pyzim_10ZimArticle_22get_article_properties_2generator(__pyx_CoroutineObject *__pyx_generator, CYTHON_UNUSED PyThreadState *__pyx_tstate, PyObject *__pyx_sent_value); /* proto */
 
-/* "pyzim.pyx":108
+/* "pyzim.pyx":113
  * 
  *     def get_article_properties(self):
  *         return dict((name, getattr(self, name)) for name in dir(self) if not name.startswith('__') )             # <<<<<<<<<<<<<<
@@ -2551,7 +2635,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_22get_article_properties_genexpr(P
   if (unlikely(!__pyx_cur_scope)) {
     __pyx_cur_scope = ((struct __pyx_obj_5pyzim___pyx_scope_struct_1_genexpr *)Py_None);
     __Pyx_INCREF(Py_None);
-    __PYX_ERR(0, 108, __pyx_L1_error)
+    __PYX_ERR(0, 113, __pyx_L1_error)
   } else {
     __Pyx_GOTREF(__pyx_cur_scope);
   }
@@ -2559,7 +2643,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_22get_article_properties_genexpr(P
   __Pyx_INCREF(((PyObject *)__pyx_cur_scope->__pyx_outer_scope));
   __Pyx_GIVEREF(__pyx_cur_scope->__pyx_outer_scope);
   {
-    __pyx_CoroutineObject *gen = __Pyx_Generator_New((__pyx_coroutine_body_t) __pyx_gb_5pyzim_10ZimArticle_22get_article_properties_2generator, NULL, (PyObject *) __pyx_cur_scope, __pyx_n_s_genexpr, __pyx_n_s_get_article_properties_locals_ge, __pyx_n_s_pyzim); if (unlikely(!gen)) __PYX_ERR(0, 108, __pyx_L1_error)
+    __pyx_CoroutineObject *gen = __Pyx_Generator_New((__pyx_coroutine_body_t) __pyx_gb_5pyzim_10ZimArticle_22get_article_properties_2generator, NULL, (PyObject *) __pyx_cur_scope, __pyx_n_s_genexpr, __pyx_n_s_get_article_properties_locals_ge, __pyx_n_s_pyzim); if (unlikely(!gen)) __PYX_ERR(0, 113, __pyx_L1_error)
     __Pyx_DECREF(__pyx_cur_scope);
     __Pyx_RefNannyFinishContext();
     return (PyObject *) gen;
@@ -2596,22 +2680,22 @@ static PyObject *__pyx_gb_5pyzim_10ZimArticle_22get_article_properties_2generato
     return NULL;
   }
   __pyx_L3_first_run:;
-  if (unlikely(!__pyx_sent_value)) __PYX_ERR(0, 108, __pyx_L1_error)
-  __pyx_r = PyDict_New(); if (unlikely(!__pyx_r)) __PYX_ERR(0, 108, __pyx_L1_error)
+  if (unlikely(!__pyx_sent_value)) __PYX_ERR(0, 113, __pyx_L1_error)
+  __pyx_r = PyDict_New(); if (unlikely(!__pyx_r)) __PYX_ERR(0, 113, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_r);
-  if (unlikely(!__pyx_cur_scope->__pyx_outer_scope->__pyx_v_self)) { __Pyx_RaiseClosureNameError("self"); __PYX_ERR(0, 108, __pyx_L1_error) }
+  if (unlikely(!__pyx_cur_scope->__pyx_outer_scope->__pyx_v_self)) { __Pyx_RaiseClosureNameError("self"); __PYX_ERR(0, 113, __pyx_L1_error) }
   __pyx_t_1 = ((PyObject *)__pyx_cur_scope->__pyx_outer_scope->__pyx_v_self);
   __Pyx_INCREF(__pyx_t_1);
-  __pyx_t_2 = PyObject_Dir(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 108, __pyx_L1_error)
+  __pyx_t_2 = PyObject_Dir(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 113, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (likely(PyList_CheckExact(__pyx_t_2)) || PyTuple_CheckExact(__pyx_t_2)) {
     __pyx_t_1 = __pyx_t_2; __Pyx_INCREF(__pyx_t_1); __pyx_t_3 = 0;
     __pyx_t_4 = NULL;
   } else {
-    __pyx_t_3 = -1; __pyx_t_1 = PyObject_GetIter(__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 108, __pyx_L1_error)
+    __pyx_t_3 = -1; __pyx_t_1 = PyObject_GetIter(__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 113, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_4 = Py_TYPE(__pyx_t_1)->tp_iternext; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 108, __pyx_L1_error)
+    __pyx_t_4 = Py_TYPE(__pyx_t_1)->tp_iternext; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 113, __pyx_L1_error)
   }
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   for (;;) {
@@ -2619,17 +2703,17 @@ static PyObject *__pyx_gb_5pyzim_10ZimArticle_22get_article_properties_2generato
       if (likely(PyList_CheckExact(__pyx_t_1))) {
         if (__pyx_t_3 >= PyList_GET_SIZE(__pyx_t_1)) break;
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        __pyx_t_2 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_3); __Pyx_INCREF(__pyx_t_2); __pyx_t_3++; if (unlikely(0 < 0)) __PYX_ERR(0, 108, __pyx_L1_error)
+        __pyx_t_2 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_3); __Pyx_INCREF(__pyx_t_2); __pyx_t_3++; if (unlikely(0 < 0)) __PYX_ERR(0, 113, __pyx_L1_error)
         #else
-        __pyx_t_2 = PySequence_ITEM(__pyx_t_1, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 108, __pyx_L1_error)
+        __pyx_t_2 = PySequence_ITEM(__pyx_t_1, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 113, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
         #endif
       } else {
         if (__pyx_t_3 >= PyTuple_GET_SIZE(__pyx_t_1)) break;
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        __pyx_t_2 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_3); __Pyx_INCREF(__pyx_t_2); __pyx_t_3++; if (unlikely(0 < 0)) __PYX_ERR(0, 108, __pyx_L1_error)
+        __pyx_t_2 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_3); __Pyx_INCREF(__pyx_t_2); __pyx_t_3++; if (unlikely(0 < 0)) __PYX_ERR(0, 113, __pyx_L1_error)
         #else
-        __pyx_t_2 = PySequence_ITEM(__pyx_t_1, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 108, __pyx_L1_error)
+        __pyx_t_2 = PySequence_ITEM(__pyx_t_1, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 113, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
         #endif
       }
@@ -2639,7 +2723,7 @@ static PyObject *__pyx_gb_5pyzim_10ZimArticle_22get_article_properties_2generato
         PyObject* exc_type = PyErr_Occurred();
         if (exc_type) {
           if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-          else __PYX_ERR(0, 108, __pyx_L1_error)
+          else __PYX_ERR(0, 113, __pyx_L1_error)
         }
         break;
       }
@@ -2649,7 +2733,7 @@ static PyObject *__pyx_gb_5pyzim_10ZimArticle_22get_article_properties_2generato
     __Pyx_XDECREF_SET(__pyx_cur_scope->__pyx_v_name, __pyx_t_2);
     __Pyx_GIVEREF(__pyx_t_2);
     __pyx_t_2 = 0;
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_cur_scope->__pyx_v_name, __pyx_n_s_startswith); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 108, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_cur_scope->__pyx_v_name, __pyx_n_s_startswith); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 113, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __pyx_t_6 = NULL;
     if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_5))) {
@@ -2663,20 +2747,20 @@ static PyObject *__pyx_gb_5pyzim_10ZimArticle_22get_article_properties_2generato
     }
     __pyx_t_2 = (__pyx_t_6) ? __Pyx_PyObject_Call2Args(__pyx_t_5, __pyx_t_6, __pyx_n_u__3) : __Pyx_PyObject_CallOneArg(__pyx_t_5, __pyx_n_u__3);
     __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
-    if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 108, __pyx_L1_error)
+    if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 113, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __pyx_t_7 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_7 < 0)) __PYX_ERR(0, 108, __pyx_L1_error)
+    __pyx_t_7 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_7 < 0)) __PYX_ERR(0, 113, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __pyx_t_8 = ((!__pyx_t_7) != 0);
     if (__pyx_t_8) {
-      if (unlikely(!__pyx_cur_scope->__pyx_outer_scope->__pyx_v_self)) { __Pyx_RaiseClosureNameError("self"); __PYX_ERR(0, 108, __pyx_L1_error) }
+      if (unlikely(!__pyx_cur_scope->__pyx_outer_scope->__pyx_v_self)) { __Pyx_RaiseClosureNameError("self"); __PYX_ERR(0, 113, __pyx_L1_error) }
       __pyx_t_2 = ((PyObject *)__pyx_cur_scope->__pyx_outer_scope->__pyx_v_self);
       __Pyx_INCREF(__pyx_t_2);
-      __pyx_t_5 = __Pyx_GetAttr(__pyx_t_2, __pyx_cur_scope->__pyx_v_name); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 108, __pyx_L1_error)
+      __pyx_t_5 = __Pyx_GetAttr(__pyx_t_2, __pyx_cur_scope->__pyx_v_name); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 113, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-      if (unlikely(PyDict_SetItem(__pyx_r, (PyObject*)__pyx_cur_scope->__pyx_v_name, (PyObject*)__pyx_t_5))) __PYX_ERR(0, 108, __pyx_L1_error)
+      if (unlikely(PyDict_SetItem(__pyx_r, (PyObject*)__pyx_cur_scope->__pyx_v_name, (PyObject*)__pyx_t_5))) __PYX_ERR(0, 113, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     }
   }
@@ -2703,7 +2787,7 @@ static PyObject *__pyx_gb_5pyzim_10ZimArticle_22get_article_properties_2generato
   return __pyx_r;
 }
 
-/* "pyzim.pyx":107
+/* "pyzim.pyx":112
  * 
  * 
  *     def get_article_properties(self):             # <<<<<<<<<<<<<<
@@ -2722,7 +2806,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_4get_article_properties(struct __p
   if (unlikely(!__pyx_cur_scope)) {
     __pyx_cur_scope = ((struct __pyx_obj_5pyzim___pyx_scope_struct__get_article_properties *)Py_None);
     __Pyx_INCREF(Py_None);
-    __PYX_ERR(0, 107, __pyx_L1_error)
+    __PYX_ERR(0, 112, __pyx_L1_error)
   } else {
     __Pyx_GOTREF(__pyx_cur_scope);
   }
@@ -2730,7 +2814,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_4get_article_properties(struct __p
   __Pyx_INCREF((PyObject *)__pyx_cur_scope->__pyx_v_self);
   __Pyx_GIVEREF((PyObject *)__pyx_cur_scope->__pyx_v_self);
 
-  /* "pyzim.pyx":108
+  /* "pyzim.pyx":113
  * 
  *     def get_article_properties(self):
  *         return dict((name, getattr(self, name)) for name in dir(self) if not name.startswith('__') )             # <<<<<<<<<<<<<<
@@ -2738,16 +2822,16 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_4get_article_properties(struct __p
  *     # Factory functions - Currently Cython can't use classmethods
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_pf_5pyzim_10ZimArticle_22get_article_properties_genexpr(((PyObject*)__pyx_cur_scope)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 108, __pyx_L1_error)
+  __pyx_t_1 = __pyx_pf_5pyzim_10ZimArticle_22get_article_properties_genexpr(((PyObject*)__pyx_cur_scope)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 113, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_Generator_Next(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 108, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_Generator_Next(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 113, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
   goto __pyx_L0;
 
-  /* "pyzim.pyx":107
+  /* "pyzim.pyx":112
  * 
  * 
  *     def get_article_properties(self):             # <<<<<<<<<<<<<<
@@ -2768,7 +2852,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_4get_article_properties(struct __p
   return __pyx_r;
 }
 
-/* "pyzim.pyx":112
+/* "pyzim.pyx":117
  *     # Factory functions - Currently Cython can't use classmethods
  *     @staticmethod
  *     cdef from_read_article(zim.Article art):             # <<<<<<<<<<<<<<
@@ -2785,19 +2869,19 @@ static PyObject *__pyx_f_5pyzim_10ZimArticle_from_read_article(zim::Article __py
   ZimArticle *__pyx_t_2;
   __Pyx_RefNannySetupContext("from_read_article", 0);
 
-  /* "pyzim.pyx":121
+  /* "pyzim.pyx":130
  * 
  *         """
  *         cdef ZimArticle article = ZimArticle()             # <<<<<<<<<<<<<<
  *         # Construct ZimArticle (zim::writer namespace) from Article (zim namespace)
  *         c_zim_art = new zim.ZimArticle(art)
  */
-  __pyx_t_1 = __Pyx_PyObject_CallNoArg(((PyObject *)__pyx_ptype_5pyzim_ZimArticle)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 121, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_CallNoArg(((PyObject *)__pyx_ptype_5pyzim_ZimArticle)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 130, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_v_article = ((struct __pyx_obj_5pyzim_ZimArticle *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "pyzim.pyx":123
+  /* "pyzim.pyx":132
  *         cdef ZimArticle article = ZimArticle()
  *         # Construct ZimArticle (zim::writer namespace) from Article (zim namespace)
  *         c_zim_art = new zim.ZimArticle(art)             # <<<<<<<<<<<<<<
@@ -2808,22 +2892,22 @@ static PyObject *__pyx_f_5pyzim_10ZimArticle_from_read_article(zim::Article __py
     __pyx_t_2 = new ZimArticle(__pyx_v_art);
   } catch(...) {
     __Pyx_CppExn2PyErr();
-    __PYX_ERR(0, 123, __pyx_L1_error)
+    __PYX_ERR(0, 132, __pyx_L1_error)
   }
   __pyx_v_c_zim_art = __pyx_t_2;
 
-  /* "pyzim.pyx":124
+  /* "pyzim.pyx":133
  *         # Construct ZimArticle (zim::writer namespace) from Article (zim namespace)
  *         c_zim_art = new zim.ZimArticle(art)
  *         article.__setup(c_zim_art)             # <<<<<<<<<<<<<<
  *         return article
  * 
  */
-  __pyx_t_1 = ((struct __pyx_vtabstruct_5pyzim_ZimArticle *)__pyx_v_article->__pyx_vtab)->__pyx___setup(__pyx_v_article, __pyx_v_c_zim_art); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 124, __pyx_L1_error)
+  __pyx_t_1 = ((struct __pyx_vtabstruct_5pyzim_ZimArticle *)__pyx_v_article->__pyx_vtab)->__pyx___setup(__pyx_v_article, __pyx_v_c_zim_art); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 133, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "pyzim.pyx":125
+  /* "pyzim.pyx":134
  *         c_zim_art = new zim.ZimArticle(art)
  *         article.__setup(c_zim_art)
  *         return article             # <<<<<<<<<<<<<<
@@ -2835,7 +2919,7 @@ static PyObject *__pyx_f_5pyzim_10ZimArticle_from_read_article(zim::Article __py
   __pyx_r = ((PyObject *)__pyx_v_article);
   goto __pyx_L0;
 
-  /* "pyzim.pyx":112
+  /* "pyzim.pyx":117
  *     # Factory functions - Currently Cython can't use classmethods
  *     @staticmethod
  *     cdef from_read_article(zim.Article art):             # <<<<<<<<<<<<<<
@@ -2855,7 +2939,7 @@ static PyObject *__pyx_f_5pyzim_10ZimArticle_from_read_article(zim::Article __py
   return __pyx_r;
 }
 
-/* "pyzim.pyx":128
+/* "pyzim.pyx":137
  * 
  *     @property
  *     def namespace(self):             # <<<<<<<<<<<<<<
@@ -2883,7 +2967,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_9namespace___get__(struct __pyx_ob
   PyObject *__pyx_t_2 = NULL;
   __Pyx_RefNannySetupContext("__get__", 0);
 
-  /* "pyzim.pyx":130
+  /* "pyzim.pyx":139
  *     def namespace(self):
  *         """Get the article's namespace"""
  *         return chr(self.c_zim_article.ns)             # <<<<<<<<<<<<<<
@@ -2891,16 +2975,16 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_9namespace___get__(struct __pyx_ob
  *     @namespace.setter
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyInt_From_char(__pyx_v_self->c_zim_article->ns); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 130, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_char(__pyx_v_self->c_zim_article->ns); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 139, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_builtin_chr, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 130, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_builtin_chr, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 139, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
   goto __pyx_L0;
 
-  /* "pyzim.pyx":128
+  /* "pyzim.pyx":137
  * 
  *     @property
  *     def namespace(self):             # <<<<<<<<<<<<<<
@@ -2920,7 +3004,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_9namespace___get__(struct __pyx_ob
   return __pyx_r;
 }
 
-/* "pyzim.pyx":133
+/* "pyzim.pyx":142
  * 
  *     @namespace.setter
  *     def namespace(self,new_namespace):             # <<<<<<<<<<<<<<
@@ -2950,34 +3034,34 @@ static int __pyx_pf_5pyzim_10ZimArticle_9namespace_2__set__(struct __pyx_obj_5py
   long __pyx_t_4;
   __Pyx_RefNannySetupContext("__set__", 0);
 
-  /* "pyzim.pyx":135
+  /* "pyzim.pyx":144
  *     def namespace(self,new_namespace):
  *         """Set the article's namespace"""
  *         if new_namespace not in self.VALID_NAMESPACES:             # <<<<<<<<<<<<<<
  *             raise RuntimeError("Invalid Namespace")
  *         self.c_zim_article.ns = ord(new_namespace[0])
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_VALID_NAMESPACES); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 135, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_VALID_NAMESPACES); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 144, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = (__Pyx_PySequence_ContainsTF(__pyx_v_new_namespace, __pyx_t_1, Py_NE)); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 135, __pyx_L1_error)
+  __pyx_t_2 = (__Pyx_PySequence_ContainsTF(__pyx_v_new_namespace, __pyx_t_1, Py_NE)); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 144, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_t_3 = (__pyx_t_2 != 0);
   if (unlikely(__pyx_t_3)) {
 
-    /* "pyzim.pyx":136
+    /* "pyzim.pyx":145
  *         """Set the article's namespace"""
  *         if new_namespace not in self.VALID_NAMESPACES:
  *             raise RuntimeError("Invalid Namespace")             # <<<<<<<<<<<<<<
  *         self.c_zim_article.ns = ord(new_namespace[0])
  * 
  */
-    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 136, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 145, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_Raise(__pyx_t_1, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __PYX_ERR(0, 136, __pyx_L1_error)
+    __PYX_ERR(0, 145, __pyx_L1_error)
 
-    /* "pyzim.pyx":135
+    /* "pyzim.pyx":144
  *     def namespace(self,new_namespace):
  *         """Set the article's namespace"""
  *         if new_namespace not in self.VALID_NAMESPACES:             # <<<<<<<<<<<<<<
@@ -2986,20 +3070,20 @@ static int __pyx_pf_5pyzim_10ZimArticle_9namespace_2__set__(struct __pyx_obj_5py
  */
   }
 
-  /* "pyzim.pyx":137
+  /* "pyzim.pyx":146
  *         if new_namespace not in self.VALID_NAMESPACES:
  *             raise RuntimeError("Invalid Namespace")
  *         self.c_zim_article.ns = ord(new_namespace[0])             # <<<<<<<<<<<<<<
  * 
  *     @property
  */
-  __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_new_namespace, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 137, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_new_namespace, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 146, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_4 = __Pyx_PyObject_Ord(__pyx_t_1); if (unlikely(__pyx_t_4 == ((long)(long)(Py_UCS4)-1))) __PYX_ERR(0, 137, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_Ord(__pyx_t_1); if (unlikely(__pyx_t_4 == ((long)(long)(Py_UCS4)-1))) __PYX_ERR(0, 146, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_self->c_zim_article->ns = __pyx_t_4;
 
-  /* "pyzim.pyx":133
+  /* "pyzim.pyx":142
  * 
  *     @namespace.setter
  *     def namespace(self,new_namespace):             # <<<<<<<<<<<<<<
@@ -3019,7 +3103,7 @@ static int __pyx_pf_5pyzim_10ZimArticle_9namespace_2__set__(struct __pyx_obj_5py
   return __pyx_r;
 }
 
-/* "pyzim.pyx":140
+/* "pyzim.pyx":149
  * 
  *     @property
  *     def title(self):             # <<<<<<<<<<<<<<
@@ -3046,7 +3130,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_5title___get__(struct __pyx_obj_5p
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("__get__", 0);
 
-  /* "pyzim.pyx":142
+  /* "pyzim.pyx":151
  *     def title(self):
  *         """Get the article's title"""
  *         return self.c_zim_article.title.decode('UTF-8')             # <<<<<<<<<<<<<<
@@ -3054,13 +3138,13 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_5title___get__(struct __pyx_obj_5p
  *     @title.setter
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_decode_cpp_string(__pyx_v_self->c_zim_article->title, 0, PY_SSIZE_T_MAX, NULL, NULL, PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 142, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_decode_cpp_string(__pyx_v_self->c_zim_article->title, 0, PY_SSIZE_T_MAX, NULL, NULL, PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 151, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "pyzim.pyx":140
+  /* "pyzim.pyx":149
  * 
  *     @property
  *     def title(self):             # <<<<<<<<<<<<<<
@@ -3079,7 +3163,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_5title___get__(struct __pyx_obj_5p
   return __pyx_r;
 }
 
-/* "pyzim.pyx":145
+/* "pyzim.pyx":154
  * 
  *     @title.setter
  *     def title(self, new_title):             # <<<<<<<<<<<<<<
@@ -3109,14 +3193,14 @@ static int __pyx_pf_5pyzim_10ZimArticle_5title_2__set__(struct __pyx_obj_5pyzim_
   std::string __pyx_t_4;
   __Pyx_RefNannySetupContext("__set__", 0);
 
-  /* "pyzim.pyx":147
+  /* "pyzim.pyx":156
  *     def title(self, new_title):
  *         """Set the article's namespace"""
  *         self.c_zim_article.title = new_title.encode('UTF-8')             # <<<<<<<<<<<<<<
  * 
  *     @property
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_new_title, __pyx_n_s_encode); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 147, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_new_title, __pyx_n_s_encode); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 156, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_3 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_2))) {
@@ -3130,14 +3214,14 @@ static int __pyx_pf_5pyzim_10ZimArticle_5title_2__set__(struct __pyx_obj_5pyzim_
   }
   __pyx_t_1 = (__pyx_t_3) ? __Pyx_PyObject_Call2Args(__pyx_t_2, __pyx_t_3, __pyx_kp_u_UTF_8) : __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_kp_u_UTF_8);
   __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 147, __pyx_L1_error)
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 156, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_4 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 147, __pyx_L1_error)
+  __pyx_t_4 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 156, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_self->c_zim_article->title = __pyx_t_4;
 
-  /* "pyzim.pyx":145
+  /* "pyzim.pyx":154
  * 
  *     @title.setter
  *     def title(self, new_title):             # <<<<<<<<<<<<<<
@@ -3159,12 +3243,12 @@ static int __pyx_pf_5pyzim_10ZimArticle_5title_2__set__(struct __pyx_obj_5pyzim_
   return __pyx_r;
 }
 
-/* "pyzim.pyx":150
+/* "pyzim.pyx":159
  * 
  *     @property
  *     def content(self):             # <<<<<<<<<<<<<<
  *         """Get the article's content"""
- *         return self.c_zim_article.content.decode('UTF-8')
+ *         data = self.c_zim_article.content
  */
 
 /* Python wrapper */
@@ -3181,36 +3265,146 @@ static PyObject *__pyx_pw_5pyzim_10ZimArticle_7content_1__get__(PyObject *__pyx_
 }
 
 static PyObject *__pyx_pf_5pyzim_10ZimArticle_7content___get__(struct __pyx_obj_5pyzim_ZimArticle *__pyx_v_self) {
+  std::string __pyx_v_data;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
-  PyObject *__pyx_t_1 = NULL;
+  std::string __pyx_t_1;
+  PyObject *__pyx_t_2 = NULL;
+  PyObject *__pyx_t_3 = NULL;
+  PyObject *__pyx_t_4 = NULL;
+  PyObject *__pyx_t_5 = NULL;
+  int __pyx_t_6;
+  PyObject *__pyx_t_7 = NULL;
+  PyObject *__pyx_t_8 = NULL;
+  PyObject *__pyx_t_9 = NULL;
   __Pyx_RefNannySetupContext("__get__", 0);
 
-  /* "pyzim.pyx":152
+  /* "pyzim.pyx":161
  *     def content(self):
  *         """Get the article's content"""
- *         return self.c_zim_article.content.decode('UTF-8')             # <<<<<<<<<<<<<<
+ *         data = self.c_zim_article.content             # <<<<<<<<<<<<<<
+ *         try:
+ *             return data.decode('UTF-8')
+ */
+  __pyx_t_1 = __pyx_v_self->c_zim_article->content;
+  __pyx_v_data = __pyx_t_1;
+
+  /* "pyzim.pyx":162
+ *         """Get the article's content"""
+ *         data = self.c_zim_article.content
+ *         try:             # <<<<<<<<<<<<<<
+ *             return data.decode('UTF-8')
+ *         except UnicodeDecodeError:
+ */
+  {
+    __Pyx_PyThreadState_declare
+    __Pyx_PyThreadState_assign
+    __Pyx_ExceptionSave(&__pyx_t_2, &__pyx_t_3, &__pyx_t_4);
+    __Pyx_XGOTREF(__pyx_t_2);
+    __Pyx_XGOTREF(__pyx_t_3);
+    __Pyx_XGOTREF(__pyx_t_4);
+    /*try:*/ {
+
+      /* "pyzim.pyx":163
+ *         data = self.c_zim_article.content
+ *         try:
+ *             return data.decode('UTF-8')             # <<<<<<<<<<<<<<
+ *         except UnicodeDecodeError:
+ *             return data
+ */
+      __Pyx_XDECREF(__pyx_r);
+      __pyx_t_5 = __Pyx_decode_cpp_string(__pyx_v_data, 0, PY_SSIZE_T_MAX, NULL, NULL, PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 163, __pyx_L3_error)
+      __Pyx_GOTREF(__pyx_t_5);
+      __pyx_r = __pyx_t_5;
+      __pyx_t_5 = 0;
+      goto __pyx_L7_try_return;
+
+      /* "pyzim.pyx":162
+ *         """Get the article's content"""
+ *         data = self.c_zim_article.content
+ *         try:             # <<<<<<<<<<<<<<
+ *             return data.decode('UTF-8')
+ *         except UnicodeDecodeError:
+ */
+    }
+    __pyx_L3_error:;
+    __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
+
+    /* "pyzim.pyx":164
+ *         try:
+ *             return data.decode('UTF-8')
+ *         except UnicodeDecodeError:             # <<<<<<<<<<<<<<
+ *             return data
+ * 
+ */
+    __pyx_t_6 = __Pyx_PyErr_ExceptionMatches(__pyx_builtin_UnicodeDecodeError);
+    if (__pyx_t_6) {
+      __Pyx_AddTraceback("pyzim.ZimArticle.content.__get__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+      if (__Pyx_GetException(&__pyx_t_5, &__pyx_t_7, &__pyx_t_8) < 0) __PYX_ERR(0, 164, __pyx_L5_except_error)
+      __Pyx_GOTREF(__pyx_t_5);
+      __Pyx_GOTREF(__pyx_t_7);
+      __Pyx_GOTREF(__pyx_t_8);
+
+      /* "pyzim.pyx":165
+ *             return data.decode('UTF-8')
+ *         except UnicodeDecodeError:
+ *             return data             # <<<<<<<<<<<<<<
  * 
  *     @content.setter
  */
-  __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_decode_cpp_string(__pyx_v_self->c_zim_article->content, 0, PY_SSIZE_T_MAX, NULL, NULL, PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 152, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_r = __pyx_t_1;
-  __pyx_t_1 = 0;
-  goto __pyx_L0;
+      __Pyx_XDECREF(__pyx_r);
+      __pyx_t_9 = __pyx_convert_PyBytes_string_to_py_std__in_string(__pyx_v_data); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 165, __pyx_L5_except_error)
+      __Pyx_GOTREF(__pyx_t_9);
+      __pyx_r = __pyx_t_9;
+      __pyx_t_9 = 0;
+      __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+      __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+      __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+      goto __pyx_L6_except_return;
+    }
+    goto __pyx_L5_except_error;
+    __pyx_L5_except_error:;
 
-  /* "pyzim.pyx":150
+    /* "pyzim.pyx":162
+ *         """Get the article's content"""
+ *         data = self.c_zim_article.content
+ *         try:             # <<<<<<<<<<<<<<
+ *             return data.decode('UTF-8')
+ *         except UnicodeDecodeError:
+ */
+    __Pyx_XGIVEREF(__pyx_t_2);
+    __Pyx_XGIVEREF(__pyx_t_3);
+    __Pyx_XGIVEREF(__pyx_t_4);
+    __Pyx_ExceptionReset(__pyx_t_2, __pyx_t_3, __pyx_t_4);
+    goto __pyx_L1_error;
+    __pyx_L7_try_return:;
+    __Pyx_XGIVEREF(__pyx_t_2);
+    __Pyx_XGIVEREF(__pyx_t_3);
+    __Pyx_XGIVEREF(__pyx_t_4);
+    __Pyx_ExceptionReset(__pyx_t_2, __pyx_t_3, __pyx_t_4);
+    goto __pyx_L0;
+    __pyx_L6_except_return:;
+    __Pyx_XGIVEREF(__pyx_t_2);
+    __Pyx_XGIVEREF(__pyx_t_3);
+    __Pyx_XGIVEREF(__pyx_t_4);
+    __Pyx_ExceptionReset(__pyx_t_2, __pyx_t_3, __pyx_t_4);
+    goto __pyx_L0;
+  }
+
+  /* "pyzim.pyx":159
  * 
  *     @property
  *     def content(self):             # <<<<<<<<<<<<<<
  *         """Get the article's content"""
- *         return self.c_zim_article.content.decode('UTF-8')
+ *         data = self.c_zim_article.content
  */
 
   /* function exit code */
   __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_5);
+  __Pyx_XDECREF(__pyx_t_7);
+  __Pyx_XDECREF(__pyx_t_8);
+  __Pyx_XDECREF(__pyx_t_9);
   __Pyx_AddTraceback("pyzim.ZimArticle.content.__get__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
@@ -3219,12 +3413,12 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_7content___get__(struct __pyx_obj_
   return __pyx_r;
 }
 
-/* "pyzim.pyx":155
+/* "pyzim.pyx":168
  * 
  *     @content.setter
  *     def content(self, new_content):             # <<<<<<<<<<<<<<
  *         """Set the article's content"""
- *         self.c_zim_article.content = new_content.encode('UTF-8')
+ *         if isinstance(new_content,str):
  */
 
 /* Python wrapper */
@@ -3243,55 +3437,91 @@ static int __pyx_pw_5pyzim_10ZimArticle_7content_3__set__(PyObject *__pyx_v_self
 static int __pyx_pf_5pyzim_10ZimArticle_7content_2__set__(struct __pyx_obj_5pyzim_ZimArticle *__pyx_v_self, PyObject *__pyx_v_new_content) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
-  PyObject *__pyx_t_1 = NULL;
-  PyObject *__pyx_t_2 = NULL;
+  int __pyx_t_1;
+  int __pyx_t_2;
   PyObject *__pyx_t_3 = NULL;
-  std::string __pyx_t_4;
+  PyObject *__pyx_t_4 = NULL;
+  PyObject *__pyx_t_5 = NULL;
+  std::string __pyx_t_6;
   __Pyx_RefNannySetupContext("__set__", 0);
 
-  /* "pyzim.pyx":157
+  /* "pyzim.pyx":170
  *     def content(self, new_content):
  *         """Set the article's content"""
- *         self.c_zim_article.content = new_content.encode('UTF-8')             # <<<<<<<<<<<<<<
+ *         if isinstance(new_content,str):             # <<<<<<<<<<<<<<
+ *             self.c_zim_article.content = new_content.encode('UTF-8')
+ *         else:
+ */
+  __pyx_t_1 = PyUnicode_Check(__pyx_v_new_content); 
+  __pyx_t_2 = (__pyx_t_1 != 0);
+  if (__pyx_t_2) {
+
+    /* "pyzim.pyx":171
+ *         """Set the article's content"""
+ *         if isinstance(new_content,str):
+ *             self.c_zim_article.content = new_content.encode('UTF-8')             # <<<<<<<<<<<<<<
+ *         else:
+ *             self.c_zim_article.content = new_content
+ */
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_new_content, __pyx_n_s_encode); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 171, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
+    __pyx_t_5 = NULL;
+    if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_4))) {
+      __pyx_t_5 = PyMethod_GET_SELF(__pyx_t_4);
+      if (likely(__pyx_t_5)) {
+        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_4);
+        __Pyx_INCREF(__pyx_t_5);
+        __Pyx_INCREF(function);
+        __Pyx_DECREF_SET(__pyx_t_4, function);
+      }
+    }
+    __pyx_t_3 = (__pyx_t_5) ? __Pyx_PyObject_Call2Args(__pyx_t_4, __pyx_t_5, __pyx_kp_u_UTF_8) : __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_kp_u_UTF_8);
+    __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
+    if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 171, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    __pyx_t_6 = __pyx_convert_string_from_py_std__in_string(__pyx_t_3); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 171, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __pyx_v_self->c_zim_article->content = __pyx_t_6;
+
+    /* "pyzim.pyx":170
+ *     def content(self, new_content):
+ *         """Set the article's content"""
+ *         if isinstance(new_content,str):             # <<<<<<<<<<<<<<
+ *             self.c_zim_article.content = new_content.encode('UTF-8')
+ *         else:
+ */
+    goto __pyx_L3;
+  }
+
+  /* "pyzim.pyx":173
+ *             self.c_zim_article.content = new_content.encode('UTF-8')
+ *         else:
+ *             self.c_zim_article.content = new_content             # <<<<<<<<<<<<<<
  * 
  *     @property
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_new_content, __pyx_n_s_encode); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 157, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = NULL;
-  if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_2))) {
-    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_2);
-    if (likely(__pyx_t_3)) {
-      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_2);
-      __Pyx_INCREF(__pyx_t_3);
-      __Pyx_INCREF(function);
-      __Pyx_DECREF_SET(__pyx_t_2, function);
-    }
+  /*else*/ {
+    __pyx_t_6 = __pyx_convert_string_from_py_std__in_string(__pyx_v_new_content); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 173, __pyx_L1_error)
+    __pyx_v_self->c_zim_article->content = __pyx_t_6;
   }
-  __pyx_t_1 = (__pyx_t_3) ? __Pyx_PyObject_Call2Args(__pyx_t_2, __pyx_t_3, __pyx_kp_u_UTF_8) : __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_kp_u_UTF_8);
-  __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 157, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_4 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 157, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_v_self->c_zim_article->content = __pyx_t_4;
+  __pyx_L3:;
 
-  /* "pyzim.pyx":155
+  /* "pyzim.pyx":168
  * 
  *     @content.setter
  *     def content(self, new_content):             # <<<<<<<<<<<<<<
  *         """Set the article's content"""
- *         self.c_zim_article.content = new_content.encode('UTF-8')
+ *         if isinstance(new_content,str):
  */
 
   /* function exit code */
   __pyx_r = 0;
   goto __pyx_L0;
   __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_XDECREF(__pyx_t_5);
   __Pyx_AddTraceback("pyzim.ZimArticle.content.__set__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
@@ -3299,7 +3529,7 @@ static int __pyx_pf_5pyzim_10ZimArticle_7content_2__set__(struct __pyx_obj_5pyzi
   return __pyx_r;
 }
 
-/* "pyzim.pyx":160
+/* "pyzim.pyx":176
  * 
  *     @property
  *     def longurl(self):             # <<<<<<<<<<<<<<
@@ -3326,7 +3556,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_7longurl___get__(struct __pyx_obj_
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("__get__", 0);
 
-  /* "pyzim.pyx":162
+  /* "pyzim.pyx":178
  *     def longurl(self):
  *         """Get the article's long url i.e {NAMESPACE}/{url}"""
  *         return self.c_zim_article.getUrl().getLongUrl().decode("UTF-8", "strict")             # <<<<<<<<<<<<<<
@@ -3334,13 +3564,13 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_7longurl___get__(struct __pyx_obj_
  *     @property
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_decode_cpp_string(__pyx_v_self->c_zim_article->getUrl().getLongUrl(), 0, PY_SSIZE_T_MAX, NULL, NULL, PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 162, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_decode_cpp_string(__pyx_v_self->c_zim_article->getUrl().getLongUrl(), 0, PY_SSIZE_T_MAX, NULL, NULL, PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 178, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "pyzim.pyx":160
+  /* "pyzim.pyx":176
  * 
  *     @property
  *     def longurl(self):             # <<<<<<<<<<<<<<
@@ -3359,7 +3589,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_7longurl___get__(struct __pyx_obj_
   return __pyx_r;
 }
 
-/* "pyzim.pyx":165
+/* "pyzim.pyx":181
  * 
  *     @property
  *     def url(self):             # <<<<<<<<<<<<<<
@@ -3386,7 +3616,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_3url___get__(struct __pyx_obj_5pyz
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("__get__", 0);
 
-  /* "pyzim.pyx":167
+  /* "pyzim.pyx":183
  *     def url(self):
  *         """Get the article's url"""
  *         return self.c_zim_article.url.decode('UTF-8')             # <<<<<<<<<<<<<<
@@ -3394,13 +3624,13 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_3url___get__(struct __pyx_obj_5pyz
  *     @url.setter
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_decode_cpp_string(__pyx_v_self->c_zim_article->url, 0, PY_SSIZE_T_MAX, NULL, NULL, PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 167, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_decode_cpp_string(__pyx_v_self->c_zim_article->url, 0, PY_SSIZE_T_MAX, NULL, NULL, PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 183, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "pyzim.pyx":165
+  /* "pyzim.pyx":181
  * 
  *     @property
  *     def url(self):             # <<<<<<<<<<<<<<
@@ -3419,7 +3649,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_3url___get__(struct __pyx_obj_5pyz
   return __pyx_r;
 }
 
-/* "pyzim.pyx":170
+/* "pyzim.pyx":186
  * 
  *     @url.setter
  *     def url(self, new_url):             # <<<<<<<<<<<<<<
@@ -3449,14 +3679,14 @@ static int __pyx_pf_5pyzim_10ZimArticle_3url_2__set__(struct __pyx_obj_5pyzim_Zi
   std::string __pyx_t_4;
   __Pyx_RefNannySetupContext("__set__", 0);
 
-  /* "pyzim.pyx":172
+  /* "pyzim.pyx":188
  *     def url(self, new_url):
  *         """Set the article's url"""
  *         self.c_zim_article.url = new_url.encode('UTF-8')             # <<<<<<<<<<<<<<
  * 
  *     @property
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_new_url, __pyx_n_s_encode); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 172, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_new_url, __pyx_n_s_encode); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 188, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_3 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_2))) {
@@ -3470,14 +3700,14 @@ static int __pyx_pf_5pyzim_10ZimArticle_3url_2__set__(struct __pyx_obj_5pyzim_Zi
   }
   __pyx_t_1 = (__pyx_t_3) ? __Pyx_PyObject_Call2Args(__pyx_t_2, __pyx_t_3, __pyx_kp_u_UTF_8) : __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_kp_u_UTF_8);
   __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 172, __pyx_L1_error)
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 188, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_4 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 172, __pyx_L1_error)
+  __pyx_t_4 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 188, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_self->c_zim_article->url = __pyx_t_4;
 
-  /* "pyzim.pyx":170
+  /* "pyzim.pyx":186
  * 
  *     @url.setter
  *     def url(self, new_url):             # <<<<<<<<<<<<<<
@@ -3499,7 +3729,7 @@ static int __pyx_pf_5pyzim_10ZimArticle_3url_2__set__(struct __pyx_obj_5pyzim_Zi
   return __pyx_r;
 }
 
-/* "pyzim.pyx":175
+/* "pyzim.pyx":191
  * 
  *     @property
  *     def redirect_longurl(self):             # <<<<<<<<<<<<<<
@@ -3526,7 +3756,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_16redirect_longurl___get__(struct 
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("__get__", 0);
 
-  /* "pyzim.pyx":177
+  /* "pyzim.pyx":193
  *     def redirect_longurl(self):
  *         """Get the article's redirect long url i.e {NAMESPACE}/{redirect_url}"""
  *         return self.c_zim_article.getRedirectUrl().getLongUrl().decode("UTF-8", "strict")             # <<<<<<<<<<<<<<
@@ -3534,13 +3764,13 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_16redirect_longurl___get__(struct 
  *     @property
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_decode_cpp_string(__pyx_v_self->c_zim_article->getRedirectUrl().getLongUrl(), 0, PY_SSIZE_T_MAX, NULL, NULL, PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 177, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_decode_cpp_string(__pyx_v_self->c_zim_article->getRedirectUrl().getLongUrl(), 0, PY_SSIZE_T_MAX, NULL, NULL, PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 193, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "pyzim.pyx":175
+  /* "pyzim.pyx":191
  * 
  *     @property
  *     def redirect_longurl(self):             # <<<<<<<<<<<<<<
@@ -3559,7 +3789,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_16redirect_longurl___get__(struct 
   return __pyx_r;
 }
 
-/* "pyzim.pyx":180
+/* "pyzim.pyx":196
  * 
  *     @property
  *     def redirect_url(self):             # <<<<<<<<<<<<<<
@@ -3586,7 +3816,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_12redirect_url___get__(struct __py
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("__get__", 0);
 
-  /* "pyzim.pyx":182
+  /* "pyzim.pyx":198
  *     def redirect_url(self):
  *         """Get the article's redirect url"""
  *         return self.c_zim_article.redirectUrl.decode('UTF-8')             # <<<<<<<<<<<<<<
@@ -3594,13 +3824,13 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_12redirect_url___get__(struct __py
  *     @redirect_url.setter
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_decode_cpp_string(__pyx_v_self->c_zim_article->redirectUrl, 0, PY_SSIZE_T_MAX, NULL, NULL, PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 182, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_decode_cpp_string(__pyx_v_self->c_zim_article->redirectUrl, 0, PY_SSIZE_T_MAX, NULL, NULL, PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 198, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "pyzim.pyx":180
+  /* "pyzim.pyx":196
  * 
  *     @property
  *     def redirect_url(self):             # <<<<<<<<<<<<<<
@@ -3619,7 +3849,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_12redirect_url___get__(struct __py
   return __pyx_r;
 }
 
-/* "pyzim.pyx":185
+/* "pyzim.pyx":201
  * 
  *     @redirect_url.setter
  *     def redirect_url(self, new_redirect_url):             # <<<<<<<<<<<<<<
@@ -3649,14 +3879,14 @@ static int __pyx_pf_5pyzim_10ZimArticle_12redirect_url_2__set__(struct __pyx_obj
   std::string __pyx_t_4;
   __Pyx_RefNannySetupContext("__set__", 0);
 
-  /* "pyzim.pyx":187
+  /* "pyzim.pyx":203
  *     def redirect_url(self, new_redirect_url):
  *         """Set the article's redirect url"""
  *         self.c_zim_article.redirectUrl = new_redirect_url.encode('UTF-8')             # <<<<<<<<<<<<<<
  * 
  *     @property
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_new_redirect_url, __pyx_n_s_encode); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 187, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_new_redirect_url, __pyx_n_s_encode); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 203, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_3 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_2))) {
@@ -3670,14 +3900,14 @@ static int __pyx_pf_5pyzim_10ZimArticle_12redirect_url_2__set__(struct __pyx_obj
   }
   __pyx_t_1 = (__pyx_t_3) ? __Pyx_PyObject_Call2Args(__pyx_t_2, __pyx_t_3, __pyx_kp_u_UTF_8) : __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_kp_u_UTF_8);
   __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 187, __pyx_L1_error)
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 203, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_4 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 187, __pyx_L1_error)
+  __pyx_t_4 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 203, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_self->c_zim_article->redirectUrl = __pyx_t_4;
 
-  /* "pyzim.pyx":185
+  /* "pyzim.pyx":201
  * 
  *     @redirect_url.setter
  *     def redirect_url(self, new_redirect_url):             # <<<<<<<<<<<<<<
@@ -3699,7 +3929,7 @@ static int __pyx_pf_5pyzim_10ZimArticle_12redirect_url_2__set__(struct __pyx_obj
   return __pyx_r;
 }
 
-/* "pyzim.pyx":190
+/* "pyzim.pyx":206
  * 
  *     @property
  *     def mimetype(self):             # <<<<<<<<<<<<<<
@@ -3726,7 +3956,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_8mimetype___get__(struct __pyx_obj
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("__get__", 0);
 
-  /* "pyzim.pyx":192
+  /* "pyzim.pyx":208
  *     def mimetype(self):
  *         """Get the article's mimetype"""
  *         return self.c_zim_article.mimeType.decode('UTF-8')             # <<<<<<<<<<<<<<
@@ -3734,13 +3964,13 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_8mimetype___get__(struct __pyx_obj
  *     @mimetype.setter
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_decode_cpp_string(__pyx_v_self->c_zim_article->mimeType, 0, PY_SSIZE_T_MAX, NULL, NULL, PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 192, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_decode_cpp_string(__pyx_v_self->c_zim_article->mimeType, 0, PY_SSIZE_T_MAX, NULL, NULL, PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 208, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "pyzim.pyx":190
+  /* "pyzim.pyx":206
  * 
  *     @property
  *     def mimetype(self):             # <<<<<<<<<<<<<<
@@ -3759,7 +3989,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_8mimetype___get__(struct __pyx_obj
   return __pyx_r;
 }
 
-/* "pyzim.pyx":195
+/* "pyzim.pyx":211
  * 
  *     @mimetype.setter
  *     def mimetype(self, new_mimetype):             # <<<<<<<<<<<<<<
@@ -3789,14 +4019,14 @@ static int __pyx_pf_5pyzim_10ZimArticle_8mimetype_2__set__(struct __pyx_obj_5pyz
   std::string __pyx_t_4;
   __Pyx_RefNannySetupContext("__set__", 0);
 
-  /* "pyzim.pyx":197
+  /* "pyzim.pyx":213
  *     def mimetype(self, new_mimetype):
  *         """Set the article's mimetype"""
  *         self.c_zim_article.mimeType = new_mimetype.encode('UTF-8')             # <<<<<<<<<<<<<<
  * 
  *     @property
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_new_mimetype, __pyx_n_s_encode); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 197, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_new_mimetype, __pyx_n_s_encode); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 213, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_3 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_2))) {
@@ -3810,14 +4040,14 @@ static int __pyx_pf_5pyzim_10ZimArticle_8mimetype_2__set__(struct __pyx_obj_5pyz
   }
   __pyx_t_1 = (__pyx_t_3) ? __Pyx_PyObject_Call2Args(__pyx_t_2, __pyx_t_3, __pyx_kp_u_UTF_8) : __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_kp_u_UTF_8);
   __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 197, __pyx_L1_error)
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 213, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_4 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 197, __pyx_L1_error)
+  __pyx_t_4 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 213, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_self->c_zim_article->mimeType = __pyx_t_4;
 
-  /* "pyzim.pyx":195
+  /* "pyzim.pyx":211
  * 
  *     @mimetype.setter
  *     def mimetype(self, new_mimetype):             # <<<<<<<<<<<<<<
@@ -3839,7 +4069,7 @@ static int __pyx_pf_5pyzim_10ZimArticle_8mimetype_2__set__(struct __pyx_obj_5pyz
   return __pyx_r;
 }
 
-/* "pyzim.pyx":200
+/* "pyzim.pyx":216
  * 
  *     @property
  *     def is_redirect(self):             # <<<<<<<<<<<<<<
@@ -3866,7 +4096,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_11is_redirect___get__(struct __pyx
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("__get__", 0);
 
-  /* "pyzim.pyx":202
+  /* "pyzim.pyx":218
  *     def is_redirect(self):
  *         """Get if the article is a redirect"""
  *         return self.c_zim_article.isRedirect()             # <<<<<<<<<<<<<<
@@ -3874,13 +4104,13 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_11is_redirect___get__(struct __pyx
  *     @property
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyBool_FromLong(__pyx_v_self->c_zim_article->isRedirect()); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 202, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyBool_FromLong(__pyx_v_self->c_zim_article->isRedirect()); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 218, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "pyzim.pyx":200
+  /* "pyzim.pyx":216
  * 
  *     @property
  *     def is_redirect(self):             # <<<<<<<<<<<<<<
@@ -3899,7 +4129,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_11is_redirect___get__(struct __pyx
   return __pyx_r;
 }
 
-/* "pyzim.pyx":205
+/* "pyzim.pyx":221
  * 
  *     @property
  *     def can_write(self):             # <<<<<<<<<<<<<<
@@ -3928,40 +4158,40 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_9can_write___get__(struct __pyx_ob
   int __pyx_t_3;
   __Pyx_RefNannySetupContext("__get__", 0);
 
-  /* "pyzim.pyx":209
+  /* "pyzim.pyx":225
  *         # An article must have at least non empty url to be writable
  *         # Content can be empty if article is a redirect
  *         if self.longurl and (self.content or self.is_redirect):             # <<<<<<<<<<<<<<
  *             self._can_write = True
  *         else:
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_longurl); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 209, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_longurl); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 225, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 209, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 225, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   if (__pyx_t_3) {
   } else {
     __pyx_t_1 = __pyx_t_3;
     goto __pyx_L4_bool_binop_done;
   }
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_content); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 209, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_content); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 225, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 209, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 225, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   if (!__pyx_t_3) {
   } else {
     __pyx_t_1 = __pyx_t_3;
     goto __pyx_L4_bool_binop_done;
   }
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_is_redirect); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 209, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_is_redirect); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 225, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 209, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 225, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_t_1 = __pyx_t_3;
   __pyx_L4_bool_binop_done:;
   if (__pyx_t_1) {
 
-    /* "pyzim.pyx":210
+    /* "pyzim.pyx":226
  *         # Content can be empty if article is a redirect
  *         if self.longurl and (self.content or self.is_redirect):
  *             self._can_write = True             # <<<<<<<<<<<<<<
@@ -3974,7 +4204,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_9can_write___get__(struct __pyx_ob
     __Pyx_DECREF(__pyx_v_self->_can_write);
     __pyx_v_self->_can_write = Py_True;
 
-    /* "pyzim.pyx":209
+    /* "pyzim.pyx":225
  *         # An article must have at least non empty url to be writable
  *         # Content can be empty if article is a redirect
  *         if self.longurl and (self.content or self.is_redirect):             # <<<<<<<<<<<<<<
@@ -3984,7 +4214,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_9can_write___get__(struct __pyx_ob
     goto __pyx_L3;
   }
 
-  /* "pyzim.pyx":212
+  /* "pyzim.pyx":228
  *             self._can_write = True
  *         else:
  *             self._can_write = False             # <<<<<<<<<<<<<<
@@ -4000,7 +4230,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_9can_write___get__(struct __pyx_ob
   }
   __pyx_L3:;
 
-  /* "pyzim.pyx":213
+  /* "pyzim.pyx":229
  *         else:
  *             self._can_write = False
  *         return self._can_write             # <<<<<<<<<<<<<<
@@ -4012,7 +4242,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_9can_write___get__(struct __pyx_ob
   __pyx_r = __pyx_v_self->_can_write;
   goto __pyx_L0;
 
-  /* "pyzim.pyx":205
+  /* "pyzim.pyx":221
  * 
  *     @property
  *     def can_write(self):             # <<<<<<<<<<<<<<
@@ -4138,7 +4368,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimArticle_8__setstate_cython__(CYTHON_UNUSED
   return __pyx_r;
 }
 
-/* "pyzim.pyx":241
+/* "pyzim.pyx":270
  *         "Scraper"]
  * 
  *     def __cinit__(self, str filename):             # <<<<<<<<<<<<<<
@@ -4172,7 +4402,7 @@ static int __pyx_pw_5pyzim_9ZimReader_1__cinit__(PyObject *__pyx_v_self, PyObjec
         else goto __pyx_L5_argtuple_error;
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__cinit__") < 0)) __PYX_ERR(0, 241, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__cinit__") < 0)) __PYX_ERR(0, 270, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 1) {
       goto __pyx_L5_argtuple_error;
@@ -4183,13 +4413,13 @@ static int __pyx_pw_5pyzim_9ZimReader_1__cinit__(PyObject *__pyx_v_self, PyObjec
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 1, 1, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 241, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 1, 1, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 270, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("pyzim.ZimReader.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return -1;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_filename), (&PyUnicode_Type), 1, "filename", 1))) __PYX_ERR(0, 241, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_filename), (&PyUnicode_Type), 1, "filename", 1))) __PYX_ERR(0, 270, __pyx_L1_error)
   __pyx_r = __pyx_pf_5pyzim_9ZimReader___cinit__(((struct __pyx_obj_5pyzim_ZimReader *)__pyx_v_self), __pyx_v_filename);
 
   /* function exit code */
@@ -4210,7 +4440,7 @@ static int __pyx_pf_5pyzim_9ZimReader___cinit__(struct __pyx_obj_5pyzim_ZimReade
   ZimSearch *__pyx_t_4;
   __Pyx_RefNannySetupContext("__cinit__", 0);
 
-  /* "pyzim.pyx":242
+  /* "pyzim.pyx":271
  * 
  *     def __cinit__(self, str filename):
  *         self.c_file = new zim.File(filename.encode('UTF-8'))             # <<<<<<<<<<<<<<
@@ -4219,21 +4449,21 @@ static int __pyx_pf_5pyzim_9ZimReader___cinit__(struct __pyx_obj_5pyzim_ZimReade
  */
   if (unlikely(__pyx_v_filename == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%.30s'", "encode");
-    __PYX_ERR(0, 242, __pyx_L1_error)
+    __PYX_ERR(0, 271, __pyx_L1_error)
   }
-  __pyx_t_1 = PyUnicode_AsUTF8String(__pyx_v_filename); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 242, __pyx_L1_error)
+  __pyx_t_1 = PyUnicode_AsUTF8String(__pyx_v_filename); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 271, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 242, __pyx_L1_error)
+  __pyx_t_2 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 271, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   try {
     __pyx_t_3 = new zim::File(__pyx_t_2);
   } catch(...) {
     __Pyx_CppExn2PyErr();
-    __PYX_ERR(0, 242, __pyx_L1_error)
+    __PYX_ERR(0, 271, __pyx_L1_error)
   }
   __pyx_v_self->c_file = __pyx_t_3;
 
-  /* "pyzim.pyx":243
+  /* "pyzim.pyx":272
  *     def __cinit__(self, str filename):
  *         self.c_file = new zim.File(filename.encode('UTF-8'))
  *         self.c_search = new zim.ZimSearch(self.c_file)             # <<<<<<<<<<<<<<
@@ -4244,18 +4474,18 @@ static int __pyx_pf_5pyzim_9ZimReader___cinit__(struct __pyx_obj_5pyzim_ZimReade
     __pyx_t_4 = new ZimSearch(__pyx_v_self->c_file);
   } catch(...) {
     __Pyx_CppExn2PyErr();
-    __PYX_ERR(0, 243, __pyx_L1_error)
+    __PYX_ERR(0, 272, __pyx_L1_error)
   }
   __pyx_v_self->c_search = __pyx_t_4;
 
-  /* "pyzim.pyx":245
+  /* "pyzim.pyx":274
  *         self.c_search = new zim.ZimSearch(self.c_file)
  * 
  *         self._filename = self.c_file.getFilename().decode("UTF-8", "strict")             # <<<<<<<<<<<<<<
  * 
  *     def __dealloc__(self):
  */
-  __pyx_t_1 = __Pyx_decode_cpp_string(__pyx_v_self->c_file->getFilename(), 0, PY_SSIZE_T_MAX, NULL, NULL, PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 245, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_decode_cpp_string(__pyx_v_self->c_file->getFilename(), 0, PY_SSIZE_T_MAX, NULL, NULL, PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 274, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_1);
   __Pyx_GOTREF(__pyx_v_self->_filename);
@@ -4263,7 +4493,7 @@ static int __pyx_pf_5pyzim_9ZimReader___cinit__(struct __pyx_obj_5pyzim_ZimReade
   __pyx_v_self->_filename = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "pyzim.pyx":241
+  /* "pyzim.pyx":270
  *         "Scraper"]
  * 
  *     def __cinit__(self, str filename):             # <<<<<<<<<<<<<<
@@ -4283,7 +4513,7 @@ static int __pyx_pf_5pyzim_9ZimReader___cinit__(struct __pyx_obj_5pyzim_ZimReade
   return __pyx_r;
 }
 
-/* "pyzim.pyx":247
+/* "pyzim.pyx":276
  *         self._filename = self.c_file.getFilename().decode("UTF-8", "strict")
  * 
  *     def __dealloc__(self):             # <<<<<<<<<<<<<<
@@ -4307,7 +4537,7 @@ static void __pyx_pf_5pyzim_9ZimReader_2__dealloc__(struct __pyx_obj_5pyzim_ZimR
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("__dealloc__", 0);
 
-  /* "pyzim.pyx":248
+  /* "pyzim.pyx":277
  * 
  *     def __dealloc__(self):
  *         if self.c_file != NULL:             # <<<<<<<<<<<<<<
@@ -4317,7 +4547,7 @@ static void __pyx_pf_5pyzim_9ZimReader_2__dealloc__(struct __pyx_obj_5pyzim_ZimR
   __pyx_t_1 = ((__pyx_v_self->c_file != NULL) != 0);
   if (__pyx_t_1) {
 
-    /* "pyzim.pyx":249
+    /* "pyzim.pyx":278
  *     def __dealloc__(self):
  *         if self.c_file != NULL:
  *             del self.c_file             # <<<<<<<<<<<<<<
@@ -4326,7 +4556,7 @@ static void __pyx_pf_5pyzim_9ZimReader_2__dealloc__(struct __pyx_obj_5pyzim_ZimR
  */
     delete __pyx_v_self->c_file;
 
-    /* "pyzim.pyx":248
+    /* "pyzim.pyx":277
  * 
  *     def __dealloc__(self):
  *         if self.c_file != NULL:             # <<<<<<<<<<<<<<
@@ -4335,7 +4565,7 @@ static void __pyx_pf_5pyzim_9ZimReader_2__dealloc__(struct __pyx_obj_5pyzim_ZimR
  */
   }
 
-  /* "pyzim.pyx":247
+  /* "pyzim.pyx":276
  *         self._filename = self.c_file.getFilename().decode("UTF-8", "strict")
  * 
  *     def __dealloc__(self):             # <<<<<<<<<<<<<<
@@ -4347,12 +4577,12 @@ static void __pyx_pf_5pyzim_9ZimReader_2__dealloc__(struct __pyx_obj_5pyzim_ZimR
   __Pyx_RefNannyFinishContext();
 }
 
-/* "pyzim.pyx":252
+/* "pyzim.pyx":281
  * 
  *     @property
  *     def filename(self):             # <<<<<<<<<<<<<<
+ *         """Get the filename of the ZimReader object"""
  *         return self._filename
- * 
  */
 
 /* Python wrapper */
@@ -4373,9 +4603,9 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_8filename___get__(struct __pyx_obj_5
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__", 0);
 
-  /* "pyzim.pyx":253
- *     @property
+  /* "pyzim.pyx":283
  *     def filename(self):
+ *         """Get the filename of the ZimReader object"""
  *         return self._filename             # <<<<<<<<<<<<<<
  * 
  *     def get_article(self, url):
@@ -4385,12 +4615,12 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_8filename___get__(struct __pyx_obj_5
   __pyx_r = __pyx_v_self->_filename;
   goto __pyx_L0;
 
-  /* "pyzim.pyx":252
+  /* "pyzim.pyx":281
  * 
  *     @property
  *     def filename(self):             # <<<<<<<<<<<<<<
+ *         """Get the filename of the ZimReader object"""
  *         return self._filename
- * 
  */
 
   /* function exit code */
@@ -4400,16 +4630,17 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_8filename___get__(struct __pyx_obj_5
   return __pyx_r;
 }
 
-/* "pyzim.pyx":255
+/* "pyzim.pyx":285
  *         return self._filename
  * 
  *     def get_article(self, url):             # <<<<<<<<<<<<<<
- *         # Read to a zim::Article
- *         cdef zim.Article art = self.c_file.getArticleByUrl(url.encode('UTF-8'))
+ *         """Get a ZimArticle with a copy of the file article by full url i.e including namespace
+ * 
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_5pyzim_9ZimReader_5get_article(PyObject *__pyx_v_self, PyObject *__pyx_v_url); /*proto*/
+static char __pyx_doc_5pyzim_9ZimReader_4get_article[] = "Get a ZimArticle with a copy of the file article by full url i.e including namespace\n        \n        Parameters\n        ----------\n        url : str\n            The full url, including namespace, of the article\n\n        Returns\n        -------\n        ZimArticle\n            The ZimArticle object\n\n        Raises\n        ------\n            RuntimeError\n                If an article with the provided long url is not found in the file\n\n        ";
 static PyObject *__pyx_pw_5pyzim_9ZimReader_5get_article(PyObject *__pyx_v_self, PyObject *__pyx_v_url) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
@@ -4433,14 +4664,14 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_4get_article(struct __pyx_obj_5pyzim
   int __pyx_t_5;
   __Pyx_RefNannySetupContext("get_article", 0);
 
-  /* "pyzim.pyx":257
- *     def get_article(self, url):
+  /* "pyzim.pyx":305
+ *         """
  *         # Read to a zim::Article
  *         cdef zim.Article art = self.c_file.getArticleByUrl(url.encode('UTF-8'))             # <<<<<<<<<<<<<<
  *         if not art.good():
  *             raise RuntimeError("Article not found for url")
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_url, __pyx_n_s_encode); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 257, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_url, __pyx_n_s_encode); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 305, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_3 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_2))) {
@@ -4454,14 +4685,14 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_4get_article(struct __pyx_obj_5pyzim
   }
   __pyx_t_1 = (__pyx_t_3) ? __Pyx_PyObject_Call2Args(__pyx_t_2, __pyx_t_3, __pyx_kp_u_UTF_8) : __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_kp_u_UTF_8);
   __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 257, __pyx_L1_error)
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 305, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_4 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 257, __pyx_L1_error)
+  __pyx_t_4 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 305, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_art = __pyx_v_self->c_file->getArticleByUrl(__pyx_t_4);
 
-  /* "pyzim.pyx":258
+  /* "pyzim.pyx":306
  *         # Read to a zim::Article
  *         cdef zim.Article art = self.c_file.getArticleByUrl(url.encode('UTF-8'))
  *         if not art.good():             # <<<<<<<<<<<<<<
@@ -4471,20 +4702,20 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_4get_article(struct __pyx_obj_5pyzim
   __pyx_t_5 = ((!(__pyx_v_art.good() != 0)) != 0);
   if (unlikely(__pyx_t_5)) {
 
-    /* "pyzim.pyx":259
+    /* "pyzim.pyx":307
  *         cdef zim.Article art = self.c_file.getArticleByUrl(url.encode('UTF-8'))
  *         if not art.good():
  *             raise RuntimeError("Article not found for url")             # <<<<<<<<<<<<<<
  * 
  *         article = ZimArticle.from_read_article(art)
  */
-    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple__6, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 259, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple__6, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 307, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_Raise(__pyx_t_1, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __PYX_ERR(0, 259, __pyx_L1_error)
+    __PYX_ERR(0, 307, __pyx_L1_error)
 
-    /* "pyzim.pyx":258
+    /* "pyzim.pyx":306
  *         # Read to a zim::Article
  *         cdef zim.Article art = self.c_file.getArticleByUrl(url.encode('UTF-8'))
  *         if not art.good():             # <<<<<<<<<<<<<<
@@ -4493,19 +4724,19 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_4get_article(struct __pyx_obj_5pyzim
  */
   }
 
-  /* "pyzim.pyx":261
+  /* "pyzim.pyx":309
  *             raise RuntimeError("Article not found for url")
  * 
  *         article = ZimArticle.from_read_article(art)             # <<<<<<<<<<<<<<
  *         return article
  * 
  */
-  __pyx_t_1 = __pyx_f_5pyzim_10ZimArticle_from_read_article(__pyx_v_art); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 261, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_5pyzim_10ZimArticle_from_read_article(__pyx_v_art); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 309, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_v_article = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "pyzim.pyx":262
+  /* "pyzim.pyx":310
  * 
  *         article = ZimArticle.from_read_article(art)
  *         return article             # <<<<<<<<<<<<<<
@@ -4517,12 +4748,12 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_4get_article(struct __pyx_obj_5pyzim
   __pyx_r = __pyx_v_article;
   goto __pyx_L0;
 
-  /* "pyzim.pyx":255
+  /* "pyzim.pyx":285
  *         return self._filename
  * 
  *     def get_article(self, url):             # <<<<<<<<<<<<<<
- *         # Read to a zim::Article
- *         cdef zim.Article art = self.c_file.getArticleByUrl(url.encode('UTF-8'))
+ *         """Get a ZimArticle with a copy of the file article by full url i.e including namespace
+ * 
  */
 
   /* function exit code */
@@ -4539,16 +4770,17 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_4get_article(struct __pyx_obj_5pyzim
   return __pyx_r;
 }
 
-/* "pyzim.pyx":264
+/* "pyzim.pyx":312
  *         return article
  * 
  *     def get_metadata(self):             # <<<<<<<<<<<<<<
- *         metadata = dict()
- *         for key in self._metadata_keys:
+ *         """Get the file metadata.
+ * 
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_5pyzim_9ZimReader_7get_metadata(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static char __pyx_doc_5pyzim_9ZimReader_6get_metadata[] = "Get the file metadata.\n\n        Returns\n        -------\n        dict\n            A dictionary with the file metadata\n        ";
 static PyObject *__pyx_pw_5pyzim_9ZimReader_7get_metadata(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
@@ -4578,34 +4810,34 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_6get_metadata(struct __pyx_obj_5pyzi
   PyObject *__pyx_t_10 = NULL;
   __Pyx_RefNannySetupContext("get_metadata", 0);
 
-  /* "pyzim.pyx":265
- * 
- *     def get_metadata(self):
+  /* "pyzim.pyx":320
+ *             A dictionary with the file metadata
+ *         """
  *         metadata = dict()             # <<<<<<<<<<<<<<
  *         for key in self._metadata_keys:
  *             try:
  */
-  __pyx_t_1 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 265, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 320, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_v_metadata = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "pyzim.pyx":266
- *     def get_metadata(self):
+  /* "pyzim.pyx":321
+ *         """
  *         metadata = dict()
  *         for key in self._metadata_keys:             # <<<<<<<<<<<<<<
  *             try:
  *                 meta_art = self.get_article(f"M/{key}")
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_metadata_keys); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 266, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_metadata_keys); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 321, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   if (likely(PyList_CheckExact(__pyx_t_1)) || PyTuple_CheckExact(__pyx_t_1)) {
     __pyx_t_2 = __pyx_t_1; __Pyx_INCREF(__pyx_t_2); __pyx_t_3 = 0;
     __pyx_t_4 = NULL;
   } else {
-    __pyx_t_3 = -1; __pyx_t_2 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 266, __pyx_L1_error)
+    __pyx_t_3 = -1; __pyx_t_2 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 321, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_4 = Py_TYPE(__pyx_t_2)->tp_iternext; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 266, __pyx_L1_error)
+    __pyx_t_4 = Py_TYPE(__pyx_t_2)->tp_iternext; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 321, __pyx_L1_error)
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   for (;;) {
@@ -4613,17 +4845,17 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_6get_metadata(struct __pyx_obj_5pyzi
       if (likely(PyList_CheckExact(__pyx_t_2))) {
         if (__pyx_t_3 >= PyList_GET_SIZE(__pyx_t_2)) break;
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        __pyx_t_1 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_3); __Pyx_INCREF(__pyx_t_1); __pyx_t_3++; if (unlikely(0 < 0)) __PYX_ERR(0, 266, __pyx_L1_error)
+        __pyx_t_1 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_3); __Pyx_INCREF(__pyx_t_1); __pyx_t_3++; if (unlikely(0 < 0)) __PYX_ERR(0, 321, __pyx_L1_error)
         #else
-        __pyx_t_1 = PySequence_ITEM(__pyx_t_2, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 266, __pyx_L1_error)
+        __pyx_t_1 = PySequence_ITEM(__pyx_t_2, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 321, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         #endif
       } else {
         if (__pyx_t_3 >= PyTuple_GET_SIZE(__pyx_t_2)) break;
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_2, __pyx_t_3); __Pyx_INCREF(__pyx_t_1); __pyx_t_3++; if (unlikely(0 < 0)) __PYX_ERR(0, 266, __pyx_L1_error)
+        __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_2, __pyx_t_3); __Pyx_INCREF(__pyx_t_1); __pyx_t_3++; if (unlikely(0 < 0)) __PYX_ERR(0, 321, __pyx_L1_error)
         #else
-        __pyx_t_1 = PySequence_ITEM(__pyx_t_2, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 266, __pyx_L1_error)
+        __pyx_t_1 = PySequence_ITEM(__pyx_t_2, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 321, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         #endif
       }
@@ -4633,7 +4865,7 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_6get_metadata(struct __pyx_obj_5pyzi
         PyObject* exc_type = PyErr_Occurred();
         if (exc_type) {
           if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-          else __PYX_ERR(0, 266, __pyx_L1_error)
+          else __PYX_ERR(0, 321, __pyx_L1_error)
         }
         break;
       }
@@ -4642,7 +4874,7 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_6get_metadata(struct __pyx_obj_5pyzi
     __Pyx_XDECREF_SET(__pyx_v_key, __pyx_t_1);
     __pyx_t_1 = 0;
 
-    /* "pyzim.pyx":267
+    /* "pyzim.pyx":322
  *         metadata = dict()
  *         for key in self._metadata_keys:
  *             try:             # <<<<<<<<<<<<<<
@@ -4658,18 +4890,18 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_6get_metadata(struct __pyx_obj_5pyzi
       __Pyx_XGOTREF(__pyx_t_7);
       /*try:*/ {
 
-        /* "pyzim.pyx":268
+        /* "pyzim.pyx":323
  *         for key in self._metadata_keys:
  *             try:
  *                 meta_art = self.get_article(f"M/{key}")             # <<<<<<<<<<<<<<
  *             except:
  *                 pass
  */
-        __pyx_t_8 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_get_article); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 268, __pyx_L5_error)
+        __pyx_t_8 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_get_article); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 323, __pyx_L5_error)
         __Pyx_GOTREF(__pyx_t_8);
-        __pyx_t_9 = __Pyx_PyObject_FormatSimple(__pyx_v_key, __pyx_empty_unicode); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 268, __pyx_L5_error)
+        __pyx_t_9 = __Pyx_PyObject_FormatSimple(__pyx_v_key, __pyx_empty_unicode); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 323, __pyx_L5_error)
         __Pyx_GOTREF(__pyx_t_9);
-        __pyx_t_10 = __Pyx_PyUnicode_Concat(__pyx_kp_u_M, __pyx_t_9); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 268, __pyx_L5_error)
+        __pyx_t_10 = __Pyx_PyUnicode_Concat(__pyx_kp_u_M, __pyx_t_9); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 323, __pyx_L5_error)
         __Pyx_GOTREF(__pyx_t_10);
         __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
         __pyx_t_9 = NULL;
@@ -4685,13 +4917,13 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_6get_metadata(struct __pyx_obj_5pyzi
         __pyx_t_1 = (__pyx_t_9) ? __Pyx_PyObject_Call2Args(__pyx_t_8, __pyx_t_9, __pyx_t_10) : __Pyx_PyObject_CallOneArg(__pyx_t_8, __pyx_t_10);
         __Pyx_XDECREF(__pyx_t_9); __pyx_t_9 = 0;
         __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-        if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 268, __pyx_L5_error)
+        if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 323, __pyx_L5_error)
         __Pyx_GOTREF(__pyx_t_1);
         __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
         __Pyx_XDECREF_SET(__pyx_v_meta_art, __pyx_t_1);
         __pyx_t_1 = 0;
 
-        /* "pyzim.pyx":267
+        /* "pyzim.pyx":322
  *         metadata = dict()
  *         for key in self._metadata_keys:
  *             try:             # <<<<<<<<<<<<<<
@@ -4700,7 +4932,7 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_6get_metadata(struct __pyx_obj_5pyzi
  */
       }
 
-      /* "pyzim.pyx":272
+      /* "pyzim.pyx":327
  *                 pass
  *             else:
  *                 metadata[key] = meta_art.content             # <<<<<<<<<<<<<<
@@ -4708,9 +4940,9 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_6get_metadata(struct __pyx_obj_5pyzi
  * 
  */
       /*else:*/ {
-        __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_meta_art, __pyx_n_s_content); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 272, __pyx_L7_except_error)
+        __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_meta_art, __pyx_n_s_content); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 327, __pyx_L7_except_error)
         __Pyx_GOTREF(__pyx_t_1);
-        if (unlikely(PyDict_SetItem(__pyx_v_metadata, __pyx_v_key, __pyx_t_1) < 0)) __PYX_ERR(0, 272, __pyx_L7_except_error)
+        if (unlikely(PyDict_SetItem(__pyx_v_metadata, __pyx_v_key, __pyx_t_1) < 0)) __PYX_ERR(0, 327, __pyx_L7_except_error)
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
       }
       __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
@@ -4723,7 +4955,7 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_6get_metadata(struct __pyx_obj_5pyzi
       __Pyx_XDECREF(__pyx_t_8); __pyx_t_8 = 0;
       __Pyx_XDECREF(__pyx_t_9); __pyx_t_9 = 0;
 
-      /* "pyzim.pyx":269
+      /* "pyzim.pyx":324
  *             try:
  *                 meta_art = self.get_article(f"M/{key}")
  *             except:             # <<<<<<<<<<<<<<
@@ -4736,7 +4968,7 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_6get_metadata(struct __pyx_obj_5pyzi
       }
       __pyx_L7_except_error:;
 
-      /* "pyzim.pyx":267
+      /* "pyzim.pyx":322
  *         metadata = dict()
  *         for key in self._metadata_keys:
  *             try:             # <<<<<<<<<<<<<<
@@ -4756,8 +4988,8 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_6get_metadata(struct __pyx_obj_5pyzi
       __pyx_L12_try_end:;
     }
 
-    /* "pyzim.pyx":266
- *     def get_metadata(self):
+    /* "pyzim.pyx":321
+ *         """
  *         metadata = dict()
  *         for key in self._metadata_keys:             # <<<<<<<<<<<<<<
  *             try:
@@ -4766,7 +4998,7 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_6get_metadata(struct __pyx_obj_5pyzi
   }
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "pyzim.pyx":273
+  /* "pyzim.pyx":328
  *             else:
  *                 metadata[key] = meta_art.content
  *         return metadata             # <<<<<<<<<<<<<<
@@ -4778,12 +5010,12 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_6get_metadata(struct __pyx_obj_5pyzi
   __pyx_r = __pyx_v_metadata;
   goto __pyx_L0;
 
-  /* "pyzim.pyx":264
+  /* "pyzim.pyx":312
  *         return article
  * 
  *     def get_metadata(self):             # <<<<<<<<<<<<<<
- *         metadata = dict()
- *         for key in self._metadata_keys:
+ *         """Get the file metadata.
+ * 
  */
 
   /* function exit code */
@@ -4804,16 +5036,17 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_6get_metadata(struct __pyx_obj_5pyzi
   return __pyx_r;
 }
 
-/* "pyzim.pyx":275
+/* "pyzim.pyx":330
  *         return metadata
  * 
  *     def get_article_by_id(self, id):             # <<<<<<<<<<<<<<
- *         # Read to a zim::Article
- *         cdef zim.Article art = self.c_file.getArticle(<int> id)
+ *         """Get a ZimArticle with a copy of the file article by article id.
+ * 
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_5pyzim_9ZimReader_9get_article_by_id(PyObject *__pyx_v_self, PyObject *__pyx_v_id); /*proto*/
+static char __pyx_doc_5pyzim_9ZimReader_8get_article_by_id[] = "Get a ZimArticle with a copy of the file article by article id.\n        \n        Parameters\n        ----------\n        id : int\n            The id of the article\n\n        Returns\n        -------\n        ZimArticle\n            The ZimArticle object\n\n        Raises\n        ------\n            RuntimeError\n                If an article with the provided id is not found in the file\n\n        ";
 static PyObject *__pyx_pw_5pyzim_9ZimReader_9get_article_by_id(PyObject *__pyx_v_self, PyObject *__pyx_v_id) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
@@ -4835,61 +5068,61 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_8get_article_by_id(struct __pyx_obj_
   PyObject *__pyx_t_3 = NULL;
   __Pyx_RefNannySetupContext("get_article_by_id", 0);
 
-  /* "pyzim.pyx":277
- *     def get_article_by_id(self, id):
+  /* "pyzim.pyx":351
+ * 
  *         # Read to a zim::Article
  *         cdef zim.Article art = self.c_file.getArticle(<int> id)             # <<<<<<<<<<<<<<
  *         if not art.good():
- *             raise RuntimeError("Article not found for url")
+ *             raise RuntimeError("Article not found for id")
  */
-  __pyx_t_1 = __Pyx_PyInt_As_int(__pyx_v_id); if (unlikely((__pyx_t_1 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 277, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_As_int(__pyx_v_id); if (unlikely((__pyx_t_1 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 351, __pyx_L1_error)
   __pyx_v_art = __pyx_v_self->c_file->getArticle(((int)__pyx_t_1));
 
-  /* "pyzim.pyx":278
+  /* "pyzim.pyx":352
  *         # Read to a zim::Article
  *         cdef zim.Article art = self.c_file.getArticle(<int> id)
  *         if not art.good():             # <<<<<<<<<<<<<<
- *             raise RuntimeError("Article not found for url")
+ *             raise RuntimeError("Article not found for id")
  * 
  */
   __pyx_t_2 = ((!(__pyx_v_art.good() != 0)) != 0);
   if (unlikely(__pyx_t_2)) {
 
-    /* "pyzim.pyx":279
+    /* "pyzim.pyx":353
  *         cdef zim.Article art = self.c_file.getArticle(<int> id)
  *         if not art.good():
- *             raise RuntimeError("Article not found for url")             # <<<<<<<<<<<<<<
+ *             raise RuntimeError("Article not found for id")             # <<<<<<<<<<<<<<
  * 
  *         article = ZimArticle.from_read_article(art)
  */
-    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple__6, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 279, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple__7, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 353, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_Raise(__pyx_t_3, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __PYX_ERR(0, 279, __pyx_L1_error)
+    __PYX_ERR(0, 353, __pyx_L1_error)
 
-    /* "pyzim.pyx":278
+    /* "pyzim.pyx":352
  *         # Read to a zim::Article
  *         cdef zim.Article art = self.c_file.getArticle(<int> id)
  *         if not art.good():             # <<<<<<<<<<<<<<
- *             raise RuntimeError("Article not found for url")
+ *             raise RuntimeError("Article not found for id")
  * 
  */
   }
 
-  /* "pyzim.pyx":281
- *             raise RuntimeError("Article not found for url")
+  /* "pyzim.pyx":355
+ *             raise RuntimeError("Article not found for id")
  * 
  *         article = ZimArticle.from_read_article(art)             # <<<<<<<<<<<<<<
  *         return article
  * 
  */
-  __pyx_t_3 = __pyx_f_5pyzim_10ZimArticle_from_read_article(__pyx_v_art); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 281, __pyx_L1_error)
+  __pyx_t_3 = __pyx_f_5pyzim_10ZimArticle_from_read_article(__pyx_v_art); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 355, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __pyx_v_article = __pyx_t_3;
   __pyx_t_3 = 0;
 
-  /* "pyzim.pyx":282
+  /* "pyzim.pyx":356
  * 
  *         article = ZimArticle.from_read_article(art)
  *         return article             # <<<<<<<<<<<<<<
@@ -4901,12 +5134,12 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_8get_article_by_id(struct __pyx_obj_
   __pyx_r = __pyx_v_article;
   goto __pyx_L0;
 
-  /* "pyzim.pyx":275
+  /* "pyzim.pyx":330
  *         return metadata
  * 
  *     def get_article_by_id(self, id):             # <<<<<<<<<<<<<<
- *         # Read to a zim::Article
- *         cdef zim.Article art = self.c_file.getArticle(<int> id)
+ *         """Get a ZimArticle with a copy of the file article by article id.
+ * 
  */
 
   /* function exit code */
@@ -4921,21 +5154,22 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_8get_article_by_id(struct __pyx_obj_
   return __pyx_r;
 }
 
-/* "pyzim.pyx":284
+/* "pyzim.pyx":358
  *         return article
  * 
  *     def get_redirect_article(self, ZimArticle article):             # <<<<<<<<<<<<<<
- *         cdef zim.Article art = self.c_file.getArticleByUrl(article.redirect_longurl.encode('UTF-8'))
+ *         """Get a ZimArticle with a copy of the file pointed article, if any, from a redirecting ZimArticle.
  * 
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_5pyzim_9ZimReader_11get_redirect_article(PyObject *__pyx_v_self, PyObject *__pyx_v_article); /*proto*/
+static char __pyx_doc_5pyzim_9ZimReader_10get_redirect_article[] = "Get a ZimArticle with a copy of the file pointed article, if any, from a redirecting ZimArticle.\n        \n        Parameters\n        ----------\n        article : ZimArticle\n            The redirecting article \n\n        Returns\n        -------\n        ZimArticle\n            The ZimArticle copy of the file redirected article\n\n        Raises\n        ------\n            RuntimeError\n                If the ZimArticle provided is not a redirect article\n            RuntimeError\n                If the pointed article is not present in the file\n\n        ";
 static PyObject *__pyx_pw_5pyzim_9ZimReader_11get_redirect_article(PyObject *__pyx_v_self, PyObject *__pyx_v_article) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("get_redirect_article (wrapper)", 0);
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_article), __pyx_ptype_5pyzim_ZimArticle, 1, "article", 0))) __PYX_ERR(0, 284, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_article), __pyx_ptype_5pyzim_ZimArticle, 1, "article", 0))) __PYX_ERR(0, 358, __pyx_L1_error)
   __pyx_r = __pyx_pf_5pyzim_9ZimReader_10get_redirect_article(((struct __pyx_obj_5pyzim_ZimReader *)__pyx_v_self), ((struct __pyx_obj_5pyzim_ZimArticle *)__pyx_v_article));
 
   /* function exit code */
@@ -4959,16 +5193,16 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_10get_redirect_article(struct __pyx_
   __Pyx_RefNannySetupContext("get_redirect_article", 0);
   __Pyx_INCREF((PyObject *)__pyx_v_article);
 
-  /* "pyzim.pyx":285
+  /* "pyzim.pyx":379
  * 
- *     def get_redirect_article(self, ZimArticle article):
+ *         """
  *         cdef zim.Article art = self.c_file.getArticleByUrl(article.redirect_longurl.encode('UTF-8'))             # <<<<<<<<<<<<<<
  * 
  *         if article.is_redirect:
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_article), __pyx_n_s_redirect_longurl); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 285, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_article), __pyx_n_s_redirect_longurl); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 379, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_encode); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 285, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_encode); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 379, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_t_2 = NULL;
@@ -4983,27 +5217,27 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_10get_redirect_article(struct __pyx_
   }
   __pyx_t_1 = (__pyx_t_2) ? __Pyx_PyObject_Call2Args(__pyx_t_3, __pyx_t_2, __pyx_kp_u_UTF_8) : __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_kp_u_UTF_8);
   __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 285, __pyx_L1_error)
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 379, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_4 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 285, __pyx_L1_error)
+  __pyx_t_4 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 379, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_art = __pyx_v_self->c_file->getArticleByUrl(__pyx_t_4);
 
-  /* "pyzim.pyx":287
+  /* "pyzim.pyx":381
  *         cdef zim.Article art = self.c_file.getArticleByUrl(article.redirect_longurl.encode('UTF-8'))
  * 
  *         if article.is_redirect:             # <<<<<<<<<<<<<<
  *             if not art.good():
  *                 raise RuntimeError("Article not found for redirect url")
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_article), __pyx_n_s_is_redirect); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 287, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_article), __pyx_n_s_is_redirect); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 381, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 287, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 381, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (likely(__pyx_t_5)) {
 
-    /* "pyzim.pyx":288
+    /* "pyzim.pyx":382
  * 
  *         if article.is_redirect:
  *             if not art.good():             # <<<<<<<<<<<<<<
@@ -5013,20 +5247,20 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_10get_redirect_article(struct __pyx_
     __pyx_t_5 = ((!(__pyx_v_art.good() != 0)) != 0);
     if (unlikely(__pyx_t_5)) {
 
-      /* "pyzim.pyx":289
+      /* "pyzim.pyx":383
  *         if article.is_redirect:
  *             if not art.good():
  *                 raise RuntimeError("Article not found for redirect url")             # <<<<<<<<<<<<<<
  *             article = ZimArticle.from_read_article(art)
  *             return article
  */
-      __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple__7, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 289, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple__8, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 383, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_Raise(__pyx_t_1, 0, 0, 0);
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-      __PYX_ERR(0, 289, __pyx_L1_error)
+      __PYX_ERR(0, 383, __pyx_L1_error)
 
-      /* "pyzim.pyx":288
+      /* "pyzim.pyx":382
  * 
  *         if article.is_redirect:
  *             if not art.good():             # <<<<<<<<<<<<<<
@@ -5035,20 +5269,20 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_10get_redirect_article(struct __pyx_
  */
     }
 
-    /* "pyzim.pyx":290
+    /* "pyzim.pyx":384
  *             if not art.good():
  *                 raise RuntimeError("Article not found for redirect url")
  *             article = ZimArticle.from_read_article(art)             # <<<<<<<<<<<<<<
  *             return article
  *         else:
  */
-    __pyx_t_1 = __pyx_f_5pyzim_10ZimArticle_from_read_article(__pyx_v_art); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 290, __pyx_L1_error)
+    __pyx_t_1 = __pyx_f_5pyzim_10ZimArticle_from_read_article(__pyx_v_art); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 384, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5pyzim_ZimArticle))))) __PYX_ERR(0, 290, __pyx_L1_error)
+    if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5pyzim_ZimArticle))))) __PYX_ERR(0, 384, __pyx_L1_error)
     __Pyx_DECREF_SET(__pyx_v_article, ((struct __pyx_obj_5pyzim_ZimArticle *)__pyx_t_1));
     __pyx_t_1 = 0;
 
-    /* "pyzim.pyx":291
+    /* "pyzim.pyx":385
  *                 raise RuntimeError("Article not found for redirect url")
  *             article = ZimArticle.from_read_article(art)
  *             return article             # <<<<<<<<<<<<<<
@@ -5060,7 +5294,7 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_10get_redirect_article(struct __pyx_
     __pyx_r = ((PyObject *)__pyx_v_article);
     goto __pyx_L0;
 
-    /* "pyzim.pyx":287
+    /* "pyzim.pyx":381
  *         cdef zim.Article art = self.c_file.getArticleByUrl(article.redirect_longurl.encode('UTF-8'))
  * 
  *         if article.is_redirect:             # <<<<<<<<<<<<<<
@@ -5069,7 +5303,7 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_10get_redirect_article(struct __pyx_
  */
   }
 
-  /* "pyzim.pyx":293
+  /* "pyzim.pyx":387
  *             return article
  *         else:
  *             raise RuntimeError("Article is not a redirect article")             # <<<<<<<<<<<<<<
@@ -5077,18 +5311,18 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_10get_redirect_article(struct __pyx_
  *     def get_main_page_url(self):
  */
   /*else*/ {
-    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple__8, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 293, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple__9, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 387, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_Raise(__pyx_t_1, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __PYX_ERR(0, 293, __pyx_L1_error)
+    __PYX_ERR(0, 387, __pyx_L1_error)
   }
 
-  /* "pyzim.pyx":284
+  /* "pyzim.pyx":358
  *         return article
  * 
  *     def get_redirect_article(self, ZimArticle article):             # <<<<<<<<<<<<<<
- *         cdef zim.Article art = self.c_file.getArticleByUrl(article.redirect_longurl.encode('UTF-8'))
+ *         """Get a ZimArticle with a copy of the file pointed article, if any, from a redirecting ZimArticle.
  * 
  */
 
@@ -5106,16 +5340,17 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_10get_redirect_article(struct __pyx_
   return __pyx_r;
 }
 
-/* "pyzim.pyx":295
+/* "pyzim.pyx":389
  *             raise RuntimeError("Article is not a redirect article")
  * 
  *     def get_main_page_url(self):             # <<<<<<<<<<<<<<
- *         cdef zim.Fileheader header = self.c_file.getFileheader()
- *         cdef zim.Article article
+ *         """Get the file main page url.
+ * 
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_5pyzim_9ZimReader_13get_main_page_url(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static char __pyx_doc_5pyzim_9ZimReader_12get_main_page_url[] = "Get the file main page url.\n\n        Returns\n        -------\n        str\n            The url of the main page\n\n        TODO Check old formats\n\n        ";
 static PyObject *__pyx_pw_5pyzim_9ZimReader_13get_main_page_url(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
@@ -5136,16 +5371,16 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_12get_main_page_url(struct __pyx_obj
   PyObject *__pyx_t_2 = NULL;
   __Pyx_RefNannySetupContext("get_main_page_url", 0);
 
-  /* "pyzim.pyx":296
+  /* "pyzim.pyx":400
  * 
- *     def get_main_page_url(self):
+ *         """
  *         cdef zim.Fileheader header = self.c_file.getFileheader()             # <<<<<<<<<<<<<<
  *         cdef zim.Article article
  *         if header.hasMainPage():
  */
   __pyx_v_header = __pyx_v_self->c_file->getFileheader();
 
-  /* "pyzim.pyx":298
+  /* "pyzim.pyx":402
  *         cdef zim.Fileheader header = self.c_file.getFileheader()
  *         cdef zim.Article article
  *         if header.hasMainPage():             # <<<<<<<<<<<<<<
@@ -5155,7 +5390,7 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_12get_main_page_url(struct __pyx_obj
   __pyx_t_1 = (__pyx_v_header.hasMainPage() != 0);
   if (__pyx_t_1) {
 
-    /* "pyzim.pyx":299
+    /* "pyzim.pyx":403
  *         cdef zim.Article article
  *         if header.hasMainPage():
  *             article = self.c_file.getArticle(header.getMainPage())             # <<<<<<<<<<<<<<
@@ -5164,7 +5399,7 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_12get_main_page_url(struct __pyx_obj
  */
     __pyx_v_article = __pyx_v_self->c_file->getArticle(__pyx_v_header.getMainPage());
 
-    /* "pyzim.pyx":300
+    /* "pyzim.pyx":404
  *         if header.hasMainPage():
  *             article = self.c_file.getArticle(header.getMainPage())
  *             return article.getLongUrl().decode("UTF-8", "strict");             # <<<<<<<<<<<<<<
@@ -5172,13 +5407,13 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_12get_main_page_url(struct __pyx_obj
  *         # TODO Ask about the old format, check libzim for tests
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_2 = __Pyx_decode_cpp_string(__pyx_v_article.getLongUrl(), 0, PY_SSIZE_T_MAX, NULL, NULL, PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 300, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_decode_cpp_string(__pyx_v_article.getLongUrl(), 0, PY_SSIZE_T_MAX, NULL, NULL, PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 404, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __pyx_r = __pyx_t_2;
     __pyx_t_2 = 0;
     goto __pyx_L0;
 
-    /* "pyzim.pyx":298
+    /* "pyzim.pyx":402
  *         cdef zim.Fileheader header = self.c_file.getFileheader()
  *         cdef zim.Article article
  *         if header.hasMainPage():             # <<<<<<<<<<<<<<
@@ -5187,7 +5422,7 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_12get_main_page_url(struct __pyx_obj
  */
   }
 
-  /* "pyzim.pyx":305
+  /* "pyzim.pyx":409
  *         # Handle old zim where header has no mainPage.
  *         # (We need to get first article in the zim)
  *         article = self.c_file.getArticle(<int> 0)             # <<<<<<<<<<<<<<
@@ -5196,7 +5431,7 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_12get_main_page_url(struct __pyx_obj
  */
   __pyx_v_article = __pyx_v_self->c_file->getArticle(((int)0));
 
-  /* "pyzim.pyx":306
+  /* "pyzim.pyx":410
  *         # (We need to get first article in the zim)
  *         article = self.c_file.getArticle(<int> 0)
  *         if article.good():             # <<<<<<<<<<<<<<
@@ -5206,7 +5441,7 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_12get_main_page_url(struct __pyx_obj
   __pyx_t_1 = (__pyx_v_article.good() != 0);
   if (__pyx_t_1) {
 
-    /* "pyzim.pyx":307
+    /* "pyzim.pyx":411
  *         article = self.c_file.getArticle(<int> 0)
  *         if article.good():
  *             return article.getLongUrl().decode("UTF-8", "strict")             # <<<<<<<<<<<<<<
@@ -5214,13 +5449,13 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_12get_main_page_url(struct __pyx_obj
  *     def get_checksum(self):
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_2 = __Pyx_decode_cpp_string(__pyx_v_article.getLongUrl(), 0, PY_SSIZE_T_MAX, NULL, NULL, PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 307, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_decode_cpp_string(__pyx_v_article.getLongUrl(), 0, PY_SSIZE_T_MAX, NULL, NULL, PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 411, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __pyx_r = __pyx_t_2;
     __pyx_t_2 = 0;
     goto __pyx_L0;
 
-    /* "pyzim.pyx":306
+    /* "pyzim.pyx":410
  *         # (We need to get first article in the zim)
  *         article = self.c_file.getArticle(<int> 0)
  *         if article.good():             # <<<<<<<<<<<<<<
@@ -5229,12 +5464,12 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_12get_main_page_url(struct __pyx_obj
  */
   }
 
-  /* "pyzim.pyx":295
+  /* "pyzim.pyx":389
  *             raise RuntimeError("Article is not a redirect article")
  * 
  *     def get_main_page_url(self):             # <<<<<<<<<<<<<<
- *         cdef zim.Fileheader header = self.c_file.getFileheader()
- *         cdef zim.Article article
+ *         """Get the file main page url.
+ * 
  */
 
   /* function exit code */
@@ -5250,16 +5485,17 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_12get_main_page_url(struct __pyx_obj
   return __pyx_r;
 }
 
-/* "pyzim.pyx":309
+/* "pyzim.pyx":413
  *             return article.getLongUrl().decode("UTF-8", "strict")
  * 
  *     def get_checksum(self):             # <<<<<<<<<<<<<<
- *         return self.c_file.getChecksum().decode("UTF-8", "strict")
+ *         """Get the file checksum.
  * 
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_5pyzim_9ZimReader_15get_checksum(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static char __pyx_doc_5pyzim_9ZimReader_14get_checksum[] = "Get the file checksum.\n\n        Returns\n        -------\n        str\n            The file checksum\n        ";
 static PyObject *__pyx_pw_5pyzim_9ZimReader_15get_checksum(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
@@ -5277,25 +5513,25 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_14get_checksum(struct __pyx_obj_5pyz
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("get_checksum", 0);
 
-  /* "pyzim.pyx":310
- * 
- *     def get_checksum(self):
+  /* "pyzim.pyx":421
+ *             The file checksum
+ *         """
  *         return self.c_file.getChecksum().decode("UTF-8", "strict")             # <<<<<<<<<<<<<<
  * 
  *     def get_article_count(self):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_decode_cpp_string(__pyx_v_self->c_file->getChecksum(), 0, PY_SSIZE_T_MAX, NULL, NULL, PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 310, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_decode_cpp_string(__pyx_v_self->c_file->getChecksum(), 0, PY_SSIZE_T_MAX, NULL, NULL, PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 421, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "pyzim.pyx":309
+  /* "pyzim.pyx":413
  *             return article.getLongUrl().decode("UTF-8", "strict")
  * 
  *     def get_checksum(self):             # <<<<<<<<<<<<<<
- *         return self.c_file.getChecksum().decode("UTF-8", "strict")
+ *         """Get the file checksum.
  * 
  */
 
@@ -5310,16 +5546,17 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_14get_checksum(struct __pyx_obj_5pyz
   return __pyx_r;
 }
 
-/* "pyzim.pyx":312
+/* "pyzim.pyx":423
  *         return self.c_file.getChecksum().decode("UTF-8", "strict")
  * 
  *     def get_article_count(self):             # <<<<<<<<<<<<<<
- *         return self.c_file.getCountArticles()
+ *         """Get the file article count.
  * 
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_5pyzim_9ZimReader_17get_article_count(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static char __pyx_doc_5pyzim_9ZimReader_16get_article_count[] = "Get the file article count.\n\n        Returns\n        -------\n        int\n            The total number of articles from the file\n\n        ";
 static PyObject *__pyx_pw_5pyzim_9ZimReader_17get_article_count(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
@@ -5337,25 +5574,25 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_16get_article_count(struct __pyx_obj
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("get_article_count", 0);
 
-  /* "pyzim.pyx":313
+  /* "pyzim.pyx":432
  * 
- *     def get_article_count(self):
+ *         """
  *         return self.c_file.getCountArticles()             # <<<<<<<<<<<<<<
  * 
  *     def get_namespaces(self) -> str:
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyInt_From_uint32_t(__pyx_v_self->c_file->getCountArticles()); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 313, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_uint32_t(__pyx_v_self->c_file->getCountArticles()); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 432, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "pyzim.pyx":312
+  /* "pyzim.pyx":423
  *         return self.c_file.getChecksum().decode("UTF-8", "strict")
  * 
  *     def get_article_count(self):             # <<<<<<<<<<<<<<
- *         return self.c_file.getCountArticles()
+ *         """Get the file article count.
  * 
  */
 
@@ -5370,16 +5607,17 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_16get_article_count(struct __pyx_obj
   return __pyx_r;
 }
 
-/* "pyzim.pyx":315
+/* "pyzim.pyx":434
  *         return self.c_file.getCountArticles()
  * 
  *     def get_namespaces(self) -> str:             # <<<<<<<<<<<<<<
- *         return self.c_file.getNamespaces().decode("UTF-8", "strict")
+ *         """Get the namespaces.
  * 
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_5pyzim_9ZimReader_19get_namespaces(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static char __pyx_doc_5pyzim_9ZimReader_18get_namespaces[] = "Get the namespaces.\n\n        Returns\n        -------\n        str\n            A string containing all namespaces in the file\n\n        ";
 static PyObject *__pyx_pw_5pyzim_9ZimReader_19get_namespaces(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
@@ -5397,25 +5635,25 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_18get_namespaces(struct __pyx_obj_5p
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("get_namespaces", 0);
 
-  /* "pyzim.pyx":316
+  /* "pyzim.pyx":443
  * 
- *     def get_namespaces(self) -> str:
+ *         """
  *         return self.c_file.getNamespaces().decode("UTF-8", "strict")             # <<<<<<<<<<<<<<
  * 
  *     def get_namespaces_count(self, str ns):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_decode_cpp_string(__pyx_v_self->c_file->getNamespaces(), 0, PY_SSIZE_T_MAX, NULL, NULL, PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 316, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_decode_cpp_string(__pyx_v_self->c_file->getNamespaces(), 0, PY_SSIZE_T_MAX, NULL, NULL, PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 443, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "pyzim.pyx":315
+  /* "pyzim.pyx":434
  *         return self.c_file.getCountArticles()
  * 
  *     def get_namespaces(self) -> str:             # <<<<<<<<<<<<<<
- *         return self.c_file.getNamespaces().decode("UTF-8", "strict")
+ *         """Get the namespaces.
  * 
  */
 
@@ -5430,21 +5668,22 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_18get_namespaces(struct __pyx_obj_5p
   return __pyx_r;
 }
 
-/* "pyzim.pyx":318
+/* "pyzim.pyx":445
  *         return self.c_file.getNamespaces().decode("UTF-8", "strict")
  * 
  *     def get_namespaces_count(self, str ns):             # <<<<<<<<<<<<<<
- *         return self.c_file.getNamespaceCount(ord(ns[0]))
+ *         """Get article count from a namespaces.
  * 
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_5pyzim_9ZimReader_21get_namespaces_count(PyObject *__pyx_v_self, PyObject *__pyx_v_ns); /*proto*/
+static char __pyx_doc_5pyzim_9ZimReader_20get_namespaces_count[] = "Get article count from a namespaces.\n\n        Returns\n        -------\n        int\n            The total number of articles from the namespace\n        ";
 static PyObject *__pyx_pw_5pyzim_9ZimReader_21get_namespaces_count(PyObject *__pyx_v_self, PyObject *__pyx_v_ns) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("get_namespaces_count (wrapper)", 0);
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_ns), (&PyUnicode_Type), 1, "ns", 1))) __PYX_ERR(0, 318, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_ns), (&PyUnicode_Type), 1, "ns", 1))) __PYX_ERR(0, 445, __pyx_L1_error)
   __pyx_r = __pyx_pf_5pyzim_9ZimReader_20get_namespaces_count(((struct __pyx_obj_5pyzim_ZimReader *)__pyx_v_self), ((PyObject*)__pyx_v_ns));
 
   /* function exit code */
@@ -5463,26 +5702,26 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_20get_namespaces_count(struct __pyx_
   PyObject *__pyx_t_2 = NULL;
   __Pyx_RefNannySetupContext("get_namespaces_count", 0);
 
-  /* "pyzim.pyx":319
- * 
- *     def get_namespaces_count(self, str ns):
+  /* "pyzim.pyx":453
+ *             The total number of articles from the namespace
+ *         """
  *         return self.c_file.getNamespaceCount(ord(ns[0]))             # <<<<<<<<<<<<<<
  * 
  *     def suggest(self, query):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_GetItemInt_Unicode(__pyx_v_ns, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(__pyx_t_1 == (Py_UCS4)-1)) __PYX_ERR(0, 319, __pyx_L1_error)
-  __pyx_t_2 = __Pyx_PyInt_From_uint32_t(__pyx_v_self->c_file->getNamespaceCount(((long)__pyx_t_1))); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 319, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetItemInt_Unicode(__pyx_v_ns, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(__pyx_t_1 == (Py_UCS4)-1)) __PYX_ERR(0, 453, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_From_uint32_t(__pyx_v_self->c_file->getNamespaceCount(((long)__pyx_t_1))); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 453, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
   goto __pyx_L0;
 
-  /* "pyzim.pyx":318
+  /* "pyzim.pyx":445
  *         return self.c_file.getNamespaces().decode("UTF-8", "strict")
  * 
  *     def get_namespaces_count(self, str ns):             # <<<<<<<<<<<<<<
- *         return self.c_file.getNamespaceCount(ord(ns[0]))
+ *         """Get article count from a namespaces.
  * 
  */
 
@@ -5497,16 +5736,17 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_20get_namespaces_count(struct __pyx_
   return __pyx_r;
 }
 
-/* "pyzim.pyx":321
+/* "pyzim.pyx":455
  *         return self.c_file.getNamespaceCount(ord(ns[0]))
  * 
  *     def suggest(self, query):             # <<<<<<<<<<<<<<
- *         results = self.c_search.suggest(query.encode('UTF-8'))
- *         return [r.decode("UTF-8", "strict") for r in results]
+ *         """Get a list of the full urls of suggested articles in the file from a query.
+ * 
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_5pyzim_9ZimReader_23suggest(PyObject *__pyx_v_self, PyObject *__pyx_v_query); /*proto*/
+static char __pyx_doc_5pyzim_9ZimReader_22suggest[] = "Get a list of the full urls of suggested articles in the file from a query.\n\n        Parameters\n        ----------\n        query : str\n            Query string\n\n        Returns\n        -------\n        list\n            A list with the urls of suggested articles\n\n        ";
 static PyObject *__pyx_pw_5pyzim_9ZimReader_23suggest(PyObject *__pyx_v_self, PyObject *__pyx_v_query) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
@@ -5530,14 +5770,14 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_22suggest(struct __pyx_obj_5pyzim_Zi
   std::vector<std::string> ::iterator __pyx_t_5;
   __Pyx_RefNannySetupContext("suggest", 0);
 
-  /* "pyzim.pyx":322
+  /* "pyzim.pyx":469
  * 
- *     def suggest(self, query):
+ *         """
  *         results = self.c_search.suggest(query.encode('UTF-8'))             # <<<<<<<<<<<<<<
  *         return [r.decode("UTF-8", "strict") for r in results]
  * 
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_query, __pyx_n_s_encode); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 322, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_query, __pyx_n_s_encode); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 469, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_3 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_2))) {
@@ -5551,15 +5791,15 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_22suggest(struct __pyx_obj_5pyzim_Zi
   }
   __pyx_t_1 = (__pyx_t_3) ? __Pyx_PyObject_Call2Args(__pyx_t_2, __pyx_t_3, __pyx_kp_u_UTF_8) : __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_kp_u_UTF_8);
   __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 322, __pyx_L1_error)
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 469, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_4 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 322, __pyx_L1_error)
+  __pyx_t_4 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 469, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_results = __pyx_v_self->c_search->suggest(__pyx_t_4);
 
-  /* "pyzim.pyx":323
- *     def suggest(self, query):
+  /* "pyzim.pyx":470
+ *         """
  *         results = self.c_search.suggest(query.encode('UTF-8'))
  *         return [r.decode("UTF-8", "strict") for r in results]             # <<<<<<<<<<<<<<
  * 
@@ -5567,7 +5807,7 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_22suggest(struct __pyx_obj_5pyzim_Zi
  */
   __Pyx_XDECREF(__pyx_r);
   { /* enter inner scope */
-    __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 323, __pyx_L1_error)
+    __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 470, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __pyx_t_5 = __pyx_v_results.begin();
     for (;;) {
@@ -5575,9 +5815,9 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_22suggest(struct __pyx_obj_5pyzim_Zi
       __pyx_t_4 = *__pyx_t_5;
       ++__pyx_t_5;
       __pyx_8genexpr1__pyx_v_r = __pyx_t_4;
-      __pyx_t_2 = __Pyx_decode_cpp_string(__pyx_8genexpr1__pyx_v_r, 0, PY_SSIZE_T_MAX, NULL, NULL, PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 323, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_decode_cpp_string(__pyx_8genexpr1__pyx_v_r, 0, PY_SSIZE_T_MAX, NULL, NULL, PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 470, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
-      if (unlikely(__Pyx_ListComp_Append(__pyx_t_1, (PyObject*)__pyx_t_2))) __PYX_ERR(0, 323, __pyx_L1_error)
+      if (unlikely(__Pyx_ListComp_Append(__pyx_t_1, (PyObject*)__pyx_t_2))) __PYX_ERR(0, 470, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     }
   } /* exit inner scope */
@@ -5585,12 +5825,12 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_22suggest(struct __pyx_obj_5pyzim_Zi
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "pyzim.pyx":321
+  /* "pyzim.pyx":455
  *         return self.c_file.getNamespaceCount(ord(ns[0]))
  * 
  *     def suggest(self, query):             # <<<<<<<<<<<<<<
- *         results = self.c_search.suggest(query.encode('UTF-8'))
- *         return [r.decode("UTF-8", "strict") for r in results]
+ *         """Get a list of the full urls of suggested articles in the file from a query.
+ * 
  */
 
   /* function exit code */
@@ -5606,16 +5846,17 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_22suggest(struct __pyx_obj_5pyzim_Zi
   return __pyx_r;
 }
 
-/* "pyzim.pyx":325
+/* "pyzim.pyx":472
  *         return [r.decode("UTF-8", "strict") for r in results]
  * 
  *     def search(self, query):             # <<<<<<<<<<<<<<
- *         results = self.c_search.search(query.encode('UTF-8'))
- *         return [r.decode("UTF-8", "strict") for r in results]
+ *         """Get a list of the full urls of articles in the file from a search query.
+ * 
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_5pyzim_9ZimReader_25search(PyObject *__pyx_v_self, PyObject *__pyx_v_query); /*proto*/
+static char __pyx_doc_5pyzim_9ZimReader_24search[] = "Get a list of the full urls of articles in the file from a search query.\n\n        Parameters\n        ----------\n        query : str\n            Query string\n\n        Returns\n        -------\n        list\n            A list with the urls of articles matching the search query\n        ";
 static PyObject *__pyx_pw_5pyzim_9ZimReader_25search(PyObject *__pyx_v_self, PyObject *__pyx_v_query) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
@@ -5639,14 +5880,14 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_24search(struct __pyx_obj_5pyzim_Zim
   std::vector<std::string> ::iterator __pyx_t_5;
   __Pyx_RefNannySetupContext("search", 0);
 
-  /* "pyzim.pyx":326
+  /* "pyzim.pyx":486
+ *         """
  * 
- *     def search(self, query):
  *         results = self.c_search.search(query.encode('UTF-8'))             # <<<<<<<<<<<<<<
  *         return [r.decode("UTF-8", "strict") for r in results]
  * 
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_query, __pyx_n_s_encode); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 326, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_query, __pyx_n_s_encode); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 486, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_3 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_2))) {
@@ -5660,15 +5901,15 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_24search(struct __pyx_obj_5pyzim_Zim
   }
   __pyx_t_1 = (__pyx_t_3) ? __Pyx_PyObject_Call2Args(__pyx_t_2, __pyx_t_3, __pyx_kp_u_UTF_8) : __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_kp_u_UTF_8);
   __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 326, __pyx_L1_error)
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 486, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_4 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 326, __pyx_L1_error)
+  __pyx_t_4 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 486, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_results = __pyx_v_self->c_search->search(__pyx_t_4);
 
-  /* "pyzim.pyx":327
- *     def search(self, query):
+  /* "pyzim.pyx":487
+ * 
  *         results = self.c_search.search(query.encode('UTF-8'))
  *         return [r.decode("UTF-8", "strict") for r in results]             # <<<<<<<<<<<<<<
  * 
@@ -5676,7 +5917,7 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_24search(struct __pyx_obj_5pyzim_Zim
  */
   __Pyx_XDECREF(__pyx_r);
   { /* enter inner scope */
-    __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 327, __pyx_L1_error)
+    __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 487, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __pyx_t_5 = __pyx_v_results.begin();
     for (;;) {
@@ -5684,9 +5925,9 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_24search(struct __pyx_obj_5pyzim_Zim
       __pyx_t_4 = *__pyx_t_5;
       ++__pyx_t_5;
       __pyx_8genexpr2__pyx_v_r = __pyx_t_4;
-      __pyx_t_2 = __Pyx_decode_cpp_string(__pyx_8genexpr2__pyx_v_r, 0, PY_SSIZE_T_MAX, NULL, NULL, PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 327, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_decode_cpp_string(__pyx_8genexpr2__pyx_v_r, 0, PY_SSIZE_T_MAX, NULL, NULL, PyUnicode_DecodeUTF8); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 487, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
-      if (unlikely(__Pyx_ListComp_Append(__pyx_t_1, (PyObject*)__pyx_t_2))) __PYX_ERR(0, 327, __pyx_L1_error)
+      if (unlikely(__Pyx_ListComp_Append(__pyx_t_1, (PyObject*)__pyx_t_2))) __PYX_ERR(0, 487, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     }
   } /* exit inner scope */
@@ -5694,12 +5935,12 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_24search(struct __pyx_obj_5pyzim_Zim
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "pyzim.pyx":325
+  /* "pyzim.pyx":472
  *         return [r.decode("UTF-8", "strict") for r in results]
  * 
  *     def search(self, query):             # <<<<<<<<<<<<<<
- *         results = self.c_search.search(query.encode('UTF-8'))
- *         return [r.decode("UTF-8", "strict") for r in results]
+ *         """Get a list of the full urls of articles in the file from a search query.
+ * 
  */
 
   /* function exit code */
@@ -5746,7 +5987,7 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_26__reduce_cython__(CYTHON_UNUSED st
  * def __setstate_cython__(self, __pyx_state):
  *     raise TypeError("no default __reduce__ due to non-trivial __cinit__")
  */
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__9, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 2, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__10, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 2, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_Raise(__pyx_t_1, 0, 0, 0);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -5799,7 +6040,7 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_28__setstate_cython__(CYTHON_UNUSED 
  * def __setstate_cython__(self, __pyx_state):
  *     raise TypeError("no default __reduce__ due to non-trivial __cinit__")             # <<<<<<<<<<<<<<
  */
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__10, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 4, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__11, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 4, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_Raise(__pyx_t_1, 0, 0, 0);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -5822,7 +6063,7 @@ static PyObject *__pyx_pf_5pyzim_9ZimReader_28__setstate_cython__(CYTHON_UNUSED 
   return __pyx_r;
 }
 
-/* "pyzim.pyx":357
+/* "pyzim.pyx":529
  *     _article_counter = defaultdict(int)
  * 
  *     def __cinit__(self, str filename, str main_page = "", str index_language = "eng", min_chunk_size = 2048):             # <<<<<<<<<<<<<<
@@ -5886,7 +6127,7 @@ static int __pyx_pw_5pyzim_10ZimCreator_1__cinit__(PyObject *__pyx_v_self, PyObj
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__cinit__") < 0)) __PYX_ERR(0, 357, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__cinit__") < 0)) __PYX_ERR(0, 529, __pyx_L3_error)
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -5908,15 +6149,15 @@ static int __pyx_pw_5pyzim_10ZimCreator_1__cinit__(PyObject *__pyx_v_self, PyObj
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__cinit__", 0, 1, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 357, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("__cinit__", 0, 1, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 529, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("pyzim.ZimCreator.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return -1;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_filename), (&PyUnicode_Type), 1, "filename", 1))) __PYX_ERR(0, 357, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_main_page), (&PyUnicode_Type), 1, "main_page", 1))) __PYX_ERR(0, 357, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_index_language), (&PyUnicode_Type), 1, "index_language", 1))) __PYX_ERR(0, 357, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_filename), (&PyUnicode_Type), 1, "filename", 1))) __PYX_ERR(0, 529, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_main_page), (&PyUnicode_Type), 1, "main_page", 1))) __PYX_ERR(0, 529, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_index_language), (&PyUnicode_Type), 1, "index_language", 1))) __PYX_ERR(0, 529, __pyx_L1_error)
   __pyx_r = __pyx_pf_5pyzim_10ZimCreator___cinit__(((struct __pyx_obj_5pyzim_ZimCreator *)__pyx_v_self), __pyx_v_filename, __pyx_v_main_page, __pyx_v_index_language, __pyx_v_min_chunk_size);
 
   /* function exit code */
@@ -5942,57 +6183,57 @@ static int __pyx_pf_5pyzim_10ZimCreator___cinit__(struct __pyx_obj_5pyzim_ZimCre
   PyObject *__pyx_t_9 = NULL;
   __Pyx_RefNannySetupContext("__cinit__", 0);
 
-  /* "pyzim.pyx":358
+  /* "pyzim.pyx":530
  * 
  *     def __cinit__(self, str filename, str main_page = "", str index_language = "eng", min_chunk_size = 2048):
  *         self.c_creator = zim.ZimCreator.create(filename.encode("UTF-8"), main_page.encode("UTF-8"), index_language.encode("UTF-8"), min_chunk_size)             # <<<<<<<<<<<<<<
  *         self.set_metadata(date=datetime.date.today(), language= index_language)
- *         self._finalised = False
+ *         self._finalized = False
  */
   if (unlikely(__pyx_v_filename == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%.30s'", "encode");
-    __PYX_ERR(0, 358, __pyx_L1_error)
+    __PYX_ERR(0, 530, __pyx_L1_error)
   }
-  __pyx_t_1 = PyUnicode_AsUTF8String(__pyx_v_filename); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 358, __pyx_L1_error)
+  __pyx_t_1 = PyUnicode_AsUTF8String(__pyx_v_filename); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 530, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 358, __pyx_L1_error)
+  __pyx_t_2 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 530, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (unlikely(__pyx_v_main_page == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%.30s'", "encode");
-    __PYX_ERR(0, 358, __pyx_L1_error)
+    __PYX_ERR(0, 530, __pyx_L1_error)
   }
-  __pyx_t_1 = PyUnicode_AsUTF8String(__pyx_v_main_page); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 358, __pyx_L1_error)
+  __pyx_t_1 = PyUnicode_AsUTF8String(__pyx_v_main_page); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 530, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 358, __pyx_L1_error)
+  __pyx_t_3 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 530, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (unlikely(__pyx_v_index_language == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%.30s'", "encode");
-    __PYX_ERR(0, 358, __pyx_L1_error)
+    __PYX_ERR(0, 530, __pyx_L1_error)
   }
-  __pyx_t_1 = PyUnicode_AsUTF8String(__pyx_v_index_language); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 358, __pyx_L1_error)
+  __pyx_t_1 = PyUnicode_AsUTF8String(__pyx_v_index_language); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 530, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_4 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 358, __pyx_L1_error)
+  __pyx_t_4 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 530, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_min_chunk_size); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 358, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_min_chunk_size); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 530, __pyx_L1_error)
   __pyx_v_self->c_creator = ZimCreator::create(__pyx_t_2, __pyx_t_3, __pyx_t_4, __pyx_t_5);
 
-  /* "pyzim.pyx":359
+  /* "pyzim.pyx":531
  *     def __cinit__(self, str filename, str main_page = "", str index_language = "eng", min_chunk_size = 2048):
  *         self.c_creator = zim.ZimCreator.create(filename.encode("UTF-8"), main_page.encode("UTF-8"), index_language.encode("UTF-8"), min_chunk_size)
  *         self.set_metadata(date=datetime.date.today(), language= index_language)             # <<<<<<<<<<<<<<
- *         self._finalised = False
+ *         self._finalized = False
  * 
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_set_metadata); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 359, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_set_metadata); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 531, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_6 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 359, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 531, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
-  __Pyx_GetModuleGlobalName(__pyx_t_8, __pyx_n_s_datetime); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 359, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_8, __pyx_n_s_datetime); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 531, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
-  __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_8, __pyx_n_s_date); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 359, __pyx_L1_error)
+  __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_8, __pyx_n_s_date); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 531, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_9);
   __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-  __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_t_9, __pyx_n_s_today); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 359, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_t_9, __pyx_n_s_today); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 531, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
   __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
   __pyx_t_9 = NULL;
@@ -6007,32 +6248,32 @@ static int __pyx_pf_5pyzim_10ZimCreator___cinit__(struct __pyx_obj_5pyzim_ZimCre
   }
   __pyx_t_7 = (__pyx_t_9) ? __Pyx_PyObject_CallOneArg(__pyx_t_8, __pyx_t_9) : __Pyx_PyObject_CallNoArg(__pyx_t_8);
   __Pyx_XDECREF(__pyx_t_9); __pyx_t_9 = 0;
-  if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 359, __pyx_L1_error)
+  if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 531, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-  if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_date, __pyx_t_7) < 0) __PYX_ERR(0, 359, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_date, __pyx_t_7) < 0) __PYX_ERR(0, 531, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-  if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_language, __pyx_v_index_language) < 0) __PYX_ERR(0, 359, __pyx_L1_error)
-  __pyx_t_7 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_empty_tuple, __pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 359, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_language, __pyx_v_index_language) < 0) __PYX_ERR(0, 531, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_empty_tuple, __pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 531, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-  /* "pyzim.pyx":360
+  /* "pyzim.pyx":532
  *         self.c_creator = zim.ZimCreator.create(filename.encode("UTF-8"), main_page.encode("UTF-8"), index_language.encode("UTF-8"), min_chunk_size)
  *         self.set_metadata(date=datetime.date.today(), language= index_language)
- *         self._finalised = False             # <<<<<<<<<<<<<<
+ *         self._finalized = False             # <<<<<<<<<<<<<<
  * 
  *     #def __dealloc__(self):
  */
   __Pyx_INCREF(Py_False);
   __Pyx_GIVEREF(Py_False);
-  __Pyx_GOTREF(__pyx_v_self->_finalised);
-  __Pyx_DECREF(__pyx_v_self->_finalised);
-  __pyx_v_self->_finalised = Py_False;
+  __Pyx_GOTREF(__pyx_v_self->_finalized);
+  __Pyx_DECREF(__pyx_v_self->_finalized);
+  __pyx_v_self->_finalized = Py_False;
 
-  /* "pyzim.pyx":357
+  /* "pyzim.pyx":529
  *     _article_counter = defaultdict(int)
  * 
  *     def __cinit__(self, str filename, str main_page = "", str index_language = "eng", min_chunk_size = 2048):             # <<<<<<<<<<<<<<
@@ -6056,21 +6297,22 @@ static int __pyx_pf_5pyzim_10ZimCreator___cinit__(struct __pyx_obj_5pyzim_ZimCre
   return __pyx_r;
 }
 
-/* "pyzim.pyx":366
+/* "pyzim.pyx":538
  *     #        del self.c_creator
  * 
  *     def add_article(self, ZimArticle article):             # <<<<<<<<<<<<<<
- *         if not article.can_write:
- *             raise RuntimeError("Article is not good for writing")
+ *         """Add a ZimArticle to the Creator object.
+ * 
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_5pyzim_10ZimCreator_3add_article(PyObject *__pyx_v_self, PyObject *__pyx_v_article); /*proto*/
+static char __pyx_doc_5pyzim_10ZimCreator_2add_article[] = "Add a ZimArticle to the Creator object.\n        \n        Parameters\n        ----------\n        article : ZimArticle\n            The article to add to the file\n\n        Raises\n        ------\n            RuntimeError\n                If the ZimArticle provided is not ready for writing\n            RuntimeError\n                If the ZimCreator was already finalized\n        ";
 static PyObject *__pyx_pw_5pyzim_10ZimCreator_3add_article(PyObject *__pyx_v_self, PyObject *__pyx_v_article) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("add_article (wrapper)", 0);
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_article), __pyx_ptype_5pyzim_ZimArticle, 1, "article", 0))) __PYX_ERR(0, 366, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_article), __pyx_ptype_5pyzim_ZimArticle, 1, "article", 0))) __PYX_ERR(0, 538, __pyx_L1_error)
   __pyx_r = __pyx_pf_5pyzim_10ZimCreator_2add_article(((struct __pyx_obj_5pyzim_ZimCreator *)__pyx_v_self), ((struct __pyx_obj_5pyzim_ZimArticle *)__pyx_v_article));
 
   /* function exit code */
@@ -6086,8 +6328,8 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_2add_article(struct __pyx_obj_5pyz
   std::shared_ptr<ZimArticle>  __pyx_v_art;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
-  PyObject *__pyx_t_1 = NULL;
-  int __pyx_t_2;
+  int __pyx_t_1;
+  PyObject *__pyx_t_2 = NULL;
   int __pyx_t_3;
   std::shared_ptr<ZimArticle>  __pyx_t_4;
   PyObject *__pyx_t_5 = NULL;
@@ -6097,60 +6339,92 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_2add_article(struct __pyx_obj_5pyz
   PyObject *__pyx_t_9 = NULL;
   __Pyx_RefNannySetupContext("add_article", 0);
 
-  /* "pyzim.pyx":367
+  /* "pyzim.pyx":553
+ *                 If the ZimCreator was already finalized
+ *         """
+ *         if self._finalized:             # <<<<<<<<<<<<<<
+ *             raise RuntimeError("ZimCreator already finalized")
  * 
- *     def add_article(self, ZimArticle article):
+ */
+  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_self->_finalized); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 553, __pyx_L1_error)
+  if (unlikely(__pyx_t_1)) {
+
+    /* "pyzim.pyx":554
+ *         """
+ *         if self._finalized:
+ *             raise RuntimeError("ZimCreator already finalized")             # <<<<<<<<<<<<<<
+ * 
+ *         if not article.can_write:
+ */
+    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple__12, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 554, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_Raise(__pyx_t_2, 0, 0, 0);
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __PYX_ERR(0, 554, __pyx_L1_error)
+
+    /* "pyzim.pyx":553
+ *                 If the ZimCreator was already finalized
+ *         """
+ *         if self._finalized:             # <<<<<<<<<<<<<<
+ *             raise RuntimeError("ZimCreator already finalized")
+ * 
+ */
+  }
+
+  /* "pyzim.pyx":556
+ *             raise RuntimeError("ZimCreator already finalized")
+ * 
  *         if not article.can_write:             # <<<<<<<<<<<<<<
  *             raise RuntimeError("Article is not good for writing")
  * 
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_article), __pyx_n_s_can_write); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 367, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 367, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_3 = ((!__pyx_t_2) != 0);
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_article), __pyx_n_s_can_write); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 556, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 556, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_3 = ((!__pyx_t_1) != 0);
   if (unlikely(__pyx_t_3)) {
 
-    /* "pyzim.pyx":368
- *     def add_article(self, ZimArticle article):
+    /* "pyzim.pyx":557
+ * 
  *         if not article.can_write:
  *             raise RuntimeError("Article is not good for writing")             # <<<<<<<<<<<<<<
  * 
  *         # Make a shared pointer to ZimArticle from the ZimArticle object (dereference internal c_zim_article)
  */
-    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple__11, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 368, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_1);
-    __Pyx_Raise(__pyx_t_1, 0, 0, 0);
-    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __PYX_ERR(0, 368, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple__13, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 557, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_Raise(__pyx_t_2, 0, 0, 0);
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __PYX_ERR(0, 557, __pyx_L1_error)
 
-    /* "pyzim.pyx":367
+    /* "pyzim.pyx":556
+ *             raise RuntimeError("ZimCreator already finalized")
  * 
- *     def add_article(self, ZimArticle article):
  *         if not article.can_write:             # <<<<<<<<<<<<<<
  *             raise RuntimeError("Article is not good for writing")
  * 
  */
   }
 
-  /* "pyzim.pyx":371
+  /* "pyzim.pyx":560
  * 
  *         # Make a shared pointer to ZimArticle from the ZimArticle object (dereference internal c_zim_article)
  *         cdef shared_ptr[zim.ZimArticle] art = make_shared[zim.ZimArticle](dereference(article.c_zim_article));             # <<<<<<<<<<<<<<
+ * 
  *         try:
- *             self.c_creator.addArticle(art)
  */
   try {
     __pyx_t_4 = std::make_shared<ZimArticle>((*__pyx_v_article->c_zim_article));
   } catch(...) {
     __Pyx_CppExn2PyErr();
-    __PYX_ERR(0, 371, __pyx_L1_error)
+    __PYX_ERR(0, 560, __pyx_L1_error)
   }
   __pyx_v_art = __pyx_t_4;
 
-  /* "pyzim.pyx":372
- *         # Make a shared pointer to ZimArticle from the ZimArticle object (dereference internal c_zim_article)
+  /* "pyzim.pyx":562
  *         cdef shared_ptr[zim.ZimArticle] art = make_shared[zim.ZimArticle](dereference(article.c_zim_article));
+ * 
  *         try:             # <<<<<<<<<<<<<<
  *             self.c_creator.addArticle(art)
  *         else:
@@ -6159,8 +6433,8 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_2add_article(struct __pyx_obj_5pyz
     (void)__pyx_t_5; (void)__pyx_t_6; (void)__pyx_t_7; /* mark used */
     /*try:*/ {
 
-      /* "pyzim.pyx":373
- *         cdef shared_ptr[zim.ZimArticle] art = make_shared[zim.ZimArticle](dereference(article.c_zim_article));
+      /* "pyzim.pyx":563
+ * 
  *         try:
  *             self.c_creator.addArticle(art)             # <<<<<<<<<<<<<<
  *         else:
@@ -6168,16 +6442,16 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_2add_article(struct __pyx_obj_5pyz
  */
       __pyx_v_self->c_creator->addArticle(__pyx_v_art);
 
-      /* "pyzim.pyx":372
- *         # Make a shared pointer to ZimArticle from the ZimArticle object (dereference internal c_zim_article)
+      /* "pyzim.pyx":562
  *         cdef shared_ptr[zim.ZimArticle] art = make_shared[zim.ZimArticle](dereference(article.c_zim_article));
+ * 
  *         try:             # <<<<<<<<<<<<<<
  *             self.c_creator.addArticle(art)
  *         else:
  */
     }
 
-    /* "pyzim.pyx":375
+    /* "pyzim.pyx":565
  *             self.c_creator.addArticle(art)
  *         else:
  *             if not article.is_redirect:             # <<<<<<<<<<<<<<
@@ -6185,21 +6459,21 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_2add_article(struct __pyx_obj_5pyz
  * 
  */
     /*else:*/ {
-      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_article), __pyx_n_s_is_redirect); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 375, __pyx_L6_except_error)
-      __Pyx_GOTREF(__pyx_t_1);
-      __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 375, __pyx_L6_except_error)
-      __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-      __pyx_t_2 = ((!__pyx_t_3) != 0);
-      if (__pyx_t_2) {
+      __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_article), __pyx_n_s_is_redirect); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 565, __pyx_L7_except_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 565, __pyx_L7_except_error)
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+      __pyx_t_1 = ((!__pyx_t_3) != 0);
+      if (__pyx_t_1) {
 
-        /* "pyzim.pyx":376
+        /* "pyzim.pyx":566
  *         else:
  *             if not article.is_redirect:
  *                 self._update_article_counter(article)             # <<<<<<<<<<<<<<
  * 
  * 
  */
-        __pyx_t_8 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_update_article_counter); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 376, __pyx_L6_except_error)
+        __pyx_t_8 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_update_article_counter); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 566, __pyx_L7_except_error)
         __Pyx_GOTREF(__pyx_t_8);
         __pyx_t_9 = NULL;
         if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_8))) {
@@ -6211,14 +6485,14 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_2add_article(struct __pyx_obj_5pyz
             __Pyx_DECREF_SET(__pyx_t_8, function);
           }
         }
-        __pyx_t_1 = (__pyx_t_9) ? __Pyx_PyObject_Call2Args(__pyx_t_8, __pyx_t_9, ((PyObject *)__pyx_v_article)) : __Pyx_PyObject_CallOneArg(__pyx_t_8, ((PyObject *)__pyx_v_article));
+        __pyx_t_2 = (__pyx_t_9) ? __Pyx_PyObject_Call2Args(__pyx_t_8, __pyx_t_9, ((PyObject *)__pyx_v_article)) : __Pyx_PyObject_CallOneArg(__pyx_t_8, ((PyObject *)__pyx_v_article));
         __Pyx_XDECREF(__pyx_t_9); __pyx_t_9 = 0;
-        if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 376, __pyx_L6_except_error)
-        __Pyx_GOTREF(__pyx_t_1);
+        if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 566, __pyx_L7_except_error)
+        __Pyx_GOTREF(__pyx_t_2);
         __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-        __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+        __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-        /* "pyzim.pyx":375
+        /* "pyzim.pyx":565
  *             self.c_creator.addArticle(art)
  *         else:
  *             if not article.is_redirect:             # <<<<<<<<<<<<<<
@@ -6227,33 +6501,33 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_2add_article(struct __pyx_obj_5pyz
  */
       }
     }
-    goto __pyx_L9_try_end;
-    __pyx_L6_except_error:;
+    goto __pyx_L10_try_end;
+    __pyx_L7_except_error:;
 
-    /* "pyzim.pyx":372
- *         # Make a shared pointer to ZimArticle from the ZimArticle object (dereference internal c_zim_article)
+    /* "pyzim.pyx":562
  *         cdef shared_ptr[zim.ZimArticle] art = make_shared[zim.ZimArticle](dereference(article.c_zim_article));
+ * 
  *         try:             # <<<<<<<<<<<<<<
  *             self.c_creator.addArticle(art)
  *         else:
  */
     goto __pyx_L1_error;
-    __pyx_L9_try_end:;
+    __pyx_L10_try_end:;
   }
 
-  /* "pyzim.pyx":366
+  /* "pyzim.pyx":538
  *     #        del self.c_creator
  * 
  *     def add_article(self, ZimArticle article):             # <<<<<<<<<<<<<<
- *         if not article.can_write:
- *             raise RuntimeError("Article is not good for writing")
+ *         """Add a ZimArticle to the Creator object.
+ * 
  */
 
   /* function exit code */
   __pyx_r = Py_None; __Pyx_INCREF(Py_None);
   goto __pyx_L0;
   __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_8);
   __Pyx_XDECREF(__pyx_t_9);
   __Pyx_AddTraceback("pyzim.ZimCreator.add_article", __pyx_clineno, __pyx_lineno, __pyx_filename);
@@ -6264,7 +6538,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_2add_article(struct __pyx_obj_5pyz
   return __pyx_r;
 }
 
-/* "pyzim.pyx":379
+/* "pyzim.pyx":569
  * 
  * 
  *     def _update_article_counter(self, ZimArticle article):             # <<<<<<<<<<<<<<
@@ -6278,7 +6552,7 @@ static PyObject *__pyx_pw_5pyzim_10ZimCreator_5_update_article_counter(PyObject 
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("_update_article_counter (wrapper)", 0);
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_article), __pyx_ptype_5pyzim_ZimArticle, 1, "article", 0))) __PYX_ERR(0, 379, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_article), __pyx_ptype_5pyzim_ZimArticle, 1, "article", 0))) __PYX_ERR(0, 569, __pyx_L1_error)
   __pyx_r = __pyx_pf_5pyzim_10ZimCreator_4_update_article_counter(((struct __pyx_obj_5pyzim_ZimCreator *)__pyx_v_self), ((struct __pyx_obj_5pyzim_ZimArticle *)__pyx_v_article));
 
   /* function exit code */
@@ -6299,28 +6573,28 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_4_update_article_counter(struct __
   PyObject *__pyx_t_4 = NULL;
   __Pyx_RefNannySetupContext("_update_article_counter", 0);
 
-  /* "pyzim.pyx":381
+  /* "pyzim.pyx":571
  *     def _update_article_counter(self, ZimArticle article):
  *         # default dict update
  *         self._article_counter[article.mimetype] += 1             # <<<<<<<<<<<<<<
  * 
  *     def get_article_counter_string(self):
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_article_counter); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 381, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_article_counter); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 571, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_article), __pyx_n_s_mimetype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 381, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_article), __pyx_n_s_mimetype); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 571, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyObject_GetItem(__pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 381, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetItem(__pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 571, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = __Pyx_PyInt_AddObjC(__pyx_t_3, __pyx_int_1, 1, 1, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 381, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyInt_AddObjC(__pyx_t_3, __pyx_int_1, 1, 1, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 571, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (unlikely(PyObject_SetItem(__pyx_t_1, __pyx_t_2, __pyx_t_4) < 0)) __PYX_ERR(0, 381, __pyx_L1_error)
+  if (unlikely(PyObject_SetItem(__pyx_t_1, __pyx_t_2, __pyx_t_4) < 0)) __PYX_ERR(0, 571, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "pyzim.pyx":379
+  /* "pyzim.pyx":569
  * 
  * 
  *     def _update_article_counter(self, ZimArticle article):             # <<<<<<<<<<<<<<
@@ -6344,7 +6618,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_4_update_article_counter(struct __
   return __pyx_r;
 }
 
-/* "pyzim.pyx":383
+/* "pyzim.pyx":573
  *         self._article_counter[article.mimetype] += 1
  * 
  *     def get_article_counter_string(self):             # <<<<<<<<<<<<<<
@@ -6382,7 +6656,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_6get_article_counter_string(struct
   Py_UCS4 __pyx_t_10;
   __Pyx_RefNannySetupContext("get_article_counter_string", 0);
 
-  /* "pyzim.pyx":384
+  /* "pyzim.pyx":574
  * 
  *     def get_article_counter_string(self):
  *         return ";".join(["%s=%s" % (k,v) for (k,v) in self._article_counter.items()])             # <<<<<<<<<<<<<<
@@ -6391,16 +6665,16 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_6get_article_counter_string(struct
  */
   __Pyx_XDECREF(__pyx_r);
   { /* enter inner scope */
-    __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 384, __pyx_L5_error)
+    __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 574, __pyx_L5_error)
     __Pyx_GOTREF(__pyx_t_1);
     __pyx_t_3 = 0;
-    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_article_counter); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 384, __pyx_L5_error)
+    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_article_counter); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 574, __pyx_L5_error)
     __Pyx_GOTREF(__pyx_t_6);
     if (unlikely(__pyx_t_6 == Py_None)) {
       PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%.30s'", "items");
-      __PYX_ERR(0, 384, __pyx_L5_error)
+      __PYX_ERR(0, 574, __pyx_L5_error)
     }
-    __pyx_t_7 = __Pyx_dict_iterator(__pyx_t_6, 0, __pyx_n_s_items, (&__pyx_t_4), (&__pyx_t_5)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 384, __pyx_L5_error)
+    __pyx_t_7 = __Pyx_dict_iterator(__pyx_t_6, 0, __pyx_n_s_items, (&__pyx_t_4), (&__pyx_t_5)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 574, __pyx_L5_error)
     __Pyx_GOTREF(__pyx_t_7);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_XDECREF(__pyx_t_2);
@@ -6409,39 +6683,39 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_6get_article_counter_string(struct
     while (1) {
       __pyx_t_8 = __Pyx_dict_iter_next(__pyx_t_2, __pyx_t_4, &__pyx_t_3, &__pyx_t_7, &__pyx_t_6, NULL, __pyx_t_5);
       if (unlikely(__pyx_t_8 == 0)) break;
-      if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 384, __pyx_L5_error)
+      if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 574, __pyx_L5_error)
       __Pyx_GOTREF(__pyx_t_7);
       __Pyx_GOTREF(__pyx_t_6);
       __Pyx_XDECREF_SET(__pyx_8genexpr3__pyx_v_k, __pyx_t_7);
       __pyx_t_7 = 0;
       __Pyx_XDECREF_SET(__pyx_8genexpr3__pyx_v_v, __pyx_t_6);
       __pyx_t_6 = 0;
-      __pyx_t_6 = PyTuple_New(3); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 384, __pyx_L5_error)
+      __pyx_t_6 = PyTuple_New(3); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 574, __pyx_L5_error)
       __Pyx_GOTREF(__pyx_t_6);
       __pyx_t_9 = 0;
       __pyx_t_10 = 127;
-      __pyx_t_7 = __Pyx_PyObject_FormatSimpleAndDecref(PyObject_Unicode(__pyx_8genexpr3__pyx_v_k), __pyx_empty_unicode); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 384, __pyx_L5_error)
+      __pyx_t_7 = __Pyx_PyObject_FormatSimpleAndDecref(PyObject_Unicode(__pyx_8genexpr3__pyx_v_k), __pyx_empty_unicode); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 574, __pyx_L5_error)
       __Pyx_GOTREF(__pyx_t_7);
       __pyx_t_10 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_7) > __pyx_t_10) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_7) : __pyx_t_10;
       __pyx_t_9 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_7);
       __Pyx_GIVEREF(__pyx_t_7);
       PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_7);
       __pyx_t_7 = 0;
-      __Pyx_INCREF(__pyx_kp_u__13);
+      __Pyx_INCREF(__pyx_kp_u__15);
       __pyx_t_9 += 1;
-      __Pyx_GIVEREF(__pyx_kp_u__13);
-      PyTuple_SET_ITEM(__pyx_t_6, 1, __pyx_kp_u__13);
-      __pyx_t_7 = __Pyx_PyObject_FormatSimpleAndDecref(PyObject_Unicode(__pyx_8genexpr3__pyx_v_v), __pyx_empty_unicode); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 384, __pyx_L5_error)
+      __Pyx_GIVEREF(__pyx_kp_u__15);
+      PyTuple_SET_ITEM(__pyx_t_6, 1, __pyx_kp_u__15);
+      __pyx_t_7 = __Pyx_PyObject_FormatSimpleAndDecref(PyObject_Unicode(__pyx_8genexpr3__pyx_v_v), __pyx_empty_unicode); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 574, __pyx_L5_error)
       __Pyx_GOTREF(__pyx_t_7);
       __pyx_t_10 = (__Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_7) > __pyx_t_10) ? __Pyx_PyUnicode_MAX_CHAR_VALUE(__pyx_t_7) : __pyx_t_10;
       __pyx_t_9 += __Pyx_PyUnicode_GET_LENGTH(__pyx_t_7);
       __Pyx_GIVEREF(__pyx_t_7);
       PyTuple_SET_ITEM(__pyx_t_6, 2, __pyx_t_7);
       __pyx_t_7 = 0;
-      __pyx_t_7 = __Pyx_PyUnicode_Join(__pyx_t_6, 3, __pyx_t_9, __pyx_t_10); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 384, __pyx_L5_error)
+      __pyx_t_7 = __Pyx_PyUnicode_Join(__pyx_t_6, 3, __pyx_t_9, __pyx_t_10); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 574, __pyx_L5_error)
       __Pyx_GOTREF(__pyx_t_7);
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-      if (unlikely(__Pyx_ListComp_Append(__pyx_t_1, (PyObject*)__pyx_t_7))) __PYX_ERR(0, 384, __pyx_L5_error)
+      if (unlikely(__Pyx_ListComp_Append(__pyx_t_1, (PyObject*)__pyx_t_7))) __PYX_ERR(0, 574, __pyx_L5_error)
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
     }
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
@@ -6454,14 +6728,14 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_6get_article_counter_string(struct
     goto __pyx_L1_error;
     __pyx_L8_exit_scope:;
   } /* exit inner scope */
-  __pyx_t_2 = PyUnicode_Join(__pyx_kp_u__12, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 384, __pyx_L1_error)
+  __pyx_t_2 = PyUnicode_Join(__pyx_kp_u__14, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 574, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
   goto __pyx_L0;
 
-  /* "pyzim.pyx":383
+  /* "pyzim.pyx":573
  *         self._article_counter[article.mimetype] += 1
  * 
  *     def get_article_counter_string(self):             # <<<<<<<<<<<<<<
@@ -6485,7 +6759,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_6get_article_counter_string(struct
   return __pyx_r;
 }
 
-/* "pyzim.pyx":386
+/* "pyzim.pyx":576
  *         return ";".join(["%s=%s" % (k,v) for (k,v) in self._article_counter.items()])
  * 
  *     def get_metadata(self):             # <<<<<<<<<<<<<<
@@ -6524,7 +6798,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_8get_metadata(struct __pyx_obj_5py
   int __pyx_t_9;
   __Pyx_RefNannySetupContext("get_metadata", 0);
 
-  /* "pyzim.pyx":388
+  /* "pyzim.pyx":578
  *     def get_metadata(self):
  *         # Select non empty keys from _metadata
  *         metadata = {k: str(v) for k, v in self._metadata.items() if v}             # <<<<<<<<<<<<<<
@@ -6532,16 +6806,16 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_8get_metadata(struct __pyx_obj_5py
  *         counter_string = self.get_article_counter_string()
  */
   { /* enter inner scope */
-    __pyx_t_1 = PyDict_New(); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 388, __pyx_L5_error)
+    __pyx_t_1 = PyDict_New(); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 578, __pyx_L5_error)
     __Pyx_GOTREF(__pyx_t_1);
     __pyx_t_3 = 0;
-    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_metadata); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 388, __pyx_L5_error)
+    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_metadata); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 578, __pyx_L5_error)
     __Pyx_GOTREF(__pyx_t_6);
     if (unlikely(__pyx_t_6 == Py_None)) {
       PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%.30s'", "items");
-      __PYX_ERR(0, 388, __pyx_L5_error)
+      __PYX_ERR(0, 578, __pyx_L5_error)
     }
-    __pyx_t_7 = __Pyx_dict_iterator(__pyx_t_6, 0, __pyx_n_s_items, (&__pyx_t_4), (&__pyx_t_5)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 388, __pyx_L5_error)
+    __pyx_t_7 = __Pyx_dict_iterator(__pyx_t_6, 0, __pyx_n_s_items, (&__pyx_t_4), (&__pyx_t_5)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 578, __pyx_L5_error)
     __Pyx_GOTREF(__pyx_t_7);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_XDECREF(__pyx_t_2);
@@ -6550,18 +6824,18 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_8get_metadata(struct __pyx_obj_5py
     while (1) {
       __pyx_t_8 = __Pyx_dict_iter_next(__pyx_t_2, __pyx_t_4, &__pyx_t_3, &__pyx_t_7, &__pyx_t_6, NULL, __pyx_t_5);
       if (unlikely(__pyx_t_8 == 0)) break;
-      if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 388, __pyx_L5_error)
+      if (unlikely(__pyx_t_8 == -1)) __PYX_ERR(0, 578, __pyx_L5_error)
       __Pyx_GOTREF(__pyx_t_7);
       __Pyx_GOTREF(__pyx_t_6);
       __Pyx_XDECREF_SET(__pyx_8genexpr4__pyx_v_k, __pyx_t_7);
       __pyx_t_7 = 0;
       __Pyx_XDECREF_SET(__pyx_8genexpr4__pyx_v_v, __pyx_t_6);
       __pyx_t_6 = 0;
-      __pyx_t_9 = __Pyx_PyObject_IsTrue(__pyx_8genexpr4__pyx_v_v); if (unlikely(__pyx_t_9 < 0)) __PYX_ERR(0, 388, __pyx_L5_error)
+      __pyx_t_9 = __Pyx_PyObject_IsTrue(__pyx_8genexpr4__pyx_v_v); if (unlikely(__pyx_t_9 < 0)) __PYX_ERR(0, 578, __pyx_L5_error)
       if (__pyx_t_9) {
-        __pyx_t_6 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyUnicode_Type)), __pyx_8genexpr4__pyx_v_v); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 388, __pyx_L5_error)
+        __pyx_t_6 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyUnicode_Type)), __pyx_8genexpr4__pyx_v_v); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 578, __pyx_L5_error)
         __Pyx_GOTREF(__pyx_t_6);
-        if (unlikely(PyDict_SetItem(__pyx_t_1, (PyObject*)__pyx_8genexpr4__pyx_v_k, (PyObject*)__pyx_t_6))) __PYX_ERR(0, 388, __pyx_L5_error)
+        if (unlikely(PyDict_SetItem(__pyx_t_1, (PyObject*)__pyx_8genexpr4__pyx_v_k, (PyObject*)__pyx_t_6))) __PYX_ERR(0, 578, __pyx_L5_error)
         __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
       }
     }
@@ -6578,14 +6852,14 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_8get_metadata(struct __pyx_obj_5py
   __pyx_v_metadata = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "pyzim.pyx":390
+  /* "pyzim.pyx":580
  *         metadata = {k: str(v) for k, v in self._metadata.items() if v}
  * 
  *         counter_string = self.get_article_counter_string()             # <<<<<<<<<<<<<<
  *         if counter_string:
  *             metadata['Counter'] = counter_string
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_get_article_counter_string); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 390, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_get_article_counter_string); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 580, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_6 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_2))) {
@@ -6599,32 +6873,32 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_8get_metadata(struct __pyx_obj_5py
   }
   __pyx_t_1 = (__pyx_t_6) ? __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_6) : __Pyx_PyObject_CallNoArg(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 390, __pyx_L1_error)
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 580, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v_counter_string = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "pyzim.pyx":391
+  /* "pyzim.pyx":581
  * 
  *         counter_string = self.get_article_counter_string()
  *         if counter_string:             # <<<<<<<<<<<<<<
  *             metadata['Counter'] = counter_string
  * 
  */
-  __pyx_t_9 = __Pyx_PyObject_IsTrue(__pyx_v_counter_string); if (unlikely(__pyx_t_9 < 0)) __PYX_ERR(0, 391, __pyx_L1_error)
+  __pyx_t_9 = __Pyx_PyObject_IsTrue(__pyx_v_counter_string); if (unlikely(__pyx_t_9 < 0)) __PYX_ERR(0, 581, __pyx_L1_error)
   if (__pyx_t_9) {
 
-    /* "pyzim.pyx":392
+    /* "pyzim.pyx":582
  *         counter_string = self.get_article_counter_string()
  *         if counter_string:
  *             metadata['Counter'] = counter_string             # <<<<<<<<<<<<<<
  * 
  *         return metadata
  */
-    if (unlikely(PyDict_SetItem(__pyx_v_metadata, __pyx_n_u_Counter, __pyx_v_counter_string) < 0)) __PYX_ERR(0, 392, __pyx_L1_error)
+    if (unlikely(PyDict_SetItem(__pyx_v_metadata, __pyx_n_u_Counter, __pyx_v_counter_string) < 0)) __PYX_ERR(0, 582, __pyx_L1_error)
 
-    /* "pyzim.pyx":391
+    /* "pyzim.pyx":581
  * 
  *         counter_string = self.get_article_counter_string()
  *         if counter_string:             # <<<<<<<<<<<<<<
@@ -6633,7 +6907,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_8get_metadata(struct __pyx_obj_5py
  */
   }
 
-  /* "pyzim.pyx":394
+  /* "pyzim.pyx":584
  *             metadata['Counter'] = counter_string
  * 
  *         return metadata             # <<<<<<<<<<<<<<
@@ -6645,7 +6919,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_8get_metadata(struct __pyx_obj_5py
   __pyx_r = __pyx_v_metadata;
   goto __pyx_L0;
 
-  /* "pyzim.pyx":386
+  /* "pyzim.pyx":576
  *         return ";".join(["%s=%s" % (k,v) for (k,v) in self._article_counter.items()])
  * 
  *     def get_metadata(self):             # <<<<<<<<<<<<<<
@@ -6671,7 +6945,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_8get_metadata(struct __pyx_obj_5py
   return __pyx_r;
 }
 
-/* "pyzim.pyx":396
+/* "pyzim.pyx":586
  *         return metadata
  * 
  *     def _write_metadata(self, dict metadata):             # <<<<<<<<<<<<<<
@@ -6685,7 +6959,7 @@ static PyObject *__pyx_pw_5pyzim_10ZimCreator_11_write_metadata(PyObject *__pyx_
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("_write_metadata (wrapper)", 0);
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_metadata), (&PyDict_Type), 1, "metadata", 1))) __PYX_ERR(0, 396, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_metadata), (&PyDict_Type), 1, "metadata", 1))) __PYX_ERR(0, 586, __pyx_L1_error)
   __pyx_r = __pyx_pf_5pyzim_10ZimCreator_10_write_metadata(((struct __pyx_obj_5pyzim_ZimCreator *)__pyx_v_self), ((PyObject*)__pyx_v_metadata));
 
   /* function exit code */
@@ -6712,7 +6986,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_10_write_metadata(struct __pyx_obj
   PyObject *__pyx_t_8 = NULL;
   __Pyx_RefNannySetupContext("_write_metadata", 0);
 
-  /* "pyzim.pyx":398
+  /* "pyzim.pyx":588
  *     def _write_metadata(self, dict metadata):
  * 
  *         for key in metadata:             # <<<<<<<<<<<<<<
@@ -6722,9 +6996,9 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_10_write_metadata(struct __pyx_obj
   __pyx_t_2 = 0;
   if (unlikely(__pyx_v_metadata == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not iterable");
-    __PYX_ERR(0, 398, __pyx_L1_error)
+    __PYX_ERR(0, 588, __pyx_L1_error)
   }
-  __pyx_t_5 = __Pyx_dict_iterator(__pyx_v_metadata, 1, ((PyObject *)NULL), (&__pyx_t_3), (&__pyx_t_4)); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 398, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_dict_iterator(__pyx_v_metadata, 1, ((PyObject *)NULL), (&__pyx_t_3), (&__pyx_t_4)); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 588, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_XDECREF(__pyx_t_1);
   __pyx_t_1 = __pyx_t_5;
@@ -6732,62 +7006,62 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_10_write_metadata(struct __pyx_obj
   while (1) {
     __pyx_t_6 = __Pyx_dict_iter_next(__pyx_t_1, __pyx_t_3, &__pyx_t_2, &__pyx_t_5, NULL, NULL, __pyx_t_4);
     if (unlikely(__pyx_t_6 == 0)) break;
-    if (unlikely(__pyx_t_6 == -1)) __PYX_ERR(0, 398, __pyx_L1_error)
+    if (unlikely(__pyx_t_6 == -1)) __PYX_ERR(0, 588, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_XDECREF_SET(__pyx_v_key, __pyx_t_5);
     __pyx_t_5 = 0;
 
-    /* "pyzim.pyx":399
+    /* "pyzim.pyx":589
  * 
  *         for key in metadata:
  *             metadata_article = ZimArticle(url=key, content=metadata[key], namespace= "M",             # <<<<<<<<<<<<<<
  *              mimetype= "text/plain", title=key )
  *             self.add_article(metadata_article)
  */
-    __pyx_t_5 = __Pyx_PyDict_NewPresized(5); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 399, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyDict_NewPresized(5); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 589, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
-    if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_url, __pyx_v_key) < 0) __PYX_ERR(0, 399, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_url, __pyx_v_key) < 0) __PYX_ERR(0, 589, __pyx_L1_error)
     if (unlikely(__pyx_v_metadata == Py_None)) {
       PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      __PYX_ERR(0, 399, __pyx_L1_error)
+      __PYX_ERR(0, 589, __pyx_L1_error)
     }
-    __pyx_t_7 = __Pyx_PyDict_GetItem(__pyx_v_metadata, __pyx_v_key); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 399, __pyx_L1_error)
+    __pyx_t_7 = __Pyx_PyDict_GetItem(__pyx_v_metadata, __pyx_v_key); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 589, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
-    if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_content, __pyx_t_7) < 0) __PYX_ERR(0, 399, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_content, __pyx_t_7) < 0) __PYX_ERR(0, 589, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-    if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_namespace, __pyx_n_u_M_2) < 0) __PYX_ERR(0, 399, __pyx_L1_error)
-    if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_mimetype, __pyx_kp_u_text_plain) < 0) __PYX_ERR(0, 399, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_namespace, __pyx_n_u_M_2) < 0) __PYX_ERR(0, 589, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_mimetype, __pyx_kp_u_text_plain) < 0) __PYX_ERR(0, 589, __pyx_L1_error)
 
-    /* "pyzim.pyx":400
+    /* "pyzim.pyx":590
  *         for key in metadata:
  *             metadata_article = ZimArticle(url=key, content=metadata[key], namespace= "M",
  *              mimetype= "text/plain", title=key )             # <<<<<<<<<<<<<<
  *             self.add_article(metadata_article)
  * 
  */
-    if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_title, __pyx_v_key) < 0) __PYX_ERR(0, 399, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_title, __pyx_v_key) < 0) __PYX_ERR(0, 589, __pyx_L1_error)
 
-    /* "pyzim.pyx":399
+    /* "pyzim.pyx":589
  * 
  *         for key in metadata:
  *             metadata_article = ZimArticle(url=key, content=metadata[key], namespace= "M",             # <<<<<<<<<<<<<<
  *              mimetype= "text/plain", title=key )
  *             self.add_article(metadata_article)
  */
-    __pyx_t_7 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_5pyzim_ZimArticle), __pyx_empty_tuple, __pyx_t_5); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 399, __pyx_L1_error)
+    __pyx_t_7 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_5pyzim_ZimArticle), __pyx_empty_tuple, __pyx_t_5); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 589, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __Pyx_XDECREF_SET(__pyx_v_metadata_article, ((struct __pyx_obj_5pyzim_ZimArticle *)__pyx_t_7));
     __pyx_t_7 = 0;
 
-    /* "pyzim.pyx":401
+    /* "pyzim.pyx":591
  *             metadata_article = ZimArticle(url=key, content=metadata[key], namespace= "M",
  *              mimetype= "text/plain", title=key )
  *             self.add_article(metadata_article)             # <<<<<<<<<<<<<<
  * 
  *     def set_metadata(self, **kwargs):
  */
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_add_article); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 401, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_add_article); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 591, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __pyx_t_8 = NULL;
     if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_5))) {
@@ -6801,14 +7075,14 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_10_write_metadata(struct __pyx_obj
     }
     __pyx_t_7 = (__pyx_t_8) ? __Pyx_PyObject_Call2Args(__pyx_t_5, __pyx_t_8, ((PyObject *)__pyx_v_metadata_article)) : __Pyx_PyObject_CallOneArg(__pyx_t_5, ((PyObject *)__pyx_v_metadata_article));
     __Pyx_XDECREF(__pyx_t_8); __pyx_t_8 = 0;
-    if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 401, __pyx_L1_error)
+    if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 591, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "pyzim.pyx":396
+  /* "pyzim.pyx":586
  *         return metadata
  * 
  *     def _write_metadata(self, dict metadata):             # <<<<<<<<<<<<<<
@@ -6834,7 +7108,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_10_write_metadata(struct __pyx_obj
   return __pyx_r;
 }
 
-/* "pyzim.pyx":403
+/* "pyzim.pyx":593
  *             self.add_article(metadata_article)
  * 
  *     def set_metadata(self, **kwargs):             # <<<<<<<<<<<<<<
@@ -6862,7 +7136,7 @@ static PyObject *__pyx_pw_5pyzim_10ZimCreator_13set_metadata(PyObject *__pyx_v_s
   return __pyx_r;
 }
 
-/* "pyzim.pyx":405
+/* "pyzim.pyx":595
  *     def set_metadata(self, **kwargs):
  *         # Converts python case to pascal case. example: long_description-> LongDescription
  *         pascalize = lambda keyword: "".join(keyword.title().split("_"))             # <<<<<<<<<<<<<<
@@ -6893,7 +7167,7 @@ static PyObject *__pyx_lambda_funcdef_lambda1(CYTHON_UNUSED PyObject *__pyx_self
   PyObject *__pyx_t_4 = NULL;
   __Pyx_RefNannySetupContext("lambda1", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_keyword, __pyx_n_s_title); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 405, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_keyword, __pyx_n_s_title); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 595, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __pyx_t_4 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_3))) {
@@ -6907,10 +7181,10 @@ static PyObject *__pyx_lambda_funcdef_lambda1(CYTHON_UNUSED PyObject *__pyx_self
   }
   __pyx_t_2 = (__pyx_t_4) ? __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_t_4) : __Pyx_PyObject_CallNoArg(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 405, __pyx_L1_error)
+  if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 595, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_split); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 405, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_split); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 595, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_t_2 = NULL;
@@ -6923,12 +7197,12 @@ static PyObject *__pyx_lambda_funcdef_lambda1(CYTHON_UNUSED PyObject *__pyx_self
       __Pyx_DECREF_SET(__pyx_t_3, function);
     }
   }
-  __pyx_t_1 = (__pyx_t_2) ? __Pyx_PyObject_Call2Args(__pyx_t_3, __pyx_t_2, __pyx_n_u__14) : __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_n_u__14);
+  __pyx_t_1 = (__pyx_t_2) ? __Pyx_PyObject_Call2Args(__pyx_t_3, __pyx_t_2, __pyx_n_u__16) : __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_n_u__16);
   __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 405, __pyx_L1_error)
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 595, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = PyUnicode_Join(__pyx_kp_u_, __pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 405, __pyx_L1_error)
+  __pyx_t_3 = PyUnicode_Join(__pyx_kp_u_, __pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 595, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_r = __pyx_t_3;
@@ -6949,7 +7223,7 @@ static PyObject *__pyx_lambda_funcdef_lambda1(CYTHON_UNUSED PyObject *__pyx_self
   return __pyx_r;
 }
 
-/* "pyzim.pyx":403
+/* "pyzim.pyx":593
  *             self.add_article(metadata_article)
  * 
  *     def set_metadata(self, **kwargs):             # <<<<<<<<<<<<<<
@@ -6977,40 +7251,40 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_12set_metadata(struct __pyx_obj_5p
   int __pyx_t_11;
   __Pyx_RefNannySetupContext("set_metadata", 0);
 
-  /* "pyzim.pyx":405
+  /* "pyzim.pyx":595
  *     def set_metadata(self, **kwargs):
  *         # Converts python case to pascal case. example: long_description-> LongDescription
  *         pascalize = lambda keyword: "".join(keyword.title().split("_"))             # <<<<<<<<<<<<<<
  * 
  *         if "date" in kwargs and isinstance(kwargs['date'],datetime.date):
  */
-  __pyx_t_1 = __Pyx_CyFunction_NewEx(&__pyx_mdef_5pyzim_10ZimCreator_12set_metadata_lambda1, 0, __pyx_n_s_set_metadata_locals_lambda, NULL, __pyx_n_s_pyzim, __pyx_d, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 405, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_CyFunction_NewEx(&__pyx_mdef_5pyzim_10ZimCreator_12set_metadata_lambda1, 0, __pyx_n_s_set_metadata_locals_lambda, NULL, __pyx_n_s_pyzim, __pyx_d, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 595, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_v_pascalize = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "pyzim.pyx":407
+  /* "pyzim.pyx":597
  *         pascalize = lambda keyword: "".join(keyword.title().split("_"))
  * 
  *         if "date" in kwargs and isinstance(kwargs['date'],datetime.date):             # <<<<<<<<<<<<<<
  *             kwargs['date'] = kwargs['date'].strftime('%Y-%m-%d')
  * 
  */
-  __pyx_t_3 = (__Pyx_PyDict_ContainsTF(__pyx_n_u_date, __pyx_v_kwargs, Py_EQ)); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 407, __pyx_L1_error)
+  __pyx_t_3 = (__Pyx_PyDict_ContainsTF(__pyx_n_u_date, __pyx_v_kwargs, Py_EQ)); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 597, __pyx_L1_error)
   __pyx_t_4 = (__pyx_t_3 != 0);
   if (__pyx_t_4) {
   } else {
     __pyx_t_2 = __pyx_t_4;
     goto __pyx_L4_bool_binop_done;
   }
-  __pyx_t_1 = __Pyx_PyDict_GetItem(__pyx_v_kwargs, __pyx_n_u_date); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 407, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_GetItem(__pyx_v_kwargs, __pyx_n_u_date); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 597, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_datetime); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 407, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_datetime); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 597, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_date); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 407, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_date); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 597, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_4 = PyObject_IsInstance(__pyx_t_1, __pyx_t_6); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(0, 407, __pyx_L1_error)
+  __pyx_t_4 = PyObject_IsInstance(__pyx_t_1, __pyx_t_6); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(0, 597, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __pyx_t_3 = (__pyx_t_4 != 0);
@@ -7018,16 +7292,16 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_12set_metadata(struct __pyx_obj_5p
   __pyx_L4_bool_binop_done:;
   if (__pyx_t_2) {
 
-    /* "pyzim.pyx":408
+    /* "pyzim.pyx":598
  * 
  *         if "date" in kwargs and isinstance(kwargs['date'],datetime.date):
  *             kwargs['date'] = kwargs['date'].strftime('%Y-%m-%d')             # <<<<<<<<<<<<<<
  * 
  *         new_metadata = {pascalize(key): value for key, value in kwargs.items()}
  */
-    __pyx_t_1 = __Pyx_PyDict_GetItem(__pyx_v_kwargs, __pyx_n_u_date); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 408, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyDict_GetItem(__pyx_v_kwargs, __pyx_n_u_date); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 598, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_strftime); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 408, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_strftime); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 598, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __pyx_t_1 = NULL;
@@ -7042,13 +7316,13 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_12set_metadata(struct __pyx_obj_5p
     }
     __pyx_t_6 = (__pyx_t_1) ? __Pyx_PyObject_Call2Args(__pyx_t_5, __pyx_t_1, __pyx_kp_u_Y_m_d) : __Pyx_PyObject_CallOneArg(__pyx_t_5, __pyx_kp_u_Y_m_d);
     __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
-    if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 408, __pyx_L1_error)
+    if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 598, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    if (unlikely(PyDict_SetItem(__pyx_v_kwargs, __pyx_n_u_date, __pyx_t_6) < 0)) __PYX_ERR(0, 408, __pyx_L1_error)
+    if (unlikely(PyDict_SetItem(__pyx_v_kwargs, __pyx_n_u_date, __pyx_t_6) < 0)) __PYX_ERR(0, 598, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-    /* "pyzim.pyx":407
+    /* "pyzim.pyx":597
  *         pascalize = lambda keyword: "".join(keyword.title().split("_"))
  * 
  *         if "date" in kwargs and isinstance(kwargs['date'],datetime.date):             # <<<<<<<<<<<<<<
@@ -7057,7 +7331,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_12set_metadata(struct __pyx_obj_5p
  */
   }
 
-  /* "pyzim.pyx":410
+  /* "pyzim.pyx":600
  *             kwargs['date'] = kwargs['date'].strftime('%Y-%m-%d')
  * 
  *         new_metadata = {pascalize(key): value for key, value in kwargs.items()}             # <<<<<<<<<<<<<<
@@ -7065,10 +7339,10 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_12set_metadata(struct __pyx_obj_5p
  * 
  */
   { /* enter inner scope */
-    __pyx_t_6 = PyDict_New(); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 410, __pyx_L8_error)
+    __pyx_t_6 = PyDict_New(); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 600, __pyx_L8_error)
     __Pyx_GOTREF(__pyx_t_6);
     __pyx_t_7 = 0;
-    __pyx_t_1 = __Pyx_dict_iterator(__pyx_v_kwargs, 1, __pyx_n_s_items, (&__pyx_t_8), (&__pyx_t_9)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 410, __pyx_L8_error)
+    __pyx_t_1 = __Pyx_dict_iterator(__pyx_v_kwargs, 1, __pyx_n_s_items, (&__pyx_t_8), (&__pyx_t_9)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 600, __pyx_L8_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_XDECREF(__pyx_t_5);
     __pyx_t_5 = __pyx_t_1;
@@ -7076,16 +7350,16 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_12set_metadata(struct __pyx_obj_5p
     while (1) {
       __pyx_t_11 = __Pyx_dict_iter_next(__pyx_t_5, __pyx_t_8, &__pyx_t_7, &__pyx_t_1, &__pyx_t_10, NULL, __pyx_t_9);
       if (unlikely(__pyx_t_11 == 0)) break;
-      if (unlikely(__pyx_t_11 == -1)) __PYX_ERR(0, 410, __pyx_L8_error)
+      if (unlikely(__pyx_t_11 == -1)) __PYX_ERR(0, 600, __pyx_L8_error)
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_GOTREF(__pyx_t_10);
       __Pyx_XDECREF_SET(__pyx_8genexpr5__pyx_v_key, __pyx_t_1);
       __pyx_t_1 = 0;
       __Pyx_XDECREF_SET(__pyx_8genexpr5__pyx_v_value, __pyx_t_10);
       __pyx_t_10 = 0;
-      __pyx_t_10 = __pyx_lambda_funcdef_lambda1(__pyx_v_pascalize, __pyx_8genexpr5__pyx_v_key); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 410, __pyx_L8_error)
+      __pyx_t_10 = __pyx_lambda_funcdef_lambda1(__pyx_v_pascalize, __pyx_8genexpr5__pyx_v_key); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 600, __pyx_L8_error)
       __Pyx_GOTREF(__pyx_t_10);
-      if (unlikely(PyDict_SetItem(__pyx_t_6, (PyObject*)__pyx_t_10, (PyObject*)__pyx_8genexpr5__pyx_v_value))) __PYX_ERR(0, 410, __pyx_L8_error)
+      if (unlikely(PyDict_SetItem(__pyx_t_6, (PyObject*)__pyx_t_10, (PyObject*)__pyx_8genexpr5__pyx_v_value))) __PYX_ERR(0, 600, __pyx_L8_error)
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
     }
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
@@ -7101,16 +7375,16 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_12set_metadata(struct __pyx_obj_5p
   __pyx_v_new_metadata = ((PyObject*)__pyx_t_6);
   __pyx_t_6 = 0;
 
-  /* "pyzim.pyx":411
+  /* "pyzim.pyx":601
  * 
  *         new_metadata = {pascalize(key): value for key, value in kwargs.items()}
  *         self._metadata.update(new_metadata)             # <<<<<<<<<<<<<<
  * 
- *     def finalise(self):
+ *     def finalize(self):
  */
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_metadata); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 411, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_metadata); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 601, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_update); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 411, __pyx_L1_error)
+  __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_update); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 601, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_10);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   __pyx_t_5 = NULL;
@@ -7125,12 +7399,12 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_12set_metadata(struct __pyx_obj_5p
   }
   __pyx_t_6 = (__pyx_t_5) ? __Pyx_PyObject_Call2Args(__pyx_t_10, __pyx_t_5, __pyx_v_new_metadata) : __Pyx_PyObject_CallOneArg(__pyx_t_10, __pyx_v_new_metadata);
   __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
-  if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 411, __pyx_L1_error)
+  if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 601, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-  /* "pyzim.pyx":403
+  /* "pyzim.pyx":593
  *             self.add_article(metadata_article)
  * 
  *     def set_metadata(self, **kwargs):             # <<<<<<<<<<<<<<
@@ -7158,28 +7432,29 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_12set_metadata(struct __pyx_obj_5p
   return __pyx_r;
 }
 
-/* "pyzim.pyx":413
+/* "pyzim.pyx":603
  *         self._metadata.update(new_metadata)
  * 
- *     def finalise(self):             # <<<<<<<<<<<<<<
- *         if not self._finalised:
- *             self._write_metadata(self.get_metadata())
+ *     def finalize(self):             # <<<<<<<<<<<<<<
+ *         """finalize and write added articles to the file.
+ * 
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5pyzim_10ZimCreator_15finalise(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
-static PyObject *__pyx_pw_5pyzim_10ZimCreator_15finalise(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
+static PyObject *__pyx_pw_5pyzim_10ZimCreator_15finalize(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static char __pyx_doc_5pyzim_10ZimCreator_14finalize[] = "finalize and write added articles to the file.\n        \n        Raises\n        ------\n            RuntimeError\n                If the ZimCreator was already finalized\n\n        ";
+static PyObject *__pyx_pw_5pyzim_10ZimCreator_15finalize(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("finalise (wrapper)", 0);
-  __pyx_r = __pyx_pf_5pyzim_10ZimCreator_14finalise(((struct __pyx_obj_5pyzim_ZimCreator *)__pyx_v_self));
+  __Pyx_RefNannySetupContext("finalize (wrapper)", 0);
+  __pyx_r = __pyx_pf_5pyzim_10ZimCreator_14finalize(((struct __pyx_obj_5pyzim_ZimCreator *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5pyzim_10ZimCreator_14finalise(struct __pyx_obj_5pyzim_ZimCreator *__pyx_v_self) {
+static PyObject *__pyx_pf_5pyzim_10ZimCreator_14finalize(struct __pyx_obj_5pyzim_ZimCreator *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -7189,29 +7464,29 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_14finalise(struct __pyx_obj_5pyzim
   PyObject *__pyx_t_5 = NULL;
   PyObject *__pyx_t_6 = NULL;
   PyObject *__pyx_t_7 = NULL;
-  __Pyx_RefNannySetupContext("finalise", 0);
+  __Pyx_RefNannySetupContext("finalize", 0);
 
-  /* "pyzim.pyx":414
+  /* "pyzim.pyx":612
  * 
- *     def finalise(self):
- *         if not self._finalised:             # <<<<<<<<<<<<<<
+ *         """
+ *         if not self._finalized:             # <<<<<<<<<<<<<<
  *             self._write_metadata(self.get_metadata())
- *             self.c_creator.finalise()
+ *             self.c_creator.finalize()
  */
-  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_self->_finalised); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 414, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_self->_finalized); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 612, __pyx_L1_error)
   __pyx_t_2 = ((!__pyx_t_1) != 0);
   if (likely(__pyx_t_2)) {
 
-    /* "pyzim.pyx":415
- *     def finalise(self):
- *         if not self._finalised:
+    /* "pyzim.pyx":613
+ *         """
+ *         if not self._finalized:
  *             self._write_metadata(self.get_metadata())             # <<<<<<<<<<<<<<
- *             self.c_creator.finalise()
- *             self._finalised = True
+ *             self.c_creator.finalize()
+ *             self._finalized = True
  */
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_write_metadata); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 415, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_write_metadata); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 613, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_get_metadata); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 415, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_get_metadata); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 613, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __pyx_t_7 = NULL;
     if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_6))) {
@@ -7225,7 +7500,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_14finalise(struct __pyx_obj_5pyzim
     }
     __pyx_t_5 = (__pyx_t_7) ? __Pyx_PyObject_CallOneArg(__pyx_t_6, __pyx_t_7) : __Pyx_PyObject_CallNoArg(__pyx_t_6);
     __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
-    if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 415, __pyx_L1_error)
+    if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 613, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __pyx_t_6 = NULL;
@@ -7241,63 +7516,63 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_14finalise(struct __pyx_obj_5pyzim
     __pyx_t_3 = (__pyx_t_6) ? __Pyx_PyObject_Call2Args(__pyx_t_4, __pyx_t_6, __pyx_t_5) : __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_t_5);
     __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 415, __pyx_L1_error)
+    if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 613, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-    /* "pyzim.pyx":416
- *         if not self._finalised:
+    /* "pyzim.pyx":614
+ *         if not self._finalized:
  *             self._write_metadata(self.get_metadata())
- *             self.c_creator.finalise()             # <<<<<<<<<<<<<<
- *             self._finalised = True
+ *             self.c_creator.finalize()             # <<<<<<<<<<<<<<
+ *             self._finalized = True
  *         else:
  */
-    __pyx_v_self->c_creator->finalise();
+    __pyx_v_self->c_creator->finalize();
 
-    /* "pyzim.pyx":417
+    /* "pyzim.pyx":615
  *             self._write_metadata(self.get_metadata())
- *             self.c_creator.finalise()
- *             self._finalised = True             # <<<<<<<<<<<<<<
+ *             self.c_creator.finalize()
+ *             self._finalized = True             # <<<<<<<<<<<<<<
  *         else:
- *             raise RuntimeError("ZimCreator already finalised")
+ *             raise RuntimeError("ZimCreator already finalized")
  */
     __Pyx_INCREF(Py_True);
     __Pyx_GIVEREF(Py_True);
-    __Pyx_GOTREF(__pyx_v_self->_finalised);
-    __Pyx_DECREF(__pyx_v_self->_finalised);
-    __pyx_v_self->_finalised = Py_True;
+    __Pyx_GOTREF(__pyx_v_self->_finalized);
+    __Pyx_DECREF(__pyx_v_self->_finalized);
+    __pyx_v_self->_finalized = Py_True;
 
-    /* "pyzim.pyx":414
+    /* "pyzim.pyx":612
  * 
- *     def finalise(self):
- *         if not self._finalised:             # <<<<<<<<<<<<<<
+ *         """
+ *         if not self._finalized:             # <<<<<<<<<<<<<<
  *             self._write_metadata(self.get_metadata())
- *             self.c_creator.finalise()
+ *             self.c_creator.finalize()
  */
     goto __pyx_L3;
   }
 
-  /* "pyzim.pyx":419
- *             self._finalised = True
+  /* "pyzim.pyx":617
+ *             self._finalized = True
  *         else:
- *             raise RuntimeError("ZimCreator already finalised")             # <<<<<<<<<<<<<<
+ *             raise RuntimeError("ZimCreator already finalized")             # <<<<<<<<<<<<<<
  */
   /*else*/ {
-    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple__15, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 419, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple__12, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 617, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_Raise(__pyx_t_3, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __PYX_ERR(0, 419, __pyx_L1_error)
+    __PYX_ERR(0, 617, __pyx_L1_error)
   }
   __pyx_L3:;
 
-  /* "pyzim.pyx":413
+  /* "pyzim.pyx":603
  *         self._metadata.update(new_metadata)
  * 
- *     def finalise(self):             # <<<<<<<<<<<<<<
- *         if not self._finalised:
- *             self._write_metadata(self.get_metadata())
+ *     def finalize(self):             # <<<<<<<<<<<<<<
+ *         """finalize and write added articles to the file.
+ * 
  */
 
   /* function exit code */
@@ -7309,7 +7584,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_14finalise(struct __pyx_obj_5pyzim
   __Pyx_XDECREF(__pyx_t_5);
   __Pyx_XDECREF(__pyx_t_6);
   __Pyx_XDECREF(__pyx_t_7);
-  __Pyx_AddTraceback("pyzim.ZimCreator.finalise", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("pyzim.ZimCreator.finalize", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -7348,7 +7623,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_16__reduce_cython__(CYTHON_UNUSED 
  * def __setstate_cython__(self, __pyx_state):
  *     raise TypeError("no default __reduce__ due to non-trivial __cinit__")
  */
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__16, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 2, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__17, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 2, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_Raise(__pyx_t_1, 0, 0, 0);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -7401,7 +7676,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_18__setstate_cython__(CYTHON_UNUSE
  * def __setstate_cython__(self, __pyx_state):
  *     raise TypeError("no default __reduce__ due to non-trivial __cinit__")             # <<<<<<<<<<<<<<
  */
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__17, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 4, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_TypeError, __pyx_tuple__18, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 4, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_Raise(__pyx_t_1, 0, 0, 0);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -7930,7 +8205,7 @@ static PyTypeObject __pyx_type_5pyzim_ZimArticle = {
   0, /*tp_setattro*/
   0, /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_VERSION_TAG|Py_TPFLAGS_CHECKTYPES|Py_TPFLAGS_HAVE_NEWBUFFER|Py_TPFLAGS_BASETYPE|Py_TPFLAGS_HAVE_GC, /*tp_flags*/
-  " \n    A class to represent a Zim Article. \n    \n    Attributes\n    ----------\n    *c_zim_article : zim.ZimArticle\n        a pointer to the C++ article object\n    _can_write : bool\n        flag if the article is ready for writing\n\n    Properties\n    -----------\n    namespace: str\n        the article namespace\n    title : str\n        the article title\n    content : str\n        the article content\n    longurl : str\n        the article long url i.e {NAMESPACE}/{redirect_url}\n    url : str\n        the article url\n    mimetype : str\n        the article mimetype\n    is_redirect : bool\n        flag if the article is a redirect \n    redirect_longurl: str\n        the long redirect url i.e {NAMESPACE}/{redirect_url}\n    redirect_url : str\n        the article url\n\n    Methods\n    -------\n\n    gamma(n=1.0)\n        Change the photo's gamma exposure.\n\n    ", /*tp_doc*/
+  " \n    A class to represent a Zim Article. \n    \n    Attributes\n    ----------\n    *c_zim_article : zim.ZimArticle\n        a pointer to the C++ article object\n    _can_write : bool\n        flag if the article is ready for writing\n\n    Properties\n    -----------\n    namespace : str\n        the article namespace\n    title : str\n        the article title\n    content : str\n        the article content\n    longurl : str\n        the article long url i.e {NAMESPACE}/{redirect_url}\n    url : str\n        the article url\n    mimetype : str\n        the article mimetype\n    is_redirect : bool\n        flag if the article is a redirect \n    redirect_longurl: str\n        the long redirect article url i.e {NAMESPACE}/{redirect_url}\n    redirect_url : str\n        the redirect article url\n\n    Methods\n    -------\n\n    from_read_article(zim.Article art)\n        Creates a python ZimArticle from a C++ zim.Article article.\n    ", /*tp_doc*/
   __pyx_tp_traverse_5pyzim_ZimArticle, /*tp_traverse*/
   __pyx_tp_clear_5pyzim_ZimArticle, /*tp_clear*/
   0, /*tp_richcompare*/
@@ -8029,24 +8304,24 @@ static PyObject *__pyx_getprop_5pyzim_9ZimReader_filename(PyObject *o, CYTHON_UN
 }
 
 static PyMethodDef __pyx_methods_5pyzim_ZimReader[] = {
-  {"get_article", (PyCFunction)__pyx_pw_5pyzim_9ZimReader_5get_article, METH_O, 0},
-  {"get_metadata", (PyCFunction)__pyx_pw_5pyzim_9ZimReader_7get_metadata, METH_NOARGS, 0},
-  {"get_article_by_id", (PyCFunction)__pyx_pw_5pyzim_9ZimReader_9get_article_by_id, METH_O, 0},
-  {"get_redirect_article", (PyCFunction)__pyx_pw_5pyzim_9ZimReader_11get_redirect_article, METH_O, 0},
-  {"get_main_page_url", (PyCFunction)__pyx_pw_5pyzim_9ZimReader_13get_main_page_url, METH_NOARGS, 0},
-  {"get_checksum", (PyCFunction)__pyx_pw_5pyzim_9ZimReader_15get_checksum, METH_NOARGS, 0},
-  {"get_article_count", (PyCFunction)__pyx_pw_5pyzim_9ZimReader_17get_article_count, METH_NOARGS, 0},
-  {"get_namespaces", (PyCFunction)__pyx_pw_5pyzim_9ZimReader_19get_namespaces, METH_NOARGS, 0},
-  {"get_namespaces_count", (PyCFunction)__pyx_pw_5pyzim_9ZimReader_21get_namespaces_count, METH_O, 0},
-  {"suggest", (PyCFunction)__pyx_pw_5pyzim_9ZimReader_23suggest, METH_O, 0},
-  {"search", (PyCFunction)__pyx_pw_5pyzim_9ZimReader_25search, METH_O, 0},
+  {"get_article", (PyCFunction)__pyx_pw_5pyzim_9ZimReader_5get_article, METH_O, __pyx_doc_5pyzim_9ZimReader_4get_article},
+  {"get_metadata", (PyCFunction)__pyx_pw_5pyzim_9ZimReader_7get_metadata, METH_NOARGS, __pyx_doc_5pyzim_9ZimReader_6get_metadata},
+  {"get_article_by_id", (PyCFunction)__pyx_pw_5pyzim_9ZimReader_9get_article_by_id, METH_O, __pyx_doc_5pyzim_9ZimReader_8get_article_by_id},
+  {"get_redirect_article", (PyCFunction)__pyx_pw_5pyzim_9ZimReader_11get_redirect_article, METH_O, __pyx_doc_5pyzim_9ZimReader_10get_redirect_article},
+  {"get_main_page_url", (PyCFunction)__pyx_pw_5pyzim_9ZimReader_13get_main_page_url, METH_NOARGS, __pyx_doc_5pyzim_9ZimReader_12get_main_page_url},
+  {"get_checksum", (PyCFunction)__pyx_pw_5pyzim_9ZimReader_15get_checksum, METH_NOARGS, __pyx_doc_5pyzim_9ZimReader_14get_checksum},
+  {"get_article_count", (PyCFunction)__pyx_pw_5pyzim_9ZimReader_17get_article_count, METH_NOARGS, __pyx_doc_5pyzim_9ZimReader_16get_article_count},
+  {"get_namespaces", (PyCFunction)__pyx_pw_5pyzim_9ZimReader_19get_namespaces, METH_NOARGS, __pyx_doc_5pyzim_9ZimReader_18get_namespaces},
+  {"get_namespaces_count", (PyCFunction)__pyx_pw_5pyzim_9ZimReader_21get_namespaces_count, METH_O, __pyx_doc_5pyzim_9ZimReader_20get_namespaces_count},
+  {"suggest", (PyCFunction)__pyx_pw_5pyzim_9ZimReader_23suggest, METH_O, __pyx_doc_5pyzim_9ZimReader_22suggest},
+  {"search", (PyCFunction)__pyx_pw_5pyzim_9ZimReader_25search, METH_O, __pyx_doc_5pyzim_9ZimReader_24search},
   {"__reduce_cython__", (PyCFunction)__pyx_pw_5pyzim_9ZimReader_27__reduce_cython__, METH_NOARGS, 0},
   {"__setstate_cython__", (PyCFunction)__pyx_pw_5pyzim_9ZimReader_29__setstate_cython__, METH_O, 0},
   {0, 0, 0, 0}
 };
 
 static struct PyGetSetDef __pyx_getsets_5pyzim_ZimReader[] = {
-  {(char *)"filename", __pyx_getprop_5pyzim_9ZimReader_filename, 0, (char *)0, 0},
+  {(char *)"filename", __pyx_getprop_5pyzim_9ZimReader_filename, 0, (char *)"Get the filename of the ZimReader object", 0},
   {0, 0, 0, 0, 0}
 };
 
@@ -8081,7 +8356,7 @@ static PyTypeObject __pyx_type_5pyzim_ZimReader = {
   0, /*tp_setattro*/
   0, /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_VERSION_TAG|Py_TPFLAGS_CHECKTYPES|Py_TPFLAGS_HAVE_NEWBUFFER|Py_TPFLAGS_BASETYPE|Py_TPFLAGS_HAVE_GC, /*tp_flags*/
-  0, /*tp_doc*/
+  " \n    A class to represent a Zim File Reader. \n    \n    Attributes\n    ----------\n    *c_file : zim.File\n        a pointer to a C++ File object\n    *c_search : zim.ZimSearch\n        a pointer to a C++ ZimSearch object\n    _filename : str\n        the file name of the File Reader object\n    ", /*tp_doc*/
   __pyx_tp_traverse_5pyzim_ZimReader, /*tp_traverse*/
   __pyx_tp_clear_5pyzim_ZimReader, /*tp_clear*/
   0, /*tp_richcompare*/
@@ -8129,7 +8404,7 @@ static PyObject *__pyx_tp_new_5pyzim_ZimCreator(PyTypeObject *t, PyObject *a, Py
   }
   if (unlikely(!o)) return 0;
   p = ((struct __pyx_obj_5pyzim_ZimCreator *)o);
-  p->_finalised = Py_None; Py_INCREF(Py_None);
+  p->_finalized = Py_None; Py_INCREF(Py_None);
   if (unlikely(__pyx_pw_5pyzim_10ZimCreator_1__cinit__(o, a, k) < 0)) goto bad;
   return o;
   bad:
@@ -8145,15 +8420,15 @@ static void __pyx_tp_dealloc_5pyzim_ZimCreator(PyObject *o) {
   }
   #endif
   PyObject_GC_UnTrack(o);
-  Py_CLEAR(p->_finalised);
+  Py_CLEAR(p->_finalized);
   (*Py_TYPE(o)->tp_free)(o);
 }
 
 static int __pyx_tp_traverse_5pyzim_ZimCreator(PyObject *o, visitproc v, void *a) {
   int e;
   struct __pyx_obj_5pyzim_ZimCreator *p = (struct __pyx_obj_5pyzim_ZimCreator *)o;
-  if (p->_finalised) {
-    e = (*v)(p->_finalised, a); if (e) return e;
+  if (p->_finalized) {
+    e = (*v)(p->_finalized, a); if (e) return e;
   }
   return 0;
 }
@@ -8161,20 +8436,20 @@ static int __pyx_tp_traverse_5pyzim_ZimCreator(PyObject *o, visitproc v, void *a
 static int __pyx_tp_clear_5pyzim_ZimCreator(PyObject *o) {
   PyObject* tmp;
   struct __pyx_obj_5pyzim_ZimCreator *p = (struct __pyx_obj_5pyzim_ZimCreator *)o;
-  tmp = ((PyObject*)p->_finalised);
-  p->_finalised = Py_None; Py_INCREF(Py_None);
+  tmp = ((PyObject*)p->_finalized);
+  p->_finalized = Py_None; Py_INCREF(Py_None);
   Py_XDECREF(tmp);
   return 0;
 }
 
 static PyMethodDef __pyx_methods_5pyzim_ZimCreator[] = {
-  {"add_article", (PyCFunction)__pyx_pw_5pyzim_10ZimCreator_3add_article, METH_O, 0},
+  {"add_article", (PyCFunction)__pyx_pw_5pyzim_10ZimCreator_3add_article, METH_O, __pyx_doc_5pyzim_10ZimCreator_2add_article},
   {"_update_article_counter", (PyCFunction)__pyx_pw_5pyzim_10ZimCreator_5_update_article_counter, METH_O, 0},
   {"get_article_counter_string", (PyCFunction)__pyx_pw_5pyzim_10ZimCreator_7get_article_counter_string, METH_NOARGS, 0},
   {"get_metadata", (PyCFunction)__pyx_pw_5pyzim_10ZimCreator_9get_metadata, METH_NOARGS, 0},
   {"_write_metadata", (PyCFunction)__pyx_pw_5pyzim_10ZimCreator_11_write_metadata, METH_O, 0},
   {"set_metadata", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_5pyzim_10ZimCreator_13set_metadata, METH_VARARGS|METH_KEYWORDS, 0},
-  {"finalise", (PyCFunction)__pyx_pw_5pyzim_10ZimCreator_15finalise, METH_NOARGS, 0},
+  {"finalize", (PyCFunction)__pyx_pw_5pyzim_10ZimCreator_15finalize, METH_NOARGS, __pyx_doc_5pyzim_10ZimCreator_14finalize},
   {"__reduce_cython__", (PyCFunction)__pyx_pw_5pyzim_10ZimCreator_17__reduce_cython__, METH_NOARGS, 0},
   {"__setstate_cython__", (PyCFunction)__pyx_pw_5pyzim_10ZimCreator_19__setstate_cython__, METH_O, 0},
   {0, 0, 0, 0}
@@ -8211,7 +8486,7 @@ static PyTypeObject __pyx_type_5pyzim_ZimCreator = {
   0, /*tp_setattro*/
   0, /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_VERSION_TAG|Py_TPFLAGS_CHECKTYPES|Py_TPFLAGS_HAVE_NEWBUFFER|Py_TPFLAGS_BASETYPE|Py_TPFLAGS_HAVE_GC, /*tp_flags*/
-  0, /*tp_doc*/
+  " \n    A class to represent a Zim Creator. \n    \n    Attributes\n    ----------\n    *c_creator : zim.ZimCreator\n        a pointer to the C++ Creator object\n    _finalized : bool\n        flag if the creator was finalized\n\n    ", /*tp_doc*/
   __pyx_tp_traverse_5pyzim_ZimCreator, /*tp_traverse*/
   __pyx_tp_clear_5pyzim_ZimCreator, /*tp_clear*/
   0, /*tp_richcompare*/
@@ -8520,10 +8795,12 @@ static struct PyModuleDef __pyx_moduledef = {
 #endif
 
 static __Pyx_StringTabEntry __pyx_string_tab[] = {
+  {&__pyx_kp_b_, __pyx_k_, sizeof(__pyx_k_), 0, 0, 0, 0},
   {&__pyx_kp_u_, __pyx_k_, sizeof(__pyx_k_), 0, 1, 0, 0},
   {&__pyx_n_u_A, __pyx_k_A, sizeof(__pyx_k_A), 0, 1, 0, 1},
   {&__pyx_kp_u_Article_is_not_a_redirect_articl, __pyx_k_Article_is_not_a_redirect_articl, sizeof(__pyx_k_Article_is_not_a_redirect_articl), 0, 1, 0, 0},
   {&__pyx_kp_u_Article_is_not_good_for_writing, __pyx_k_Article_is_not_good_for_writing, sizeof(__pyx_k_Article_is_not_good_for_writing), 0, 1, 0, 0},
+  {&__pyx_kp_u_Article_not_found_for_id, __pyx_k_Article_not_found_for_id, sizeof(__pyx_k_Article_not_found_for_id), 0, 1, 0, 0},
   {&__pyx_kp_u_Article_not_found_for_redirect_u, __pyx_k_Article_not_found_for_redirect_u, sizeof(__pyx_k_Article_not_found_for_redirect_u), 0, 1, 0, 0},
   {&__pyx_kp_u_Article_not_found_for_url, __pyx_k_Article_not_found_for_url, sizeof(__pyx_k_Article_not_found_for_url), 0, 1, 0, 0},
   {&__pyx_n_u_B, __pyx_k_B, sizeof(__pyx_k_B), 0, 1, 0, 1},
@@ -8550,6 +8827,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_TypeError, __pyx_k_TypeError, sizeof(__pyx_k_TypeError), 0, 0, 1, 1},
   {&__pyx_n_u_U, __pyx_k_U, sizeof(__pyx_k_U), 0, 1, 0, 1},
   {&__pyx_kp_u_UTF_8, __pyx_k_UTF_8, sizeof(__pyx_k_UTF_8), 0, 1, 0, 0},
+  {&__pyx_n_s_UnicodeDecodeError, __pyx_k_UnicodeDecodeError, sizeof(__pyx_k_UnicodeDecodeError), 0, 0, 1, 1},
   {&__pyx_n_u_V, __pyx_k_V, sizeof(__pyx_k_V), 0, 1, 0, 1},
   {&__pyx_n_s_VALID_NAMESPACES, __pyx_k_VALID_NAMESPACES, sizeof(__pyx_k_VALID_NAMESPACES), 0, 0, 1, 1},
   {&__pyx_n_u_W, __pyx_k_W, sizeof(__pyx_k_W), 0, 1, 0, 1},
@@ -8557,12 +8835,12 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_kp_u_Y_m_d, __pyx_k_Y_m_d, sizeof(__pyx_k_Y_m_d), 0, 1, 0, 0},
   {&__pyx_n_s_ZimArticle, __pyx_k_ZimArticle, sizeof(__pyx_k_ZimArticle), 0, 0, 1, 1},
   {&__pyx_n_s_ZimCreator, __pyx_k_ZimCreator, sizeof(__pyx_k_ZimCreator), 0, 0, 1, 1},
-  {&__pyx_kp_u_ZimCreator_already_finalised, __pyx_k_ZimCreator_already_finalised, sizeof(__pyx_k_ZimCreator_already_finalised), 0, 1, 0, 0},
+  {&__pyx_kp_u_ZimCreator_already_finalized, __pyx_k_ZimCreator_already_finalized, sizeof(__pyx_k_ZimCreator_already_finalized), 0, 1, 0, 0},
   {&__pyx_n_s_ZimReader, __pyx_k_ZimReader, sizeof(__pyx_k_ZimReader), 0, 0, 1, 1},
-  {&__pyx_kp_u__12, __pyx_k__12, sizeof(__pyx_k__12), 0, 1, 0, 0},
-  {&__pyx_kp_u__13, __pyx_k__13, sizeof(__pyx_k__13), 0, 1, 0, 0},
-  {&__pyx_n_u__14, __pyx_k__14, sizeof(__pyx_k__14), 0, 1, 0, 1},
-  {&__pyx_kp_u__18, __pyx_k__18, sizeof(__pyx_k__18), 0, 1, 0, 0},
+  {&__pyx_kp_u__14, __pyx_k__14, sizeof(__pyx_k__14), 0, 1, 0, 0},
+  {&__pyx_kp_u__15, __pyx_k__15, sizeof(__pyx_k__15), 0, 1, 0, 0},
+  {&__pyx_n_u__16, __pyx_k__16, sizeof(__pyx_k__16), 0, 1, 0, 1},
+  {&__pyx_kp_u__19, __pyx_k__19, sizeof(__pyx_k__19), 0, 1, 0, 0},
   {&__pyx_n_u__3, __pyx_k__3, sizeof(__pyx_k__3), 0, 1, 0, 1},
   {&__pyx_n_s_add_article, __pyx_k_add_article, sizeof(__pyx_k_add_article), 0, 0, 1, 1},
   {&__pyx_n_s_args, __pyx_k_args, sizeof(__pyx_k_args), 0, 0, 1, 1},
@@ -8630,8 +8908,9 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {0, 0, 0, 0, 0, 0, 0}
 };
 static CYTHON_SMALL_CODE int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) __PYX_ERR(0, 70, __pyx_L1_error)
-  __pyx_builtin_chr = __Pyx_GetBuiltinName(__pyx_n_s_chr); if (!__pyx_builtin_chr) __PYX_ERR(0, 130, __pyx_L1_error)
+  __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) __PYX_ERR(0, 75, __pyx_L1_error)
+  __pyx_builtin_chr = __Pyx_GetBuiltinName(__pyx_n_s_chr); if (!__pyx_builtin_chr) __PYX_ERR(0, 139, __pyx_L1_error)
+  __pyx_builtin_UnicodeDecodeError = __Pyx_GetBuiltinName(__pyx_n_s_UnicodeDecodeError); if (!__pyx_builtin_UnicodeDecodeError) __PYX_ERR(0, 164, __pyx_L1_error)
   __pyx_builtin_TypeError = __Pyx_GetBuiltinName(__pyx_n_s_TypeError); if (!__pyx_builtin_TypeError) __PYX_ERR(1, 2, __pyx_L1_error)
   return 0;
   __pyx_L1_error:;
@@ -8642,14 +8921,14 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
-  /* "pyzim.pyx":70
+  /* "pyzim.pyx":75
  * 
  *         if namespace not in self.VALID_NAMESPACES:
  *             raise RuntimeError("Invalid Namespace")             # <<<<<<<<<<<<<<
  * 
  *         c_zim_art = new zim.ZimArticle(ord(namespace),                     # Namespace
  */
-  __pyx_tuple__2 = PyTuple_Pack(1, __pyx_kp_u_Invalid_Namespace); if (unlikely(!__pyx_tuple__2)) __PYX_ERR(0, 70, __pyx_L1_error)
+  __pyx_tuple__2 = PyTuple_Pack(1, __pyx_kp_u_Invalid_Namespace); if (unlikely(!__pyx_tuple__2)) __PYX_ERR(0, 75, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__2);
   __Pyx_GIVEREF(__pyx_tuple__2);
 
@@ -8672,38 +8951,49 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__5);
   __Pyx_GIVEREF(__pyx_tuple__5);
 
-  /* "pyzim.pyx":259
+  /* "pyzim.pyx":307
  *         cdef zim.Article art = self.c_file.getArticleByUrl(url.encode('UTF-8'))
  *         if not art.good():
  *             raise RuntimeError("Article not found for url")             # <<<<<<<<<<<<<<
  * 
  *         article = ZimArticle.from_read_article(art)
  */
-  __pyx_tuple__6 = PyTuple_Pack(1, __pyx_kp_u_Article_not_found_for_url); if (unlikely(!__pyx_tuple__6)) __PYX_ERR(0, 259, __pyx_L1_error)
+  __pyx_tuple__6 = PyTuple_Pack(1, __pyx_kp_u_Article_not_found_for_url); if (unlikely(!__pyx_tuple__6)) __PYX_ERR(0, 307, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__6);
   __Pyx_GIVEREF(__pyx_tuple__6);
 
-  /* "pyzim.pyx":289
+  /* "pyzim.pyx":353
+ *         cdef zim.Article art = self.c_file.getArticle(<int> id)
+ *         if not art.good():
+ *             raise RuntimeError("Article not found for id")             # <<<<<<<<<<<<<<
+ * 
+ *         article = ZimArticle.from_read_article(art)
+ */
+  __pyx_tuple__7 = PyTuple_Pack(1, __pyx_kp_u_Article_not_found_for_id); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(0, 353, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__7);
+  __Pyx_GIVEREF(__pyx_tuple__7);
+
+  /* "pyzim.pyx":383
  *         if article.is_redirect:
  *             if not art.good():
  *                 raise RuntimeError("Article not found for redirect url")             # <<<<<<<<<<<<<<
  *             article = ZimArticle.from_read_article(art)
  *             return article
  */
-  __pyx_tuple__7 = PyTuple_Pack(1, __pyx_kp_u_Article_not_found_for_redirect_u); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(0, 289, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__7);
-  __Pyx_GIVEREF(__pyx_tuple__7);
+  __pyx_tuple__8 = PyTuple_Pack(1, __pyx_kp_u_Article_not_found_for_redirect_u); if (unlikely(!__pyx_tuple__8)) __PYX_ERR(0, 383, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__8);
+  __Pyx_GIVEREF(__pyx_tuple__8);
 
-  /* "pyzim.pyx":293
+  /* "pyzim.pyx":387
  *             return article
  *         else:
  *             raise RuntimeError("Article is not a redirect article")             # <<<<<<<<<<<<<<
  * 
  *     def get_main_page_url(self):
  */
-  __pyx_tuple__8 = PyTuple_Pack(1, __pyx_kp_u_Article_is_not_a_redirect_articl); if (unlikely(!__pyx_tuple__8)) __PYX_ERR(0, 293, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__8);
-  __Pyx_GIVEREF(__pyx_tuple__8);
+  __pyx_tuple__9 = PyTuple_Pack(1, __pyx_kp_u_Article_is_not_a_redirect_articl); if (unlikely(!__pyx_tuple__9)) __PYX_ERR(0, 387, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__9);
+  __Pyx_GIVEREF(__pyx_tuple__9);
 
   /* "(tree fragment)":2
  * def __reduce_cython__(self):
@@ -8711,38 +9001,40 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
  * def __setstate_cython__(self, __pyx_state):
  *     raise TypeError("no default __reduce__ due to non-trivial __cinit__")
  */
-  __pyx_tuple__9 = PyTuple_Pack(1, __pyx_kp_s_no_default___reduce___due_to_non); if (unlikely(!__pyx_tuple__9)) __PYX_ERR(1, 2, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__9);
-  __Pyx_GIVEREF(__pyx_tuple__9);
+  __pyx_tuple__10 = PyTuple_Pack(1, __pyx_kp_s_no_default___reduce___due_to_non); if (unlikely(!__pyx_tuple__10)) __PYX_ERR(1, 2, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__10);
+  __Pyx_GIVEREF(__pyx_tuple__10);
 
   /* "(tree fragment)":4
  *     raise TypeError("no default __reduce__ due to non-trivial __cinit__")
  * def __setstate_cython__(self, __pyx_state):
  *     raise TypeError("no default __reduce__ due to non-trivial __cinit__")             # <<<<<<<<<<<<<<
  */
-  __pyx_tuple__10 = PyTuple_Pack(1, __pyx_kp_s_no_default___reduce___due_to_non); if (unlikely(!__pyx_tuple__10)) __PYX_ERR(1, 4, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__10);
-  __Pyx_GIVEREF(__pyx_tuple__10);
+  __pyx_tuple__11 = PyTuple_Pack(1, __pyx_kp_s_no_default___reduce___due_to_non); if (unlikely(!__pyx_tuple__11)) __PYX_ERR(1, 4, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__11);
+  __Pyx_GIVEREF(__pyx_tuple__11);
 
-  /* "pyzim.pyx":368
- *     def add_article(self, ZimArticle article):
+  /* "pyzim.pyx":554
+ *         """
+ *         if self._finalized:
+ *             raise RuntimeError("ZimCreator already finalized")             # <<<<<<<<<<<<<<
+ * 
+ *         if not article.can_write:
+ */
+  __pyx_tuple__12 = PyTuple_Pack(1, __pyx_kp_u_ZimCreator_already_finalized); if (unlikely(!__pyx_tuple__12)) __PYX_ERR(0, 554, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__12);
+  __Pyx_GIVEREF(__pyx_tuple__12);
+
+  /* "pyzim.pyx":557
+ * 
  *         if not article.can_write:
  *             raise RuntimeError("Article is not good for writing")             # <<<<<<<<<<<<<<
  * 
  *         # Make a shared pointer to ZimArticle from the ZimArticle object (dereference internal c_zim_article)
  */
-  __pyx_tuple__11 = PyTuple_Pack(1, __pyx_kp_u_Article_is_not_good_for_writing); if (unlikely(!__pyx_tuple__11)) __PYX_ERR(0, 368, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__11);
-  __Pyx_GIVEREF(__pyx_tuple__11);
-
-  /* "pyzim.pyx":419
- *             self._finalised = True
- *         else:
- *             raise RuntimeError("ZimCreator already finalised")             # <<<<<<<<<<<<<<
- */
-  __pyx_tuple__15 = PyTuple_Pack(1, __pyx_kp_u_ZimCreator_already_finalised); if (unlikely(!__pyx_tuple__15)) __PYX_ERR(0, 419, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__15);
-  __Pyx_GIVEREF(__pyx_tuple__15);
+  __pyx_tuple__13 = PyTuple_Pack(1, __pyx_kp_u_Article_is_not_good_for_writing); if (unlikely(!__pyx_tuple__13)) __PYX_ERR(0, 557, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__13);
+  __Pyx_GIVEREF(__pyx_tuple__13);
 
   /* "(tree fragment)":2
  * def __reduce_cython__(self):
@@ -8750,18 +9042,18 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
  * def __setstate_cython__(self, __pyx_state):
  *     raise TypeError("no default __reduce__ due to non-trivial __cinit__")
  */
-  __pyx_tuple__16 = PyTuple_Pack(1, __pyx_kp_s_no_default___reduce___due_to_non); if (unlikely(!__pyx_tuple__16)) __PYX_ERR(1, 2, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__16);
-  __Pyx_GIVEREF(__pyx_tuple__16);
+  __pyx_tuple__17 = PyTuple_Pack(1, __pyx_kp_s_no_default___reduce___due_to_non); if (unlikely(!__pyx_tuple__17)) __PYX_ERR(1, 2, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__17);
+  __Pyx_GIVEREF(__pyx_tuple__17);
 
   /* "(tree fragment)":4
  *     raise TypeError("no default __reduce__ due to non-trivial __cinit__")
  * def __setstate_cython__(self, __pyx_state):
  *     raise TypeError("no default __reduce__ due to non-trivial __cinit__")             # <<<<<<<<<<<<<<
  */
-  __pyx_tuple__17 = PyTuple_Pack(1, __pyx_kp_s_no_default___reduce___due_to_non); if (unlikely(!__pyx_tuple__17)) __PYX_ERR(1, 4, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__17);
-  __Pyx_GIVEREF(__pyx_tuple__17);
+  __pyx_tuple__18 = PyTuple_Pack(1, __pyx_kp_s_no_default___reduce___due_to_non); if (unlikely(!__pyx_tuple__18)) __PYX_ERR(1, 4, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__18);
+  __Pyx_GIVEREF(__pyx_tuple__18);
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -8828,27 +9120,27 @@ static int __Pyx_modinit_type_init_code(void) {
   if (PyObject_SetAttr(__pyx_m, __pyx_n_s_ZimArticle, (PyObject *)&__pyx_type_5pyzim_ZimArticle) < 0) __PYX_ERR(0, 18, __pyx_L1_error)
   if (__Pyx_setup_reduce((PyObject*)&__pyx_type_5pyzim_ZimArticle) < 0) __PYX_ERR(0, 18, __pyx_L1_error)
   __pyx_ptype_5pyzim_ZimArticle = &__pyx_type_5pyzim_ZimArticle;
-  if (PyType_Ready(&__pyx_type_5pyzim_ZimReader) < 0) __PYX_ERR(0, 219, __pyx_L1_error)
+  if (PyType_Ready(&__pyx_type_5pyzim_ZimReader) < 0) __PYX_ERR(0, 235, __pyx_L1_error)
   #if PY_VERSION_HEX < 0x030800B1
   __pyx_type_5pyzim_ZimReader.tp_print = 0;
   #endif
   if ((CYTHON_USE_TYPE_SLOTS && CYTHON_USE_PYTYPE_LOOKUP) && likely(!__pyx_type_5pyzim_ZimReader.tp_dictoffset && __pyx_type_5pyzim_ZimReader.tp_getattro == PyObject_GenericGetAttr)) {
     __pyx_type_5pyzim_ZimReader.tp_getattro = __Pyx_PyObject_GenericGetAttr;
   }
-  if (PyObject_SetAttr(__pyx_m, __pyx_n_s_ZimReader, (PyObject *)&__pyx_type_5pyzim_ZimReader) < 0) __PYX_ERR(0, 219, __pyx_L1_error)
-  if (__Pyx_setup_reduce((PyObject*)&__pyx_type_5pyzim_ZimReader) < 0) __PYX_ERR(0, 219, __pyx_L1_error)
+  if (PyObject_SetAttr(__pyx_m, __pyx_n_s_ZimReader, (PyObject *)&__pyx_type_5pyzim_ZimReader) < 0) __PYX_ERR(0, 235, __pyx_L1_error)
+  if (__Pyx_setup_reduce((PyObject*)&__pyx_type_5pyzim_ZimReader) < 0) __PYX_ERR(0, 235, __pyx_L1_error)
   __pyx_ptype_5pyzim_ZimReader = &__pyx_type_5pyzim_ZimReader;
-  if (PyType_Ready(&__pyx_type_5pyzim_ZimCreator) < 0) __PYX_ERR(0, 334, __pyx_L1_error)
+  if (PyType_Ready(&__pyx_type_5pyzim_ZimCreator) < 0) __PYX_ERR(0, 494, __pyx_L1_error)
   #if PY_VERSION_HEX < 0x030800B1
   __pyx_type_5pyzim_ZimCreator.tp_print = 0;
   #endif
   if ((CYTHON_USE_TYPE_SLOTS && CYTHON_USE_PYTYPE_LOOKUP) && likely(!__pyx_type_5pyzim_ZimCreator.tp_dictoffset && __pyx_type_5pyzim_ZimCreator.tp_getattro == PyObject_GenericGetAttr)) {
     __pyx_type_5pyzim_ZimCreator.tp_getattro = __Pyx_PyObject_GenericGetAttr;
   }
-  if (PyObject_SetAttr(__pyx_m, __pyx_n_s_ZimCreator, (PyObject *)&__pyx_type_5pyzim_ZimCreator) < 0) __PYX_ERR(0, 334, __pyx_L1_error)
-  if (__Pyx_setup_reduce((PyObject*)&__pyx_type_5pyzim_ZimCreator) < 0) __PYX_ERR(0, 334, __pyx_L1_error)
+  if (PyObject_SetAttr(__pyx_m, __pyx_n_s_ZimCreator, (PyObject *)&__pyx_type_5pyzim_ZimCreator) < 0) __PYX_ERR(0, 494, __pyx_L1_error)
+  if (__Pyx_setup_reduce((PyObject*)&__pyx_type_5pyzim_ZimCreator) < 0) __PYX_ERR(0, 494, __pyx_L1_error)
   __pyx_ptype_5pyzim_ZimCreator = &__pyx_type_5pyzim_ZimCreator;
-  if (PyType_Ready(&__pyx_type_5pyzim___pyx_scope_struct__get_article_properties) < 0) __PYX_ERR(0, 107, __pyx_L1_error)
+  if (PyType_Ready(&__pyx_type_5pyzim___pyx_scope_struct__get_article_properties) < 0) __PYX_ERR(0, 112, __pyx_L1_error)
   #if PY_VERSION_HEX < 0x030800B1
   __pyx_type_5pyzim___pyx_scope_struct__get_article_properties.tp_print = 0;
   #endif
@@ -8856,7 +9148,7 @@ static int __Pyx_modinit_type_init_code(void) {
     __pyx_type_5pyzim___pyx_scope_struct__get_article_properties.tp_getattro = __Pyx_PyObject_GenericGetAttrNoDict;
   }
   __pyx_ptype_5pyzim___pyx_scope_struct__get_article_properties = &__pyx_type_5pyzim___pyx_scope_struct__get_article_properties;
-  if (PyType_Ready(&__pyx_type_5pyzim___pyx_scope_struct_1_genexpr) < 0) __PYX_ERR(0, 108, __pyx_L1_error)
+  if (PyType_Ready(&__pyx_type_5pyzim___pyx_scope_struct_1_genexpr) < 0) __PYX_ERR(0, 113, __pyx_L1_error)
   #if PY_VERSION_HEX < 0x030800B1
   __pyx_type_5pyzim___pyx_scope_struct_1_genexpr.tp_print = 0;
   #endif
@@ -9127,18 +9419,18 @@ if (!__Pyx_RefNanny) {
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "pyzim.pyx":60
+  /* "pyzim.pyx":59
  *     cdef object _can_write
  * 
  *     VALID_NAMESPACES = ["-","A","B","I","J","M","U","V","W","X"]             # <<<<<<<<<<<<<<
  * 
  * 
  */
-  __pyx_t_2 = PyList_New(10); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 60, __pyx_L1_error)
+  __pyx_t_2 = PyList_New(10); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 59, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_INCREF(__pyx_kp_u__18);
-  __Pyx_GIVEREF(__pyx_kp_u__18);
-  PyList_SET_ITEM(__pyx_t_2, 0, __pyx_kp_u__18);
+  __Pyx_INCREF(__pyx_kp_u__19);
+  __Pyx_GIVEREF(__pyx_kp_u__19);
+  PyList_SET_ITEM(__pyx_t_2, 0, __pyx_kp_u__19);
   __Pyx_INCREF(__pyx_n_u_A);
   __Pyx_GIVEREF(__pyx_n_u_A);
   PyList_SET_ITEM(__pyx_t_2, 1, __pyx_n_u_A);
@@ -9166,18 +9458,18 @@ if (!__Pyx_RefNanny) {
   __Pyx_INCREF(__pyx_n_u_X);
   __Pyx_GIVEREF(__pyx_n_u_X);
   PyList_SET_ITEM(__pyx_t_2, 9, __pyx_n_u_X);
-  if (PyDict_SetItem((PyObject *)__pyx_ptype_5pyzim_ZimArticle->tp_dict, __pyx_n_s_VALID_NAMESPACES, __pyx_t_2) < 0) __PYX_ERR(0, 60, __pyx_L1_error)
+  if (PyDict_SetItem((PyObject *)__pyx_ptype_5pyzim_ZimArticle->tp_dict, __pyx_n_s_VALID_NAMESPACES, __pyx_t_2) < 0) __PYX_ERR(0, 59, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   PyType_Modified(__pyx_ptype_5pyzim_ZimArticle);
 
-  /* "pyzim.pyx":224
+  /* "pyzim.pyx":253
  *     cdef object _filename
  * 
  *     _metadata_keys =[             # <<<<<<<<<<<<<<
  *         "Name",
  *         "Title",
  */
-  __pyx_t_2 = PyList_New(14); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 224, __pyx_L1_error)
+  __pyx_t_2 = PyList_New(14); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 253, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_INCREF(__pyx_n_u_Name);
   __Pyx_GIVEREF(__pyx_n_u_Name);
@@ -9221,45 +9513,45 @@ if (!__Pyx_RefNanny) {
   __Pyx_INCREF(__pyx_n_u_Scraper);
   __Pyx_GIVEREF(__pyx_n_u_Scraper);
   PyList_SET_ITEM(__pyx_t_2, 13, __pyx_n_u_Scraper);
-  if (PyDict_SetItem((PyObject *)__pyx_ptype_5pyzim_ZimReader->tp_dict, __pyx_n_s_metadata_keys, __pyx_t_2) < 0) __PYX_ERR(0, 224, __pyx_L1_error)
+  if (PyDict_SetItem((PyObject *)__pyx_ptype_5pyzim_ZimReader->tp_dict, __pyx_n_s_metadata_keys, __pyx_t_2) < 0) __PYX_ERR(0, 253, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   PyType_Modified(__pyx_ptype_5pyzim_ZimReader);
 
-  /* "pyzim.pyx":339
+  /* "pyzim.pyx":511
  * 
  *     _metadata ={
  *         "Name":"",             # <<<<<<<<<<<<<<
  *         "Title":"",
  *         "Creator":"",
  */
-  __pyx_t_2 = __Pyx_PyDict_NewPresized(14); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 339, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyDict_NewPresized(14); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 511, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_u_Name, __pyx_kp_u_) < 0) __PYX_ERR(0, 339, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_u_Title, __pyx_kp_u_) < 0) __PYX_ERR(0, 339, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_u_Creator, __pyx_kp_u_) < 0) __PYX_ERR(0, 339, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_u_Publisher, __pyx_kp_u_) < 0) __PYX_ERR(0, 339, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_u_Date, __pyx_kp_u_) < 0) __PYX_ERR(0, 339, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_u_Description, __pyx_kp_u_) < 0) __PYX_ERR(0, 339, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_u_Language, __pyx_kp_u_) < 0) __PYX_ERR(0, 339, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_u_LongDescription, __pyx_kp_u_) < 0) __PYX_ERR(0, 339, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_u_Licence, __pyx_kp_u_) < 0) __PYX_ERR(0, 339, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_u_Tags, __pyx_kp_u_) < 0) __PYX_ERR(0, 339, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_u_Flavour, __pyx_kp_u_) < 0) __PYX_ERR(0, 339, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_u_Source, __pyx_kp_u_) < 0) __PYX_ERR(0, 339, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_u_Counter, __pyx_kp_u_) < 0) __PYX_ERR(0, 339, __pyx_L1_error)
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_u_Scraper, __pyx_kp_u_) < 0) __PYX_ERR(0, 339, __pyx_L1_error)
-  if (PyDict_SetItem((PyObject *)__pyx_ptype_5pyzim_ZimCreator->tp_dict, __pyx_n_s_metadata, __pyx_t_2) < 0) __PYX_ERR(0, 338, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_u_Name, __pyx_kp_u_) < 0) __PYX_ERR(0, 511, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_u_Title, __pyx_kp_u_) < 0) __PYX_ERR(0, 511, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_u_Creator, __pyx_kp_u_) < 0) __PYX_ERR(0, 511, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_u_Publisher, __pyx_kp_u_) < 0) __PYX_ERR(0, 511, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_u_Date, __pyx_kp_u_) < 0) __PYX_ERR(0, 511, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_u_Description, __pyx_kp_u_) < 0) __PYX_ERR(0, 511, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_u_Language, __pyx_kp_u_) < 0) __PYX_ERR(0, 511, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_u_LongDescription, __pyx_kp_u_) < 0) __PYX_ERR(0, 511, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_u_Licence, __pyx_kp_u_) < 0) __PYX_ERR(0, 511, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_u_Tags, __pyx_kp_u_) < 0) __PYX_ERR(0, 511, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_u_Flavour, __pyx_kp_u_) < 0) __PYX_ERR(0, 511, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_u_Source, __pyx_kp_u_) < 0) __PYX_ERR(0, 511, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_u_Counter, __pyx_kp_u_) < 0) __PYX_ERR(0, 511, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_u_Scraper, __pyx_kp_u_) < 0) __PYX_ERR(0, 511, __pyx_L1_error)
+  if (PyDict_SetItem((PyObject *)__pyx_ptype_5pyzim_ZimCreator->tp_dict, __pyx_n_s_metadata, __pyx_t_2) < 0) __PYX_ERR(0, 510, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   PyType_Modified(__pyx_ptype_5pyzim_ZimCreator);
 
-  /* "pyzim.pyx":355
+  /* "pyzim.pyx":527
  *         "Scraper":""}
  * 
  *     _article_counter = defaultdict(int)             # <<<<<<<<<<<<<<
  * 
  *     def __cinit__(self, str filename, str main_page = "", str index_language = "eng", min_chunk_size = 2048):
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_defaultdict); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 355, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_defaultdict); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 527, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_t_3 = NULL;
   if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_1))) {
@@ -9273,10 +9565,10 @@ if (!__Pyx_RefNanny) {
   }
   __pyx_t_2 = (__pyx_t_3) ? __Pyx_PyObject_Call2Args(__pyx_t_1, __pyx_t_3, ((PyObject *)(&PyInt_Type))) : __Pyx_PyObject_CallOneArg(__pyx_t_1, ((PyObject *)(&PyInt_Type)));
   __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 355, __pyx_L1_error)
+  if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 527, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (PyDict_SetItem((PyObject *)__pyx_ptype_5pyzim_ZimCreator->tp_dict, __pyx_n_s_article_counter, __pyx_t_2) < 0) __PYX_ERR(0, 355, __pyx_L1_error)
+  if (PyDict_SetItem((PyObject *)__pyx_ptype_5pyzim_ZimCreator->tp_dict, __pyx_n_s_article_counter, __pyx_t_2) < 0) __PYX_ERR(0, 527, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   PyType_Modified(__pyx_ptype_5pyzim_ZimCreator);
 
@@ -9512,26 +9804,147 @@ static void __Pyx_RaiseArgtupleInvalid(
                  (num_expected == 1) ? "" : "s", num_found);
 }
 
-/* ArgTypeTest */
-static int __Pyx__ArgTypeTest(PyObject *obj, PyTypeObject *type, const char *name, int exact)
-{
-    if (unlikely(!type)) {
-        PyErr_SetString(PyExc_SystemError, "Missing type object");
-        return 0;
+/* PyCFunctionFastCall */
+#if CYTHON_FAST_PYCCALL
+static CYTHON_INLINE PyObject * __Pyx_PyCFunction_FastCall(PyObject *func_obj, PyObject **args, Py_ssize_t nargs) {
+    PyCFunctionObject *func = (PyCFunctionObject*)func_obj;
+    PyCFunction meth = PyCFunction_GET_FUNCTION(func);
+    PyObject *self = PyCFunction_GET_SELF(func);
+    int flags = PyCFunction_GET_FLAGS(func);
+    assert(PyCFunction_Check(func));
+    assert(METH_FASTCALL == (flags & ~(METH_CLASS | METH_STATIC | METH_COEXIST | METH_KEYWORDS | METH_STACKLESS)));
+    assert(nargs >= 0);
+    assert(nargs == 0 || args != NULL);
+    /* _PyCFunction_FastCallDict() must not be called with an exception set,
+       because it may clear it (directly or indirectly) and so the
+       caller loses its exception */
+    assert(!PyErr_Occurred());
+    if ((PY_VERSION_HEX < 0x030700A0) || unlikely(flags & METH_KEYWORDS)) {
+        return (*((__Pyx_PyCFunctionFastWithKeywords)(void*)meth)) (self, args, nargs, NULL);
+    } else {
+        return (*((__Pyx_PyCFunctionFast)(void*)meth)) (self, args, nargs);
     }
-    else if (exact) {
-        #if PY_MAJOR_VERSION == 2
-        if ((type == &PyBaseString_Type) && likely(__Pyx_PyBaseString_CheckExact(obj))) return 1;
-        #endif
+}
+#endif
+
+/* PyFunctionFastCall */
+#if CYTHON_FAST_PYCALL
+static PyObject* __Pyx_PyFunction_FastCallNoKw(PyCodeObject *co, PyObject **args, Py_ssize_t na,
+                                               PyObject *globals) {
+    PyFrameObject *f;
+    PyThreadState *tstate = __Pyx_PyThreadState_Current;
+    PyObject **fastlocals;
+    Py_ssize_t i;
+    PyObject *result;
+    assert(globals != NULL);
+    /* XXX Perhaps we should create a specialized
+       PyFrame_New() that doesn't take locals, but does
+       take builtins without sanity checking them.
+       */
+    assert(tstate != NULL);
+    f = PyFrame_New(tstate, co, globals, NULL);
+    if (f == NULL) {
+        return NULL;
+    }
+    fastlocals = __Pyx_PyFrame_GetLocalsplus(f);
+    for (i = 0; i < na; i++) {
+        Py_INCREF(*args);
+        fastlocals[i] = *args++;
+    }
+    result = PyEval_EvalFrameEx(f,0);
+    ++tstate->recursion_depth;
+    Py_DECREF(f);
+    --tstate->recursion_depth;
+    return result;
+}
+#if 1 || PY_VERSION_HEX < 0x030600B1
+static PyObject *__Pyx_PyFunction_FastCallDict(PyObject *func, PyObject **args, Py_ssize_t nargs, PyObject *kwargs) {
+    PyCodeObject *co = (PyCodeObject *)PyFunction_GET_CODE(func);
+    PyObject *globals = PyFunction_GET_GLOBALS(func);
+    PyObject *argdefs = PyFunction_GET_DEFAULTS(func);
+    PyObject *closure;
+#if PY_MAJOR_VERSION >= 3
+    PyObject *kwdefs;
+#endif
+    PyObject *kwtuple, **k;
+    PyObject **d;
+    Py_ssize_t nd;
+    Py_ssize_t nk;
+    PyObject *result;
+    assert(kwargs == NULL || PyDict_Check(kwargs));
+    nk = kwargs ? PyDict_Size(kwargs) : 0;
+    if (Py_EnterRecursiveCall((char*)" while calling a Python object")) {
+        return NULL;
+    }
+    if (
+#if PY_MAJOR_VERSION >= 3
+            co->co_kwonlyargcount == 0 &&
+#endif
+            likely(kwargs == NULL || nk == 0) &&
+            co->co_flags == (CO_OPTIMIZED | CO_NEWLOCALS | CO_NOFREE)) {
+        if (argdefs == NULL && co->co_argcount == nargs) {
+            result = __Pyx_PyFunction_FastCallNoKw(co, args, nargs, globals);
+            goto done;
+        }
+        else if (nargs == 0 && argdefs != NULL
+                 && co->co_argcount == Py_SIZE(argdefs)) {
+            /* function called with no arguments, but all parameters have
+               a default value: use default values as arguments .*/
+            args = &PyTuple_GET_ITEM(argdefs, 0);
+            result =__Pyx_PyFunction_FastCallNoKw(co, args, Py_SIZE(argdefs), globals);
+            goto done;
+        }
+    }
+    if (kwargs != NULL) {
+        Py_ssize_t pos, i;
+        kwtuple = PyTuple_New(2 * nk);
+        if (kwtuple == NULL) {
+            result = NULL;
+            goto done;
+        }
+        k = &PyTuple_GET_ITEM(kwtuple, 0);
+        pos = i = 0;
+        while (PyDict_Next(kwargs, &pos, &k[i], &k[i+1])) {
+            Py_INCREF(k[i]);
+            Py_INCREF(k[i+1]);
+            i += 2;
+        }
+        nk = i / 2;
     }
     else {
-        if (likely(__Pyx_TypeCheck(obj, type))) return 1;
+        kwtuple = NULL;
+        k = NULL;
     }
-    PyErr_Format(PyExc_TypeError,
-        "Argument '%.200s' has incorrect type (expected %.200s, got %.200s)",
-        name, type->tp_name, Py_TYPE(obj)->tp_name);
-    return 0;
+    closure = PyFunction_GET_CLOSURE(func);
+#if PY_MAJOR_VERSION >= 3
+    kwdefs = PyFunction_GET_KW_DEFAULTS(func);
+#endif
+    if (argdefs != NULL) {
+        d = &PyTuple_GET_ITEM(argdefs, 0);
+        nd = Py_SIZE(argdefs);
+    }
+    else {
+        d = NULL;
+        nd = 0;
+    }
+#if PY_MAJOR_VERSION >= 3
+    result = PyEval_EvalCodeEx((PyObject*)co, globals, (PyObject *)NULL,
+                               args, (int)nargs,
+                               k, (int)nk,
+                               d, (int)nd, kwdefs, closure);
+#else
+    result = PyEval_EvalCodeEx(co, globals, (PyObject *)NULL,
+                               args, (int)nargs,
+                               k, (int)nk,
+                               d, (int)nd, closure);
+#endif
+    Py_XDECREF(kwtuple);
+done:
+    Py_LeaveRecursiveCall();
+    return result;
 }
+#endif
+#endif
 
 /* PyObjectCall */
 #if CYTHON_COMPILING_IN_CPYTHON
@@ -9549,6 +9962,95 @@ static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg
             PyExc_SystemError,
             "NULL result without error in PyObject_Call");
     }
+    return result;
+}
+#endif
+
+/* PyObjectCall2Args */
+static CYTHON_UNUSED PyObject* __Pyx_PyObject_Call2Args(PyObject* function, PyObject* arg1, PyObject* arg2) {
+    PyObject *args, *result = NULL;
+    #if CYTHON_FAST_PYCALL
+    if (PyFunction_Check(function)) {
+        PyObject *args[2] = {arg1, arg2};
+        return __Pyx_PyFunction_FastCall(function, args, 2);
+    }
+    #endif
+    #if CYTHON_FAST_PYCCALL
+    if (__Pyx_PyFastCFunction_Check(function)) {
+        PyObject *args[2] = {arg1, arg2};
+        return __Pyx_PyCFunction_FastCall(function, args, 2);
+    }
+    #endif
+    args = PyTuple_New(2);
+    if (unlikely(!args)) goto done;
+    Py_INCREF(arg1);
+    PyTuple_SET_ITEM(args, 0, arg1);
+    Py_INCREF(arg2);
+    PyTuple_SET_ITEM(args, 1, arg2);
+    Py_INCREF(function);
+    result = __Pyx_PyObject_Call(function, args, NULL);
+    Py_DECREF(args);
+    Py_DECREF(function);
+done:
+    return result;
+}
+
+/* PyObjectCallMethO */
+#if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject *arg) {
+    PyObject *self, *result;
+    PyCFunction cfunc;
+    cfunc = PyCFunction_GET_FUNCTION(func);
+    self = PyCFunction_GET_SELF(func);
+    if (unlikely(Py_EnterRecursiveCall((char*)" while calling a Python object")))
+        return NULL;
+    result = cfunc(self, arg);
+    Py_LeaveRecursiveCall();
+    if (unlikely(!result) && unlikely(!PyErr_Occurred())) {
+        PyErr_SetString(
+            PyExc_SystemError,
+            "NULL result without error in PyObject_Call");
+    }
+    return result;
+}
+#endif
+
+/* PyObjectCallOneArg */
+#if CYTHON_COMPILING_IN_CPYTHON
+static PyObject* __Pyx__PyObject_CallOneArg(PyObject *func, PyObject *arg) {
+    PyObject *result;
+    PyObject *args = PyTuple_New(1);
+    if (unlikely(!args)) return NULL;
+    Py_INCREF(arg);
+    PyTuple_SET_ITEM(args, 0, arg);
+    result = __Pyx_PyObject_Call(func, args, NULL);
+    Py_DECREF(args);
+    return result;
+}
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg) {
+#if CYTHON_FAST_PYCALL
+    if (PyFunction_Check(func)) {
+        return __Pyx_PyFunction_FastCall(func, &arg, 1);
+    }
+#endif
+    if (likely(PyCFunction_Check(func))) {
+        if (likely(PyCFunction_GET_FLAGS(func) & METH_O)) {
+            return __Pyx_PyObject_CallMethO(func, arg);
+#if CYTHON_FAST_PYCCALL
+        } else if (PyCFunction_GET_FLAGS(func) & METH_FASTCALL) {
+            return __Pyx_PyCFunction_FastCall(func, &arg, 1);
+#endif
+        }
+    }
+    return __Pyx__PyObject_CallOneArg(func, arg);
+}
+#else
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg) {
+    PyObject *result;
+    PyObject *args = PyTuple_Pack(1, arg);
+    if (unlikely(!args)) return NULL;
+    result = __Pyx_PyObject_Call(func, args, NULL);
+    Py_DECREF(args);
     return result;
 }
 #endif
@@ -9796,237 +10298,6 @@ static long __Pyx__PyObject_Ord(PyObject* c) {
     return (long)(Py_UCS4)-1;
 }
 
-/* PyCFunctionFastCall */
-#if CYTHON_FAST_PYCCALL
-static CYTHON_INLINE PyObject * __Pyx_PyCFunction_FastCall(PyObject *func_obj, PyObject **args, Py_ssize_t nargs) {
-    PyCFunctionObject *func = (PyCFunctionObject*)func_obj;
-    PyCFunction meth = PyCFunction_GET_FUNCTION(func);
-    PyObject *self = PyCFunction_GET_SELF(func);
-    int flags = PyCFunction_GET_FLAGS(func);
-    assert(PyCFunction_Check(func));
-    assert(METH_FASTCALL == (flags & ~(METH_CLASS | METH_STATIC | METH_COEXIST | METH_KEYWORDS | METH_STACKLESS)));
-    assert(nargs >= 0);
-    assert(nargs == 0 || args != NULL);
-    /* _PyCFunction_FastCallDict() must not be called with an exception set,
-       because it may clear it (directly or indirectly) and so the
-       caller loses its exception */
-    assert(!PyErr_Occurred());
-    if ((PY_VERSION_HEX < 0x030700A0) || unlikely(flags & METH_KEYWORDS)) {
-        return (*((__Pyx_PyCFunctionFastWithKeywords)(void*)meth)) (self, args, nargs, NULL);
-    } else {
-        return (*((__Pyx_PyCFunctionFast)(void*)meth)) (self, args, nargs);
-    }
-}
-#endif
-
-/* PyFunctionFastCall */
-#if CYTHON_FAST_PYCALL
-static PyObject* __Pyx_PyFunction_FastCallNoKw(PyCodeObject *co, PyObject **args, Py_ssize_t na,
-                                               PyObject *globals) {
-    PyFrameObject *f;
-    PyThreadState *tstate = __Pyx_PyThreadState_Current;
-    PyObject **fastlocals;
-    Py_ssize_t i;
-    PyObject *result;
-    assert(globals != NULL);
-    /* XXX Perhaps we should create a specialized
-       PyFrame_New() that doesn't take locals, but does
-       take builtins without sanity checking them.
-       */
-    assert(tstate != NULL);
-    f = PyFrame_New(tstate, co, globals, NULL);
-    if (f == NULL) {
-        return NULL;
-    }
-    fastlocals = __Pyx_PyFrame_GetLocalsplus(f);
-    for (i = 0; i < na; i++) {
-        Py_INCREF(*args);
-        fastlocals[i] = *args++;
-    }
-    result = PyEval_EvalFrameEx(f,0);
-    ++tstate->recursion_depth;
-    Py_DECREF(f);
-    --tstate->recursion_depth;
-    return result;
-}
-#if 1 || PY_VERSION_HEX < 0x030600B1
-static PyObject *__Pyx_PyFunction_FastCallDict(PyObject *func, PyObject **args, Py_ssize_t nargs, PyObject *kwargs) {
-    PyCodeObject *co = (PyCodeObject *)PyFunction_GET_CODE(func);
-    PyObject *globals = PyFunction_GET_GLOBALS(func);
-    PyObject *argdefs = PyFunction_GET_DEFAULTS(func);
-    PyObject *closure;
-#if PY_MAJOR_VERSION >= 3
-    PyObject *kwdefs;
-#endif
-    PyObject *kwtuple, **k;
-    PyObject **d;
-    Py_ssize_t nd;
-    Py_ssize_t nk;
-    PyObject *result;
-    assert(kwargs == NULL || PyDict_Check(kwargs));
-    nk = kwargs ? PyDict_Size(kwargs) : 0;
-    if (Py_EnterRecursiveCall((char*)" while calling a Python object")) {
-        return NULL;
-    }
-    if (
-#if PY_MAJOR_VERSION >= 3
-            co->co_kwonlyargcount == 0 &&
-#endif
-            likely(kwargs == NULL || nk == 0) &&
-            co->co_flags == (CO_OPTIMIZED | CO_NEWLOCALS | CO_NOFREE)) {
-        if (argdefs == NULL && co->co_argcount == nargs) {
-            result = __Pyx_PyFunction_FastCallNoKw(co, args, nargs, globals);
-            goto done;
-        }
-        else if (nargs == 0 && argdefs != NULL
-                 && co->co_argcount == Py_SIZE(argdefs)) {
-            /* function called with no arguments, but all parameters have
-               a default value: use default values as arguments .*/
-            args = &PyTuple_GET_ITEM(argdefs, 0);
-            result =__Pyx_PyFunction_FastCallNoKw(co, args, Py_SIZE(argdefs), globals);
-            goto done;
-        }
-    }
-    if (kwargs != NULL) {
-        Py_ssize_t pos, i;
-        kwtuple = PyTuple_New(2 * nk);
-        if (kwtuple == NULL) {
-            result = NULL;
-            goto done;
-        }
-        k = &PyTuple_GET_ITEM(kwtuple, 0);
-        pos = i = 0;
-        while (PyDict_Next(kwargs, &pos, &k[i], &k[i+1])) {
-            Py_INCREF(k[i]);
-            Py_INCREF(k[i+1]);
-            i += 2;
-        }
-        nk = i / 2;
-    }
-    else {
-        kwtuple = NULL;
-        k = NULL;
-    }
-    closure = PyFunction_GET_CLOSURE(func);
-#if PY_MAJOR_VERSION >= 3
-    kwdefs = PyFunction_GET_KW_DEFAULTS(func);
-#endif
-    if (argdefs != NULL) {
-        d = &PyTuple_GET_ITEM(argdefs, 0);
-        nd = Py_SIZE(argdefs);
-    }
-    else {
-        d = NULL;
-        nd = 0;
-    }
-#if PY_MAJOR_VERSION >= 3
-    result = PyEval_EvalCodeEx((PyObject*)co, globals, (PyObject *)NULL,
-                               args, (int)nargs,
-                               k, (int)nk,
-                               d, (int)nd, kwdefs, closure);
-#else
-    result = PyEval_EvalCodeEx(co, globals, (PyObject *)NULL,
-                               args, (int)nargs,
-                               k, (int)nk,
-                               d, (int)nd, closure);
-#endif
-    Py_XDECREF(kwtuple);
-done:
-    Py_LeaveRecursiveCall();
-    return result;
-}
-#endif
-#endif
-
-/* PyObjectCall2Args */
-static CYTHON_UNUSED PyObject* __Pyx_PyObject_Call2Args(PyObject* function, PyObject* arg1, PyObject* arg2) {
-    PyObject *args, *result = NULL;
-    #if CYTHON_FAST_PYCALL
-    if (PyFunction_Check(function)) {
-        PyObject *args[2] = {arg1, arg2};
-        return __Pyx_PyFunction_FastCall(function, args, 2);
-    }
-    #endif
-    #if CYTHON_FAST_PYCCALL
-    if (__Pyx_PyFastCFunction_Check(function)) {
-        PyObject *args[2] = {arg1, arg2};
-        return __Pyx_PyCFunction_FastCall(function, args, 2);
-    }
-    #endif
-    args = PyTuple_New(2);
-    if (unlikely(!args)) goto done;
-    Py_INCREF(arg1);
-    PyTuple_SET_ITEM(args, 0, arg1);
-    Py_INCREF(arg2);
-    PyTuple_SET_ITEM(args, 1, arg2);
-    Py_INCREF(function);
-    result = __Pyx_PyObject_Call(function, args, NULL);
-    Py_DECREF(args);
-    Py_DECREF(function);
-done:
-    return result;
-}
-
-/* PyObjectCallMethO */
-#if CYTHON_COMPILING_IN_CPYTHON
-static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject *arg) {
-    PyObject *self, *result;
-    PyCFunction cfunc;
-    cfunc = PyCFunction_GET_FUNCTION(func);
-    self = PyCFunction_GET_SELF(func);
-    if (unlikely(Py_EnterRecursiveCall((char*)" while calling a Python object")))
-        return NULL;
-    result = cfunc(self, arg);
-    Py_LeaveRecursiveCall();
-    if (unlikely(!result) && unlikely(!PyErr_Occurred())) {
-        PyErr_SetString(
-            PyExc_SystemError,
-            "NULL result without error in PyObject_Call");
-    }
-    return result;
-}
-#endif
-
-/* PyObjectCallOneArg */
-#if CYTHON_COMPILING_IN_CPYTHON
-static PyObject* __Pyx__PyObject_CallOneArg(PyObject *func, PyObject *arg) {
-    PyObject *result;
-    PyObject *args = PyTuple_New(1);
-    if (unlikely(!args)) return NULL;
-    Py_INCREF(arg);
-    PyTuple_SET_ITEM(args, 0, arg);
-    result = __Pyx_PyObject_Call(func, args, NULL);
-    Py_DECREF(args);
-    return result;
-}
-static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg) {
-#if CYTHON_FAST_PYCALL
-    if (PyFunction_Check(func)) {
-        return __Pyx_PyFunction_FastCall(func, &arg, 1);
-    }
-#endif
-    if (likely(PyCFunction_Check(func))) {
-        if (likely(PyCFunction_GET_FLAGS(func) & METH_O)) {
-            return __Pyx_PyObject_CallMethO(func, arg);
-#if CYTHON_FAST_PYCCALL
-        } else if (PyCFunction_GET_FLAGS(func) & METH_FASTCALL) {
-            return __Pyx_PyCFunction_FastCall(func, &arg, 1);
-#endif
-        }
-    }
-    return __Pyx__PyObject_CallOneArg(func, arg);
-}
-#else
-static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg) {
-    PyObject *result;
-    PyObject *args = PyTuple_Pack(1, arg);
-    if (unlikely(!args)) return NULL;
-    result = __Pyx_PyObject_Call(func, args, NULL);
-    Py_DECREF(args);
-    return result;
-}
-#endif
-
 /* None */
 static CYTHON_INLINE void __Pyx_RaiseClosureNameError(const char *varname) {
     PyErr_Format(PyExc_NameError, "free variable '%s' referenced before assignment in enclosing scope", varname);
@@ -10236,6 +10507,126 @@ static CYTHON_INLINE void __Pyx__ExceptionReset(PyThreadState *tstate, PyObject 
     Py_XDECREF(tmp_tb);
 }
 #endif
+
+/* PyErrExceptionMatches */
+#if CYTHON_FAST_THREAD_STATE
+static int __Pyx_PyErr_ExceptionMatchesTuple(PyObject *exc_type, PyObject *tuple) {
+    Py_ssize_t i, n;
+    n = PyTuple_GET_SIZE(tuple);
+#if PY_MAJOR_VERSION >= 3
+    for (i=0; i<n; i++) {
+        if (exc_type == PyTuple_GET_ITEM(tuple, i)) return 1;
+    }
+#endif
+    for (i=0; i<n; i++) {
+        if (__Pyx_PyErr_GivenExceptionMatches(exc_type, PyTuple_GET_ITEM(tuple, i))) return 1;
+    }
+    return 0;
+}
+static CYTHON_INLINE int __Pyx_PyErr_ExceptionMatchesInState(PyThreadState* tstate, PyObject* err) {
+    PyObject *exc_type = tstate->curexc_type;
+    if (exc_type == err) return 1;
+    if (unlikely(!exc_type)) return 0;
+    if (unlikely(PyTuple_Check(err)))
+        return __Pyx_PyErr_ExceptionMatchesTuple(exc_type, err);
+    return __Pyx_PyErr_GivenExceptionMatches(exc_type, err);
+}
+#endif
+
+/* GetException */
+#if CYTHON_FAST_THREAD_STATE
+static int __Pyx__GetException(PyThreadState *tstate, PyObject **type, PyObject **value, PyObject **tb)
+#else
+static int __Pyx_GetException(PyObject **type, PyObject **value, PyObject **tb)
+#endif
+{
+    PyObject *local_type, *local_value, *local_tb;
+#if CYTHON_FAST_THREAD_STATE
+    PyObject *tmp_type, *tmp_value, *tmp_tb;
+    local_type = tstate->curexc_type;
+    local_value = tstate->curexc_value;
+    local_tb = tstate->curexc_traceback;
+    tstate->curexc_type = 0;
+    tstate->curexc_value = 0;
+    tstate->curexc_traceback = 0;
+#else
+    PyErr_Fetch(&local_type, &local_value, &local_tb);
+#endif
+    PyErr_NormalizeException(&local_type, &local_value, &local_tb);
+#if CYTHON_FAST_THREAD_STATE
+    if (unlikely(tstate->curexc_type))
+#else
+    if (unlikely(PyErr_Occurred()))
+#endif
+        goto bad;
+    #if PY_MAJOR_VERSION >= 3
+    if (local_tb) {
+        if (unlikely(PyException_SetTraceback(local_value, local_tb) < 0))
+            goto bad;
+    }
+    #endif
+    Py_XINCREF(local_tb);
+    Py_XINCREF(local_type);
+    Py_XINCREF(local_value);
+    *type = local_type;
+    *value = local_value;
+    *tb = local_tb;
+#if CYTHON_FAST_THREAD_STATE
+    #if CYTHON_USE_EXC_INFO_STACK
+    {
+        _PyErr_StackItem *exc_info = tstate->exc_info;
+        tmp_type = exc_info->exc_type;
+        tmp_value = exc_info->exc_value;
+        tmp_tb = exc_info->exc_traceback;
+        exc_info->exc_type = local_type;
+        exc_info->exc_value = local_value;
+        exc_info->exc_traceback = local_tb;
+    }
+    #else
+    tmp_type = tstate->exc_type;
+    tmp_value = tstate->exc_value;
+    tmp_tb = tstate->exc_traceback;
+    tstate->exc_type = local_type;
+    tstate->exc_value = local_value;
+    tstate->exc_traceback = local_tb;
+    #endif
+    Py_XDECREF(tmp_type);
+    Py_XDECREF(tmp_value);
+    Py_XDECREF(tmp_tb);
+#else
+    PyErr_SetExcInfo(local_type, local_value, local_tb);
+#endif
+    return 0;
+bad:
+    *type = 0;
+    *value = 0;
+    *tb = 0;
+    Py_XDECREF(local_type);
+    Py_XDECREF(local_value);
+    Py_XDECREF(local_tb);
+    return -1;
+}
+
+/* ArgTypeTest */
+static int __Pyx__ArgTypeTest(PyObject *obj, PyTypeObject *type, const char *name, int exact)
+{
+    if (unlikely(!type)) {
+        PyErr_SetString(PyExc_SystemError, "Missing type object");
+        return 0;
+    }
+    else if (exact) {
+        #if PY_MAJOR_VERSION == 2
+        if ((type == &PyBaseString_Type) && likely(__Pyx_PyBaseString_CheckExact(obj))) return 1;
+        #endif
+    }
+    else {
+        if (likely(__Pyx_TypeCheck(obj, type))) return 1;
+    }
+    PyErr_Format(PyExc_TypeError,
+        "Argument '%.200s' has incorrect type (expected %.200s, got %.200s)",
+        name, type->tp_name, Py_TYPE(obj)->tp_name);
+    return 0;
+}
 
 /* ExtTypeTest */
 static CYTHON_INLINE int __Pyx_TypeTest(PyObject *obj, PyTypeObject *type) {

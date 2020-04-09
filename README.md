@@ -64,7 +64,7 @@ zim_creator = pyzim.ZimCreator(test_zim_file_path + '-' + rnd_str + '.zim',"welc
 
 # Add and write article to second test zim file
 zim_creator.add_article(article)
-zim_creator.finalise()
+zim_creator.finalize()
 ```
 
 ### Reading a Zim file

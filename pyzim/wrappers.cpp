@@ -218,7 +218,7 @@ public:
         _creator->addArticle(article);
     }
 
-    void finalise()
+    void finalize()
     {
         _creator->finishZimCreation();
         delete this;
