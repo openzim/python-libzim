@@ -109,8 +109,6 @@ cdef class ZimArticle:
         self.c_zim_article = art
 
 
-    def get_article_properties(self):
-        return dict((name, getattr(self, name)) for name in dir(self) if not name.startswith('__') )
 
     # Factory functions - Currently Cython can't use classmethods
     @staticmethod
