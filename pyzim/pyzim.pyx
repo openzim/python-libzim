@@ -59,11 +59,17 @@ cdef class ZimArticle:
     VALID_NAMESPACES = ["-","A","B","I","J","M","U","V","W","X"]
 
 
-    def __cinit__(self, url="", str content="", namespace= "A", mimetype= "text/html", title="", redirect_article_url= "",filename="", should_index=True ):
+    def __cinit__(self, url="", content="", namespace= "A", mimetype= "text/html", title="", redirect_article_url= "",filename="", should_index=True ):
 
         # Encoding must be set to UTF-8 
         #cdef bytes py_bytes = content.encode(encoding='UTF-8')
         #cdef char* c_string = py_bytes
+
+        bytes_content =b''
+        if isinstance(content, str):
+            bytes_content = content.encode('UTF-8')
+        else:
+            bytes_content = content
         
         if namespace not in self.VALID_NAMESPACES:
             raise RuntimeError("Invalid Namespace")
@@ -74,7 +80,7 @@ cdef class ZimArticle:
                                        mimetype.encode('UTF-8'),           # mimeType
                                        redirect_article_url.encode('UTF-8'),# redirectUrl
                                        should_index,                                # shouldIndex
-                                       content.encode('UTF-8'))
+                                       bytes_content)
         self.__setup(c_zim_art)
 
     def __dealloc__(self):
@@ -101,6 +107,10 @@ cdef class ZimArticle:
         """
         # Set new internal C zim.ZimArticle article
         self.c_zim_article = art
+
+
+    def get_article_properties(self):
+        return dict((name, getattr(self, name)) for name in dir(self) if not name.startswith('__') )
 
     # Factory functions - Currently Cython can't use classmethods
     @staticmethod
@@ -148,12 +158,19 @@ cdef class ZimArticle:
     @property
     def content(self):
         """Get the article's content"""
-        return self.c_zim_article.content.decode('UTF-8')
+        data = self.c_zim_article.content 
+        try:
+            return data.decode('UTF-8')
+        except UnicodeDecodeError:
+            return data
 
     @content.setter
     def content(self, new_content):
         """Set the article's content"""
-        self.c_zim_article.content = new_content.encode('UTF-8') 
+        if isinstance(new_content,str):
+            self.c_zim_article.content = new_content.encode('UTF-8') 
+        else:
+            self.c_zim_article.content = new_content 
 
     @property
     def longurl(self):
