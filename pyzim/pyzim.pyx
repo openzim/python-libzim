@@ -534,12 +534,18 @@ cdef class ZimCreator:
         ------
             RuntimeError
                 If the ZimArticle provided is not ready for writing
+            RuntimeError
+                If the ZimCreator was already finalised
         """
+        if self._finalised:
+            raise RuntimeError("ZimCreator already finalised")
+
         if not article.can_write:
             raise RuntimeError("Article is not good for writing")
 
         # Make a shared pointer to ZimArticle from the ZimArticle object (dereference internal c_zim_article)
         cdef shared_ptr[zim.ZimArticle] art = make_shared[zim.ZimArticle](dereference(article.c_zim_article));
+
         try:
             self.c_creator.addArticle(art)
         else:
