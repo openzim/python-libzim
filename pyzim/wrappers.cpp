@@ -88,7 +88,7 @@ public:
 
     virtual std::string getMimeType() const
     {
-        
+
         return mimeType;
     }
 
@@ -222,6 +222,11 @@ public:
     {
         _creator->finishZimCreation();
         delete this;
+    }
+
+    zim::writer::Url getMainUrl()
+    {
+        return _creator->getMainUrl();
     }
 
     OverriddenZimCreator *_creator;

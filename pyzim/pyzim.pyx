@@ -512,6 +512,9 @@ cdef class ZimCreator:
     cdef zim.ZimCreator *c_creator
     cdef object _finalized
     cdef object _filename
+    cdef object _main_page
+    cdef object _index_language
+    cdef object _min_chunk_size
 
     _metadata ={
         "Name":"", 
@@ -537,6 +540,9 @@ cdef class ZimCreator:
         self.set_metadata(date=datetime.date.today(), language= index_language)
         self._finalized = False
         self._filename = filename
+        self._main_page = self.c_creator.getMainUrl().getLongUrl().decode("UTF-8", "strict")
+        self._index_language = index_language
+        self._min_chunk_size = min_chunk_size
 
     #def __dealloc__(self):
     #    if self.c_creator != NULL:
@@ -546,6 +552,23 @@ cdef class ZimCreator:
     def filename(self):
         """Get the filename of the ZimCreator object"""
         return self._filename
+
+    # TODO Add setter to change main_page
+    @property
+    def main_page(self):
+        """Get the main page of the ZimCreator object"""
+        return self.c_creator.getMainUrl().getLongUrl().decode("UTF-8", "strict")
+
+    @property
+    def index_language(self):
+        """Get the index language of the ZimCreator object"""
+        return self._index_language
+
+    @property
+    def min_chunk_size(self):
+        """Get the minimum chunk size of the ZimCreator object"""
+        return self._min_chunk_size
+
 
     def add_article(self, ZimArticle article):
         """Add a ZimArticle to the Creator object.
