@@ -187,6 +187,11 @@ public:
         return zim::writer::Url('A', mainPage);
     }
 
+    void setMainUrl(std::string newUrl)
+    {
+        mainPage = newUrl;
+    }
+
     std::string mainPage;
 };
 
@@ -222,6 +227,11 @@ public:
     {
         _creator->finishZimCreation();
         delete this;
+    }
+
+    void setMainUrl(std::string newUrl)
+    {
+        _creator->setMainUrl(newUrl);
     }
 
     zim::writer::Url getMainUrl()

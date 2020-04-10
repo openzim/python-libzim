@@ -363,6 +363,25 @@ class TestZimCreator(unittest.TestCase):
 
         # Assert all article properties
         self._assert_article_properties(written_article,article)
+    
+
+    def test_creator_properties(self):
+        import uuid
+
+        rnd_str = str(uuid.uuid1())
+        zim_creator = pyzim.ZimCreator(self.test_zim_file_path + '-' + rnd_str + '.zim',"welcome","spa",2048)
+
+        self.assertEqual(zim_creator.filename, self.test_zim_file_path + '-' + rnd_str + '.zim' )
+
+        self.assertEqual(zim_creator.main_page, "welcome")
+        zim_creator.main_page = "Hola"
+        self.assertEqual(zim_creator.main_page, "Hola")
+
+        self.assertEqual(zim_creator.index_language, "spa")
+        self.assertEqual(zim_creator.min_chunk_size, 2048)
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

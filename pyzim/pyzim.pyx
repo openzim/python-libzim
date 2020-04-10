@@ -72,7 +72,7 @@ cdef class ZimArticle:
             bytes_content = content
         
         if namespace not in self.VALID_NAMESPACES:
-            raise RuntimeError("Invalid Namespace")
+            raise ValueError("Invalid Namespace")
 
         c_zim_art = new zim.ZimArticle(ord(namespace),                     # Namespace
                                        url.encode('UTF-8'),                # url
@@ -140,7 +140,7 @@ cdef class ZimArticle:
     def namespace(self,new_namespace):
         """Set the article's namespace"""
         if new_namespace not in self.VALID_NAMESPACES:
-            raise RuntimeError("Invalid Namespace")
+            raise ValueError("Invalid Namespace")
         self.c_zim_article.ns = ord(new_namespace[0])
         
     @property
@@ -557,7 +557,16 @@ cdef class ZimCreator:
     @property
     def main_page(self):
         """Get the main page of the ZimCreator object"""
-        return self.c_creator.getMainUrl().getLongUrl().decode("UTF-8", "strict")
+        return self.c_creator.getMainUrl().getLongUrl().decode("UTF-8", "strict")[2:]
+    
+    @main_page.setter
+    def main_page(self,new_url):
+        """Set the main page of the ZimCreator object"""
+        # Check if url longformat is used
+        if new_url.find('/') == 1:
+            raise ValueError("Url should not include a namespace")
+
+        self.c_creator.setMainUrl(new_url.encode('UTF-8'))
 
     @property
     def index_language(self):

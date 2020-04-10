@@ -99,6 +99,7 @@ cdef extern from "wrappers.cpp":
         void addArticle(shared_ptr[ZimArticle] article) except +
         void finalize() except +
         Url getMainUrl() except +
+        void setMainUrl(string) except +
 
 cdef extern from "zim/writer/creator.h" namespace "zim::writer":
     cdef cppclass Creator:
