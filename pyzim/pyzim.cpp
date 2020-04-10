@@ -1713,7 +1713,7 @@ static const char __pyx_k_defaultdict[] = "defaultdict";
 static const char __pyx_k_get_article[] = "get_article";
 static const char __pyx_k_is_redirect[] = "is_redirect";
 static const char __pyx_k_RuntimeError[] = "RuntimeError";
-static const char __pyx_k_get_metadata[] = "get_metadata";
+static const char __pyx_k_get_metadata[] = "_get_metadata";
 static const char __pyx_k_set_metadata[] = "set_metadata";
 static const char __pyx_k_should_index[] = "should_index";
 static const char __pyx_k_metadata_keys[] = "_metadata_keys";
@@ -1898,7 +1898,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_14min_chunk_size___get__(struct __
 static PyObject *__pyx_pf_5pyzim_10ZimCreator_2add_article(struct __pyx_obj_5pyzim_ZimCreator *__pyx_v_self, struct __pyx_obj_5pyzim_ZimArticle *__pyx_v_article); /* proto */
 static PyObject *__pyx_pf_5pyzim_10ZimCreator_4_update_article_counter(struct __pyx_obj_5pyzim_ZimCreator *__pyx_v_self, struct __pyx_obj_5pyzim_ZimArticle *__pyx_v_article); /* proto */
 static PyObject *__pyx_pf_5pyzim_10ZimCreator_6get_article_counter_string(struct __pyx_obj_5pyzim_ZimCreator *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_5pyzim_10ZimCreator_8get_metadata(struct __pyx_obj_5pyzim_ZimCreator *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_5pyzim_10ZimCreator_8_get_metadata(struct __pyx_obj_5pyzim_ZimCreator *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_5pyzim_10ZimCreator_10_write_metadata(struct __pyx_obj_5pyzim_ZimCreator *__pyx_v_self, PyObject *__pyx_v_metadata); /* proto */
 static PyObject *__pyx_lambda_funcdef_lambda(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_keyword); /* proto */
 static PyObject *__pyx_pf_5pyzim_10ZimCreator_12set_metadata(struct __pyx_obj_5pyzim_ZimCreator *__pyx_v_self, PyObject *__pyx_v_kwargs); /* proto */
@@ -7224,7 +7224,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_6get_article_counter_string(struct
  *     def get_article_counter_string(self):
  *         return ";".join(["%s=%s" % (k,v) for (k,v) in self._article_counter.items()])             # <<<<<<<<<<<<<<
  * 
- *     def get_metadata(self):
+ *     def _get_metadata(self):
  */
   __Pyx_XDECREF(__pyx_r);
   { /* enter inner scope */
@@ -7322,25 +7322,25 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_6get_article_counter_string(struct
 /* "pyzim.pyx":626
  *         return ";".join(["%s=%s" % (k,v) for (k,v) in self._article_counter.items()])
  * 
- *     def get_metadata(self):             # <<<<<<<<<<<<<<
+ *     def _get_metadata(self):             # <<<<<<<<<<<<<<
  *         # Select non empty keys from _metadata
  *         metadata = {k: str(v) for k, v in self._metadata.items() if v}
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5pyzim_10ZimCreator_9get_metadata(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
-static PyObject *__pyx_pw_5pyzim_10ZimCreator_9get_metadata(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
+static PyObject *__pyx_pw_5pyzim_10ZimCreator_9_get_metadata(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyObject *__pyx_pw_5pyzim_10ZimCreator_9_get_metadata(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("get_metadata (wrapper)", 0);
-  __pyx_r = __pyx_pf_5pyzim_10ZimCreator_8get_metadata(((struct __pyx_obj_5pyzim_ZimCreator *)__pyx_v_self));
+  __Pyx_RefNannySetupContext("_get_metadata (wrapper)", 0);
+  __pyx_r = __pyx_pf_5pyzim_10ZimCreator_8_get_metadata(((struct __pyx_obj_5pyzim_ZimCreator *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5pyzim_10ZimCreator_8get_metadata(struct __pyx_obj_5pyzim_ZimCreator *__pyx_v_self) {
+static PyObject *__pyx_pf_5pyzim_10ZimCreator_8_get_metadata(struct __pyx_obj_5pyzim_ZimCreator *__pyx_v_self) {
   PyObject *__pyx_v_metadata = NULL;
   PyObject *__pyx_v_counter_string = NULL;
   PyObject *__pyx_8genexpr3__pyx_v_k = NULL;
@@ -7356,10 +7356,10 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_8get_metadata(struct __pyx_obj_5py
   PyObject *__pyx_t_7 = NULL;
   int __pyx_t_8;
   int __pyx_t_9;
-  __Pyx_RefNannySetupContext("get_metadata", 0);
+  __Pyx_RefNannySetupContext("_get_metadata", 0);
 
   /* "pyzim.pyx":628
- *     def get_metadata(self):
+ *     def _get_metadata(self):
  *         # Select non empty keys from _metadata
  *         metadata = {k: str(v) for k, v in self._metadata.items() if v}             # <<<<<<<<<<<<<<
  * 
@@ -7479,7 +7479,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_8get_metadata(struct __pyx_obj_5py
   /* "pyzim.pyx":626
  *         return ";".join(["%s=%s" % (k,v) for (k,v) in self._article_counter.items()])
  * 
- *     def get_metadata(self):             # <<<<<<<<<<<<<<
+ *     def _get_metadata(self):             # <<<<<<<<<<<<<<
  *         # Select non empty keys from _metadata
  *         metadata = {k: str(v) for k, v in self._metadata.items() if v}
  */
@@ -7490,7 +7490,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_8get_metadata(struct __pyx_obj_5py
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_6);
   __Pyx_XDECREF(__pyx_t_7);
-  __Pyx_AddTraceback("pyzim.ZimCreator.get_metadata", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("pyzim.ZimCreator._get_metadata", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_metadata);
@@ -8024,7 +8024,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_14finalize(struct __pyx_obj_5pyzim
  * 
  *         """
  *         if not self._finalized:             # <<<<<<<<<<<<<<
- *             self._write_metadata(self.get_metadata())
+ *             self._write_metadata(self._get_metadata())
  *             self.c_creator.finalize()
  */
   __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_self->_finalized); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 662, __pyx_L1_error)
@@ -8034,7 +8034,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_14finalize(struct __pyx_obj_5pyzim
     /* "pyzim.pyx":663
  *         """
  *         if not self._finalized:
- *             self._write_metadata(self.get_metadata())             # <<<<<<<<<<<<<<
+ *             self._write_metadata(self._get_metadata())             # <<<<<<<<<<<<<<
  *             self.c_creator.finalize()
  *             self._finalized = True
  */
@@ -8077,7 +8077,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_14finalize(struct __pyx_obj_5pyzim
 
     /* "pyzim.pyx":664
  *         if not self._finalized:
- *             self._write_metadata(self.get_metadata())
+ *             self._write_metadata(self._get_metadata())
  *             self.c_creator.finalize()             # <<<<<<<<<<<<<<
  *             self._finalized = True
  *         else:
@@ -8090,7 +8090,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_14finalize(struct __pyx_obj_5pyzim
     }
 
     /* "pyzim.pyx":665
- *             self._write_metadata(self.get_metadata())
+ *             self._write_metadata(self._get_metadata())
  *             self.c_creator.finalize()
  *             self._finalized = True             # <<<<<<<<<<<<<<
  *         else:
@@ -8106,7 +8106,7 @@ static PyObject *__pyx_pf_5pyzim_10ZimCreator_14finalize(struct __pyx_obj_5pyzim
  * 
  *         """
  *         if not self._finalized:             # <<<<<<<<<<<<<<
- *             self._write_metadata(self.get_metadata())
+ *             self._write_metadata(self._get_metadata())
  *             self.c_creator.finalize()
  */
     goto __pyx_L3;
@@ -9178,7 +9178,7 @@ static PyMethodDef __pyx_methods_5pyzim_ZimCreator[] = {
   {"add_article", (PyCFunction)__pyx_pw_5pyzim_10ZimCreator_3add_article, METH_O, __pyx_doc_5pyzim_10ZimCreator_2add_article},
   {"_update_article_counter", (PyCFunction)__pyx_pw_5pyzim_10ZimCreator_5_update_article_counter, METH_O, 0},
   {"get_article_counter_string", (PyCFunction)__pyx_pw_5pyzim_10ZimCreator_7get_article_counter_string, METH_NOARGS, 0},
-  {"get_metadata", (PyCFunction)__pyx_pw_5pyzim_10ZimCreator_9get_metadata, METH_NOARGS, 0},
+  {"_get_metadata", (PyCFunction)__pyx_pw_5pyzim_10ZimCreator_9_get_metadata, METH_NOARGS, 0},
   {"_write_metadata", (PyCFunction)__pyx_pw_5pyzim_10ZimCreator_11_write_metadata, METH_O, 0},
   {"set_metadata", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_5pyzim_10ZimCreator_13set_metadata, METH_VARARGS|METH_KEYWORDS, 0},
   {"finalize", (PyCFunction)__pyx_pw_5pyzim_10ZimCreator_15finalize, METH_NOARGS, __pyx_doc_5pyzim_10ZimCreator_14finalize},

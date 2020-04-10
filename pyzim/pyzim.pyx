@@ -623,7 +623,7 @@ cdef class ZimCreator:
     def get_article_counter_string(self):
         return ";".join(["%s=%s" % (k,v) for (k,v) in self._article_counter.items()])
 
-    def get_metadata(self):
+    def _get_metadata(self):
         # Select non empty keys from _metadata
         metadata = {k: str(v) for k, v in self._metadata.items() if v}
 
@@ -660,7 +660,7 @@ cdef class ZimCreator:
 
         """
         if not self._finalized:
-            self._write_metadata(self.get_metadata())
+            self._write_metadata(self._get_metadata())
             self.c_creator.finalize()
             self._finalized = True
         else:
