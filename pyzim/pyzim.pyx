@@ -3,6 +3,7 @@ from libcpp cimport bool
 from libcpp.memory cimport shared_ptr, make_shared
 
 import datetime
+import copy
 from collections import defaultdict
 from cython.operator import dereference
 
@@ -515,8 +516,10 @@ cdef class ZimCreator:
     cdef object _main_page
     cdef object _index_language
     cdef object _min_chunk_size
+    cdef object _article_counter
+    cdef object _metadata
 
-    _metadata ={
+    _metadata_keys ={
         "Name":"", 
         "Title":"", 
         "Creator":"",
@@ -533,16 +536,20 @@ cdef class ZimCreator:
         "Counter":"",
         "Scraper":""}
 
-    _article_counter = defaultdict(int)
 
     def __cinit__(self, str filename, str main_page = "", str index_language = "eng", min_chunk_size = 2048):
         self.c_creator = zim.ZimCreator.create(filename.encode("UTF-8"), main_page.encode("UTF-8"), index_language.encode("UTF-8"), min_chunk_size)
-        self.set_metadata(date=datetime.date.today(), language= index_language)
+        self._article_counter = defaultdict(int)
+        self._metadata = copy.deepcopy(self._metadata_keys)
+        
         self._finalized = False
         self._filename = filename
         self._main_page = self.c_creator.getMainUrl().getLongUrl().decode("UTF-8", "strict")
         self._index_language = index_language
         self._min_chunk_size = min_chunk_size
+
+        self.set_metadata(date=datetime.date.today(), language= index_language)
+
 
     #def __dealloc__(self):
     #    if self.c_creator != NULL:
@@ -553,7 +560,6 @@ cdef class ZimCreator:
         """Get the filename of the ZimCreator object"""
         return self._filename
 
-    # TODO Add setter to change main_page
     @property
     def main_page(self):
         """Get the main page of the ZimCreator object"""
