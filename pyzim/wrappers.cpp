@@ -19,6 +19,7 @@ class ZimArticle : public zim::writer::Article
     zim::Article Ar;
 
 public:
+    virtual ~ZimArticle() = default;
     explicit ZimArticle(const zim::Article a) : Ar(a)
     {
         ns = a.getNamespace();
@@ -107,27 +108,27 @@ public:
         return zim::writer::Url(ns, redirectUrl);
     }
 
-    zim::Blob getData() const
+    virtual zim::Blob getData() const
     {
         return zim::Blob(&content[0], content.size());
     }
 
-    zim::size_type getSize() const
+    virtual zim::size_type getSize() const
     {
         return content.size();
     }
 
-    std::string getFilename() const
+    virtual std::string getFilename() const
     {
         return fileName;
     }
 
-    bool shouldCompress() const
+    virtual bool shouldCompress() const
     {
         return getMimeType().find("text") == 0 || getMimeType() == "application/javascript" || getMimeType() == "application/json" || getMimeType() == "image/svg+xml";
     }
 
-    bool shouldIndex() const
+    virtual bool shouldIndex() const
     {
         if (Ar.good())
             return getMimeType().find("text/html") == 0;
