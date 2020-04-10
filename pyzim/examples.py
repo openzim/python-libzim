@@ -116,8 +116,8 @@ counter_metadata = zim_reader.get_article("M/Counter")
 # Redirect articles are not counted
 print(f"Counter Metadata: {counter_metadata.content}")
 
-# Get all the file metadata as dict
-metadata = zim_reader.get_metadata()
+# Get all the mandatory file metadata as dict
+metadata = zim_reader.get_mandatory_metadata()
 
 print(f"Metadata: {metadata}")
 

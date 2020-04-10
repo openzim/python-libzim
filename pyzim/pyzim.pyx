@@ -259,15 +259,15 @@ cdef class ZimReader:
         "Publisher",
         "Date",
         "Description",
-        "Language",
+        "Language"]
         # Optional
-        "LongDescription",
-        "Licence",
-        "Tags",
-        "Flavour",
-        "Source",
-        "Counter",
-        "Scraper"]
+        #"LongDescription",
+        #"Licence",
+        #"Tags",
+        #"Flavour",
+        #"Source",
+        #"Counter",
+        #"Scraper"]
 
     def __cinit__(self, str filename):
         self.c_file = new zim.File(filename.encode('UTF-8'))
@@ -311,7 +311,7 @@ cdef class ZimReader:
         article = ZimArticle.from_read_article(art)
         return article
 
-    def get_metadata(self):
+    def get_mandatory_metadata(self):
         """Get the file metadata.
 
         Returns
