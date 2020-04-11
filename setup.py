@@ -21,6 +21,7 @@ setup(
     ext_modules = cythonize([
         Extension("pyzim",  ["pyzim/*.pyx","pyzim/wrappers.cpp"],
                   libraries=["zim"],
+                  extra_compile_args=['-std=c++11'],
                   language="c++"),
     ],
     compiler_directives={'language_level' : "3"}
