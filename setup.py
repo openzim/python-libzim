@@ -18,6 +18,7 @@ setup(
     description = ("A python-facing API for creating and interacting with ZIM files"),
     license = "GPLv3",
     long_description=read('README.md'),
+    long_description_content_type='text/markdown',
     ext_modules = cythonize([
         Extension("pyzim",  ["pyzim/*.pyx","pyzim/wrappers.cpp"],
                   libraries=["zim"],
