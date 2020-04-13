@@ -242,14 +242,11 @@ cdef class ZimReader:
     ----------
     *c_file : zim.File
         a pointer to a C++ File object
-    *c_search : zim.ZimSearch
-        a pointer to a C++ ZimSearch object
     _filename : str
         the file name of the File Reader object
     """
 
     cdef zim.File *c_file
-    cdef zim.ZimSearch *c_search
     cdef object _filename
 
     _metadata_keys =[
@@ -271,7 +268,6 @@ cdef class ZimReader:
 
     def __cinit__(self, str filename):
         self.c_file = new zim.File(filename.encode('UTF-8'))
-        self.c_search = new zim.ZimSearch(self.c_file)
 
         self._filename = self.c_file.getFilename().decode("UTF-8", "strict")
 
@@ -454,59 +450,86 @@ cdef class ZimReader:
         """
         return self.c_file.getNamespaceCount(ord(ns[0]))
 
-    def suggest(self, query):
-        """Get a list of the full urls of suggested articles in the file from a query.
+    def suggest(self, query, start=0, end=10):
+        """Get an iterator of the full urls of suggested articles in the file from a title query.
+
+        Parameters
+        ----------
+        query : str
+            Title query string
+        start : int
+            Iterator start
+        end : end
+            Iterator end
+
+        Returns
+        -------
+        iterator
+            An interator with the urls of suggested articles starting from start position
+
+        """
+        cdef unique_ptr[zim.Search] search = self.c_file.suggestions(query.encode('UTF-8'),start, end) 
+        cdef zim.search_iterator it = dereference(search).begin()
+
+        while it != dereference(search).end():
+            yield it.get_url().decode('UTF-8')
+            preincrement(it)
+
+    def search(self, query, start=0, end=10):
+        """Get an iterator of the full urls of articles in the file from a search query.
 
         Parameters
         ----------
         query : str
             Query string
+        start : int
+            Iterator start
+        end : end
+            Iterator end
 
         Returns
         -------
-        list
-            A list with the urls of suggested articles
-
-        """
-        results = self.c_search.suggest(query.encode('UTF-8')) 
-        return [r.decode("UTF-8", "strict") for r in results]
-
-    def search(self, query):
-        """Get a list of the full urls of articles in the file from a search query.
-
-        Parameters
-        ----------
-        query : str
-            Query string
-
-        Returns
-        -------
-        list
-            A list with the urls of articles matching the search query
+        iterator
+            An iterator with the urls of articles matching the search query starting from start position
         """
 
-        results = self.c_search.search(query.encode('UTF-8')) 
-        return [r.decode("UTF-8", "strict") for r in results]
-
-    def file_search(self, query, start=0, end=10):
         cdef unique_ptr[zim.Search] search = self.c_file.search(query.encode('UTF-8'),start, end) 
         cdef zim.search_iterator it = dereference(search).begin()
     
-        print(dereference(search).get_matches_estimated()) 
-
         while it != dereference(search).end():
             yield it.get_url().decode('UTF-8')
             preincrement(it)
 
-    def file_suggestions(self, query, start=0, end=10):
-        cdef unique_ptr[zim.Search] search = self.c_file.suggestions(query.encode('UTF-8'),start, end) 
-        cdef zim.search_iterator it = dereference(search).begin()
+    def get_search_results_count(self, query):
+        """Get seach results counts for a query.
+
+        Parameters
+        ----------
+        query : str
+            Query string
+        Returns
+        -------
+        int
+            Number of search results
+        """
+        cdef unique_ptr[zim.Search] search = self.c_file.search(query.encode('UTF-8'),0, 1) 
+        return dereference(search).get_matches_estimated()
     
-        print(dereference(search).get_matches_estimated()) 
+    def get_suggestions_results_count(self, query):
+        """Get suggestions results counts for a query.
 
-        while it != dereference(search).end():
-            yield it.get_url().decode('UTF-8')
-            preincrement(it)
+        Parameters
+        ----------
+        query : str
+            Query string
+        Returns
+        -------
+        int
+            Number of article suggestions
+        """
+        cdef unique_ptr[zim.Search] search = self.c_file.suggestions(query.encode('UTF-8'),0 , 1) 
+        return dereference(search).get_matches_estimated()
+
 
     def __repr__(self):
         return f"{self.__class__.__name__}(filename={self.filename})"

@@ -154,12 +154,11 @@ class TestZimReader(unittest.TestCase):
 
     def test_suggest(self):
         results =  self.zim_reader.suggest(self.zim_test_query)
-        self.assertIsInstance(results,list)
-        self.assertIn(self.zim_test_article_long_url,results)
+        self.assertIn(self.zim_test_article_long_url,list(results))
 
     def test_search(self):
         results = self.zim_reader.search(self.zim_test_query)
-        self.assertIsInstance(results,list)
+        self.assertIsInstance(list(results),list)
 
 class TestZimCreator(unittest.TestCase):
     def setUp(self):

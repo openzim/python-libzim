@@ -20,7 +20,7 @@ class ZimArticle : public zim::writer::Article
 
 public:
     virtual ~ZimArticle() = default;
-    explicit ZimArticle(const zim::Article a) : Ar(a)
+    explicit ZimArticle(const zim::Article a) : Ar(a)   
     {
         ns = a.getNamespace();
         url = a.getUrl();
@@ -134,46 +134,6 @@ public:
             return getMimeType().find("text/html") == 0;
         return _shouldIndex;
     }
-};
-
-class ZimSearch : public zim::File
-{
-public:
-    ZimSearch(zim::File *file) : _reader(file)
-    {
-    }
-
-    ~ZimSearch()
-    {
-        delete _reader;
-    }
-
-    std::vector<std::string>
-    suggest(std::string query)
-    {
-        std::vector<std::string> results;
-        auto search = _reader->suggestions(query, 0, 10);
-        for (auto it = search->begin(); it != search->end(); it++)
-        {
-            results.push_back(it->getLongUrl());
-        }
-        return results;
-    }
-
-    std::vector<std::string> search(std::string query)
-    {
-        std::vector<std::string> results;
-        auto search = _reader->search(query, 0, 10);
-        for (auto it = search->begin(); it != search->end(); it++)
-        {
-            results.push_back(it->getLongUrl());
-        }
-        // std::string url = it.get_snippet();
-        // int numResults = search->get_matches_estimated();
-        return results;
-    }
-
-    zim::File *_reader;
 };
 
 class OverriddenZimCreator : public zim::writer::Creator

@@ -51,6 +51,7 @@ cdef extern from "zim/search_iterator.h" namespace "zim":
 
 cdef extern from "zim/search.h" namespace "zim":
     cdef cppclass Search:
+        Search(const File* zimfile)
         Search(vector[const File] zimfiles)
         search_iterator begin()
         search_iterator end()
@@ -109,11 +110,6 @@ cdef extern from "wrappers.cpp":
         string mimeType
         string redirectUrl
         string content
-
-    cdef cppclass ZimSearch:
-        ZimSearch(File *f) except +
-        vector[string] suggest(string) except +
-        vector[string] search(string) except +
 
     cdef cppclass ZimCreator:
         @staticmethod
