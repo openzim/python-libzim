@@ -1,4 +1,4 @@
-import pyzim
+import libzim
 
 test_content = '''<!DOCTYPE html> 
 <html class="client-js">
@@ -10,7 +10,7 @@ test_content = '''<!DOCTYPE html>
 # Read an article from a zim file
 
 zim_file_path = "/opt/python-libzim/tests/wikipedia_es_physics_mini.zim"
-zim_reader = pyzim.ZimReader(zim_file_path)
+zim_reader = libzim.ZimReader(zim_file_path)
 zim_test_article_long_url = "A/Albert_Einstein"
 
 read_article = zim_reader.get_article(zim_test_article_long_url)
@@ -46,13 +46,13 @@ print(f"Main Page URL: {zim_reader.get_main_page_url()}")
 
 # Create a filled article
 
-article = pyzim.ZimArticle(namespace="A", url = "Monadical", title="Monadical", content=test_content, should_index = True)
+article = libzim.ZimArticle(namespace="A", url = "Monadical", title="Monadical", content=test_content, should_index = True)
 
 print(article.longurl)
 print(article.url)
 
 # Create an empty article then fill it
-article2 = pyzim.ZimArticle()
+article2 = libzim.ZimArticle()
 
 article2.content =  test_content
 article2.url = "Monadical_SAS"
@@ -60,7 +60,7 @@ article2.title = "Monadical SAS"
 
 # Fill an article from a read article
 
-article3 = pyzim.ZimArticle()
+article3 = libzim.ZimArticle()
 
 article3.content =  read_article.content
 article3.url = "Our_Einstein"
@@ -68,7 +68,7 @@ article3.title = "Our Einstein's bio"
 
 # Create a redirect article
 
-article4 = pyzim.ZimArticle()
+article4 = libzim.ZimArticle()
 article4.namespace = "A"
 article4.url = "Our_Einstein_redirect"
 article4.title = "Redirect to Einstein"
@@ -82,7 +82,7 @@ rnd_str = str(uuid.uuid1())
 
 test_zim_file_path = "/opt/python-libzim/tests/kiwix-test"
 
-zim_creator = pyzim.ZimCreator(test_zim_file_path + '-' + rnd_str + '.zim',main_page = "welcome",index_language= "eng", min_chunk_size= 2048)
+zim_creator = libzim.ZimCreator(test_zim_file_path + '-' + rnd_str + '.zim',main_page = "welcome",index_language= "eng", min_chunk_size= 2048)
 
 # Add article to zim file
 zim_creator.add_article(article)
@@ -96,7 +96,7 @@ zim_creator.finalize()
 
 # Read written articles
 
-zim_reader = pyzim.ZimReader(test_zim_file_path + '-' + rnd_str + '.zim')
+zim_reader = libzim.ZimReader(test_zim_file_path + '-' + rnd_str + '.zim')
 zim_test_article_long_url = "A/Monadical"
 
 written_article = zim_reader.get_article(zim_test_article_long_url)

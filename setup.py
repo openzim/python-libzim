@@ -20,7 +20,7 @@ setup(
     long_description=read('README.md'),
     long_description_content_type='text/markdown',
     ext_modules = cythonize([
-        Extension("pyzim",  ["pyzim/*.pyx","pyzim/wrappers.cpp"],
+        Extension("libzim",  ["libzim/*.pyx","libzim/wrappers.cpp"],
                   libraries=["zim"],
                   extra_compile_args=['-std=c++11'],
                   language="c++"),

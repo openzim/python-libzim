@@ -21,7 +21,7 @@ docker-compose run libzim /bin/bash
 ```
 ```bash
 python setup.py build_ext -i
-python tests/test_pyzim.py
+python tests/test_libzim.py
 
 # or
 
@@ -34,9 +34,9 @@ python tests/test_pyzim.py
 ### Writing a Zim file
 
 ```python
-import pyzim
+import libzim
 
-article = pyzim.ZimArticle()
+article = libzim.ZimArticle()
 
 # article content
 
@@ -57,7 +57,7 @@ import uuid
 
 rnd_str = str(uuid.uuid1()) 
 test_zim_file_path = "/opt/python-libzim/tests/kiwix-test"
-zim_creator = pyzim.ZimCreator(test_zim_file_path + '-' + rnd_str + '.zim',"welcome","spa",2048)
+zim_creator = libzim.ZimCreator(test_zim_file_path + '-' + rnd_str + '.zim',"welcome","spa",2048)
 
 
 
@@ -70,12 +70,12 @@ zim_creator.finalize()
 ### Reading a Zim file
 
 ```python
-import pyzim
+import libzim
 
 # Read an article from a zim file
 
 zim_file_path = "/opt/python-libzim/tests/wikipedia_es_physics_mini.zim"
-zim_reader = pyzim.ZimReader(zim_file_path)
+zim_reader = libzim.ZimReader(zim_file_path)
 zim_test_article_long_url = "A/Albert_Einstein"
 
 read_article = zim_reader.get_article(zim_test_article_long_url)
@@ -98,7 +98,7 @@ print(suggestions)
 
 ## Cookbook
 
-Visit [examples.py](pyzim/examples.py)
+Visit [examples.py](libzim/examples.py)
 
 ## License
 

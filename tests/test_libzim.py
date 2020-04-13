@@ -1,12 +1,12 @@
 import unittest
 import os,sys,inspect
 
-# Import local pyzim module from parent
+# Import local libzim module from parent
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 
-import pyzim
+import libzim
 # test files https://wiki.kiwix.org/wiki/Content_in_all_languages
 
 
@@ -56,16 +56,16 @@ class TestZimArticle(unittest.TestCase):
 
 
         # Zim reader 
-        self.zim_reader = pyzim.ZimReader(self.zim_file_path)
+        self.zim_reader = libzim.ZimReader(self.zim_file_path)
 
     def test_create_from_read_article(self):
         article = self.zim_reader.get_article(self.zim_test_article_long_url)
-        self.assertIsInstance(article, pyzim.ZimArticle)
+        self.assertIsInstance(article, libzim.ZimArticle)
         self.assertEqual(article.url, self.zim_test_article_long_url[2:])
 
     def test_create_empty_zim_article(self):
-        article = pyzim.ZimArticle()
-        self.assertIsInstance(article, pyzim.ZimArticle)
+        article = libzim.ZimArticle()
+        self.assertIsInstance(article, libzim.ZimArticle)
         
         article.title = self.test_article_title
         self.assertEqual(article.title, self.test_article_title)
@@ -82,7 +82,7 @@ class TestZimArticle(unittest.TestCase):
         self.assertEqual(article.is_redirect, self.test_article_is_redirect)
     
     def test_redirect_article(self):
-        article = pyzim.ZimArticle()
+        article = libzim.ZimArticle()
         article.namespace = "A"
         article.redirect_url = "Hola"
 
@@ -111,7 +111,7 @@ class TestZimReader(unittest.TestCase):
         self.zim_test_query = u"Einstein"
 
         # Zim reader 
-        self.zim_reader = pyzim.ZimReader(self.zim_file_path)
+        self.zim_reader = libzim.ZimReader(self.zim_file_path)
 
     def test_zim_filename(self):
         self.assertEqual(self.zim_reader.filename, self.zim_file_path)
@@ -171,7 +171,7 @@ class TestZimCreator(unittest.TestCase):
         self.zim_test_article_long_url = u"A/Albert_Einstein"
         self.zim_test_article_url = self.zim_test_article_long_url[2:]
 
-        self.zim_reader = pyzim.ZimReader(self.zim_file_path)
+        self.zim_reader = libzim.ZimReader(self.zim_file_path)
 
 
         # Test properties
@@ -207,7 +207,7 @@ class TestZimCreator(unittest.TestCase):
         import uuid
 
         rnd_str = str(uuid.uuid1()) 
-        zim_creator = pyzim.ZimCreator(self.test_zim_file_path + '-' + rnd_str + '.zim',"welcome","eng",2048)
+        zim_creator = libzim.ZimCreator(self.test_zim_file_path + '-' + rnd_str + '.zim',"welcome","eng",2048)
 
          # Add and write article to second test zim file
         zim_creator.add_article(article)
@@ -217,7 +217,7 @@ class TestZimCreator(unittest.TestCase):
 
 
         # Read back article from second test zim file
-        test_zim_reader = pyzim.ZimReader(self.test_zim_file_path + '-' + rnd_str + '.zim')
+        test_zim_reader = libzim.ZimReader(self.test_zim_file_path + '-' + rnd_str + '.zim')
         written_article = test_zim_reader.get_article(article.longurl)
 
         if delete_zim_file:
@@ -231,8 +231,8 @@ class TestZimCreator(unittest.TestCase):
 
     def test_write_article_created_filled(self):
 
-        article = pyzim.ZimArticle(namespace='A', url = self.test_article_url, title=self.test_article_title, content= self.test_article_content, mimetype = self.test_article_mimetype, should_index = True)
-        self.assertIsInstance(article, pyzim.ZimArticle) 
+        article = libzim.ZimArticle(namespace='A', url = self.test_article_url, title=self.test_article_title, content= self.test_article_content, mimetype = self.test_article_mimetype, should_index = True)
+        self.assertIsInstance(article, libzim.ZimArticle) 
         self.assertEqual(article.can_write, True)
 
         self.assertEqual(article.content,self.test_article_content)
@@ -247,7 +247,7 @@ class TestZimCreator(unittest.TestCase):
 
     def test_write_article_created_empty_then_filled(self):
         # New empty Article
-        article = pyzim.ZimArticle()
+        article = libzim.ZimArticle()
 
         self.assertEqual(article.can_write, False)
 
@@ -272,13 +272,13 @@ class TestZimCreator(unittest.TestCase):
         article = self.zim_reader.get_article(self.zim_test_article_long_url)
         self.assertTrue(article.can_write)
 
-        zim_creator = pyzim.ZimCreator(self.test_zim_file_path + '-' + rnd_str + '.zim',"welcome","eng",2048)
+        zim_creator = libzim.ZimCreator(self.test_zim_file_path + '-' + rnd_str + '.zim',"welcome","eng",2048)
 
          # Add and write article to second test zim file
         zim_creator.add_article(article)
 
         # Create Redirect article
-        redirect_article = pyzim.ZimArticle()
+        redirect_article = libzim.ZimArticle()
         redirect_article.namespace = "A"
         redirect_article.title = self.test_article_title
         redirect_article.url = self.test_article_url
@@ -294,7 +294,7 @@ class TestZimCreator(unittest.TestCase):
         del(zim_creator)
 
         # Read back article and redirect from second test zim file
-        test_zim_reader = pyzim.ZimReader(self.test_zim_file_path + '-' + rnd_str + '.zim')
+        test_zim_reader = libzim.ZimReader(self.test_zim_file_path + '-' + rnd_str + '.zim')
         written_article = test_zim_reader.get_article(self.zim_test_article_long_url)
         written_redirect_article = test_zim_reader.get_article(self.test_article_longurl) 
 
@@ -308,10 +308,10 @@ class TestZimCreator(unittest.TestCase):
         import uuid
 
         rnd_str = str(uuid.uuid1())
-        zim_creator = pyzim.ZimCreator(self.test_zim_file_path + '-' + rnd_str + '.zim',"welcome","spa",2048)
+        zim_creator = libzim.ZimCreator(self.test_zim_file_path + '-' + rnd_str + '.zim',"welcome","spa",2048)
 
         # New empty Article
-        article = pyzim.ZimArticle()
+        article = libzim.ZimArticle()
 
         self.assertEqual(article.can_write, False)
 
@@ -332,7 +332,7 @@ class TestZimCreator(unittest.TestCase):
         zim_creator.set_metadata(title="Monadical SAS",creator="python-libzim",language="spa,eng,ces")
         zim_creator.finalize()
         
-        test_zim_reader = pyzim.ZimReader(self.test_zim_file_path + '-' + rnd_str + '.zim')
+        test_zim_reader = libzim.ZimReader(self.test_zim_file_path + '-' + rnd_str + '.zim')
 
         metadata_title = test_zim_reader.get_article("M/Date")
         self.assertEqual(metadata_title.content, str(test_date))
@@ -368,7 +368,7 @@ class TestZimCreator(unittest.TestCase):
         import uuid
 
         rnd_str = str(uuid.uuid1())
-        zim_creator = pyzim.ZimCreator(self.test_zim_file_path + '-' + rnd_str + '.zim',"welcome","spa",2048)
+        zim_creator = libzim.ZimCreator(self.test_zim_file_path + '-' + rnd_str + '.zim',"welcome","spa",2048)
 
         self.assertEqual(zim_creator.filename, self.test_zim_file_path + '-' + rnd_str + '.zim' )
 
