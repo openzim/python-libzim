@@ -1,11 +1,11 @@
 from libcpp.string cimport string
 from libcpp cimport bool
-from libcpp.memory cimport shared_ptr, make_shared
+from libcpp.memory cimport shared_ptr, unique_ptr, make_shared
 
 import datetime
 import copy
 from collections import defaultdict
-from cython.operator import dereference
+from cython.operator import dereference, preincrement
 
 cimport zim_wrapper as zim
 
@@ -487,6 +487,26 @@ cdef class ZimReader:
 
         results = self.c_search.search(query.encode('UTF-8')) 
         return [r.decode("UTF-8", "strict") for r in results]
+
+    def file_search(self, query, start=0, end=10):
+        cdef unique_ptr[zim.Search] search = self.c_file.search(query.encode('UTF-8'),start, end) 
+        cdef zim.search_iterator it = dereference(search).begin()
+    
+        print(dereference(search).get_matches_estimated()) 
+
+        while it != dereference(search).end():
+            yield it.get_url().decode('UTF-8')
+            preincrement(it)
+
+    def file_suggestions(self, query, start=0, end=10):
+        cdef unique_ptr[zim.Search] search = self.c_file.suggestions(query.encode('UTF-8'),start, end) 
+        cdef zim.search_iterator it = dereference(search).begin()
+    
+        print(dereference(search).get_matches_estimated()) 
+
+        while it != dereference(search).end():
+            yield it.get_url().decode('UTF-8')
+            preincrement(it)
 
     def __repr__(self):
         return f"{self.__class__.__name__}(filename={self.filename})"

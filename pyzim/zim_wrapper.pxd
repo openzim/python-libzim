@@ -1,7 +1,7 @@
 from libcpp.string cimport string
 from libc.stdint cimport uint32_t, uint64_t
 from libcpp cimport bool
-from libcpp.memory cimport shared_ptr
+from libcpp.memory cimport shared_ptr, unique_ptr
 from libcpp.vector cimport vector
 
 
@@ -40,6 +40,23 @@ cdef extern from "zim/fileheader.h" namespace "zim":
         bint hasMainPage() except +
         size_type getMainPage() except +
 
+cdef extern from "zim/search_iterator.h" namespace "zim":
+    cdef cppclass search_iterator:
+        search_iterator()
+        search_iterator operator++()
+        bint operator==(search_iterator)
+        bint operator!=(search_iterator)
+        string get_url()
+        string get_title()
+
+cdef extern from "zim/search.h" namespace "zim":
+    cdef cppclass Search:
+        Search(vector[const File] zimfiles)
+        search_iterator begin()
+        search_iterator end()
+        int get_matches_estimated()
+
+
 cdef extern from "zim/file.h" namespace "zim":
     cdef cppclass File:
         File() except +
@@ -57,6 +74,11 @@ cdef extern from "zim/file.h" namespace "zim":
         string getNamespaces() except +
         string getChecksum() except +
         string getFilename() except +
+
+        unique_ptr[Search] search(const string query, int start, int end); 
+        unique_ptr[Search] suggestions(const string query, int start, int end); 
+
+
 
 
 
@@ -100,6 +122,7 @@ cdef extern from "wrappers.cpp":
         void finalize() except +
         Url getMainUrl() except +
         void setMainUrl(string) except +
+
 
 cdef extern from "zim/writer/creator.h" namespace "zim::writer":
     cdef cppclass Creator:
