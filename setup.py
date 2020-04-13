@@ -14,10 +14,11 @@ setup(
     name = "python-libzim",
     version = "0.0.1",
     author = "Monadical SAS",
-    author_email = "hello@monadical.com",
+    author_email = "jdc@monadical.com",
     description = ("A python-facing API for creating and interacting with ZIM files"),
     license = "GPLv3",
     long_description=read('README.md'),
+    long_description_content_type='text/markdown',
     ext_modules = cythonize([
         Extension("pyzim",  ["pyzim/*.pyx","pyzim/wrappers.cpp"],
                   libraries=["zim"],
