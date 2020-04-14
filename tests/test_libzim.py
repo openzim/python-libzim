@@ -328,8 +328,8 @@ class TestZimCreator(unittest.TestCase):
         test_date = datetime.date(1900, 1, 1)
 
         zim_creator.add_article(article)
-        zim_creator.set_metadata(date=test_date)
-        zim_creator.set_metadata(title="Monadical SAS",creator="python-libzim",language="spa,eng,ces")
+        zim_creator.update_metadata(date=test_date)
+        zim_creator.update_metadata(title="Monadical SAS",creator="python-libzim",language="spa,eng,ces")
         zim_creator.finalize()
         
         test_zim_reader = libzim.ZimReader(self.test_zim_file_path + '-' + rnd_str + '.zim')

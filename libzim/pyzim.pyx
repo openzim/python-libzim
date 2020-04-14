@@ -60,8 +60,26 @@ cdef class ZimArticle:
     VALID_NAMESPACES = ["-","A","B","I","J","M","U","V","W","X"]
 
 
-    def __cinit__(self, url="", content="", namespace= "A", mimetype= "text/html", title="", redirect_article_url= "",filename="", should_index=True ):
+    def __cinit__(self, url="", content="", namespace= "A", mimetype= "text/html", title="", redirect_article_url= "", should_index=True ):
+        """Constructs a ZimArticle from parameters.
 
+        Parameters
+        ----------
+        url : str
+            Article url without namespace
+        content : str - bytes
+            Article content either str or bytes
+        namespace : {"A","-","B","I","J","M","U","V","W","X"}
+            Article namespace (the default is A)
+        mimetype : str
+            Article mimetype (the default is text/html)
+        title : str
+            Article title
+        redirect_article_url : str
+            Article redirect if article is a redirect
+        should_index : bool
+            Flag if article should be indexed (the default is True)
+        """
         # Encoding must be set to UTF-8 
         #cdef bytes py_bytes = content.encode(encoding='UTF-8')
         #cdef char* c_string = py_bytes
@@ -267,8 +285,15 @@ cdef class ZimReader:
         #"Scraper"]
 
     def __cinit__(self, str filename):
-        self.c_file = new zim.File(filename.encode('UTF-8'))
+        """Constructs a ZimReader from full zim file path.
 
+        Parameters
+        ----------
+        filename : str
+            Full path to a zim file
+        """
+
+        self.c_file = new zim.File(filename.encode('UTF-8'))
         self._filename = self.c_file.getFilename().decode("UTF-8", "strict")
 
     def __dealloc__(self):
@@ -458,9 +483,9 @@ cdef class ZimReader:
         query : str
             Title query string
         start : int
-            Iterator start
+            Iterator start (default 0)
         end : end
-            Iterator end
+            Iterator end (default 10)
 
         Returns
         -------
@@ -483,9 +508,9 @@ cdef class ZimReader:
         query : str
             Query string
         start : int
-            Iterator start
+            Iterator start (default 0)
         end : end
-            Iterator end
+            Iterator end (default 10)
 
         Returns
         -------
@@ -501,12 +526,13 @@ cdef class ZimReader:
             preincrement(it)
 
     def get_search_results_count(self, query):
-        """Get seach results counts for a query.
+        """Get search results counts for a query.
 
         Parameters
         ----------
         query : str
             Query string
+
         Returns
         -------
         int
@@ -522,6 +548,7 @@ cdef class ZimReader:
         ----------
         query : str
             Query string
+
         Returns
         -------
         int
@@ -529,7 +556,6 @@ cdef class ZimReader:
         """
         cdef unique_ptr[zim.Search] search = self.c_file.suggestions(query.encode('UTF-8'),0 , 1) 
         return dereference(search).get_matches_estimated()
-
 
     def __repr__(self):
         return f"{self.__class__.__name__}(filename={self.filename})"
@@ -581,6 +607,20 @@ cdef class ZimCreator:
 
 
     def __cinit__(self, str filename, str main_page = "", str index_language = "eng", min_chunk_size = 2048):
+        """Constructs a ZimCreator from parameters.
+
+        Parameters
+        ----------
+        filename : str
+            Zim file path
+        main_page : str
+            Zim file main_page
+        index_language : str
+            Zim file index language (default eng)
+        min_chunk_size : int
+            Minimum chunk size (default 2048)
+        """
+
         self.c_creator = zim.ZimCreator.create(filename.encode("UTF-8"), main_page.encode("UTF-8"), index_language.encode("UTF-8"), min_chunk_size)
         self._article_counter = defaultdict(int)
         self._metadata = copy.deepcopy(self._metadata_keys)
@@ -591,7 +631,7 @@ cdef class ZimCreator:
         self._index_language = index_language
         self._min_chunk_size = min_chunk_size
 
-        self.set_metadata(date=datetime.date.today(), language= index_language)
+        self.update_metadata(date=datetime.date.today(), language= index_language)
 
 
     #def __dealloc__(self):
@@ -683,7 +723,8 @@ cdef class ZimCreator:
              mimetype= "text/plain", title=key )
             self.add_article(metadata_article)
 
-    def set_metadata(self, **kwargs):
+    def update_metadata(self, **kwargs):
+        """Updates article metadata"""
         # Converts python case to pascal case. example: long_description-> LongDescription
         pascalize = lambda keyword: "".join(keyword.title().split("_"))
 
