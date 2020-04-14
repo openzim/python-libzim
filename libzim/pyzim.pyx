@@ -694,6 +694,8 @@ cdef class ZimCreator:
 
         try:
             self.c_creator.addArticle(art)
+        except:
+            raise
         else:
             if not article.is_redirect:
                 self._update_article_counter(article)
