@@ -1,4 +1,4 @@
-cimport pyzim
+cimport libzim
 cimport cpython.ref as cpy_ref
 from cython.operator import dereference
 
@@ -8,10 +8,11 @@ from libcpp cimport bool
 from libcpp.memory cimport shared_ptr, make_shared
 
 import datetime
+
 from collections import defaultdict
 
 #########################
-#       ZimArticle      #
+#       ZimBlob         #
 #########################
 
 cdef class ZimBlob:
@@ -24,16 +25,17 @@ cdef class ZimBlob:
         if self.c_blob != NULL:
             del self.c_blob
 
+
+#########################
+#       ZimArticle      #
+#########################
+
 cdef class ZimArticle:
     cdef ZimArticleWrapper* c_article
 
     def __init__(self):
         self.c_article = new ZimArticleWrapper(<cpy_ref.PyObject*>self)
     
-    def __dealloc__(self):
-        if self.c_article != NULL:
-            del self.c_article
-
     def get_url(self):
         raise NotImplementedError
 
@@ -68,7 +70,7 @@ cdef class ZimArticle:
     @property
     def content(self):
         blob = self.c_article.getData()
-        return blob.data()[:blob.size()].decode('UTF-8')
+        return blob.data()[:blob.size()]
 
     # This changes with implementation
     @property
@@ -105,8 +107,7 @@ cdef public api:
             error[0] = 0
             blob = func()
             return dereference(blob.c_blob) 
-
-cdef public api:    
+    
     bool bool_cy_call_fct(void *ptr, string method, int *error):
         """Lookup and execute a pure virtual method on ZimArticle returning a bool"""
 
@@ -133,92 +134,116 @@ cdef public api:
             error[0] = 0
             return <uint64_t> func()
 
-class ZimTestArticle(ZimArticle):
-    content = '''<!DOCTYPE html> 
-                <html class="client-js">
-                <head><meta charset="UTF-8">
-                <title>Monadical</title>
-                <h1> ñññ Hello, it works ñññ </h1></html>'''
-
-    def __init__(self):
-        ZimArticle.__init__(self)
-
-    def is_redirect(self):
-        return False
-
-    @property
-    def can_write(self):
-        return True
-
-    def get_url(self):
-        return "A/Monadical_SAS"
-
-    def get_title(self):
-        return "Monadical SAS"
-    
-    def get_mime_type(self):
-        return "text/html"
-    
-    def get_filename(self):
-        return ""
-    
-    def should_compress(self):
-        return True
-
-    def should_index(self):
-        return True
-
-    def get_data(self):
-        return ZimBlob(self.content.encode('UTF-8'))
 
 #########################
 #       ZimCreator      #
 #########################
 
+#TODO Should we declare an article for metadata or left to the user managing ?
+
 
 cdef class ZimCreator:
+    """ 
+    A class to represent a Zim Creator. 
+    
+    Attributes
+    ----------
+    *c_creator : zim.ZimCreator
+        a pointer to the C++ Creator object
+    _finalized : bool
+        flag if the creator was finalized
+    _filename : str
+        Zim file path
+    _main_page : str
+        Zim file main page
+    _index_language : str
+        Zim file Index language 
+    _min_chunk_size : str
+        Zim file minimum chunk size
+    """
+    
     cdef ZimCreatorWrapper *c_creator
-    cdef object _finalised
-
-    _metadata ={
-        "Name":"", 
-        "Title":"", 
-        "Creator":"",
-        "Publisher":"",
-        "Date":"",
-        "Description":"",
-        "Language":"",
-        # Optional
-        "LongDescription":"",
-        "Licence":"",
-        "Tags":"",
-        "Flavour":"",
-        "Source":"",
-        "Counter":"",
-        "Scraper":""}
-
-    _article_counter = defaultdict(int)
+    cdef bool _finalized
+    cdef object _filename
+    cdef object _main_page
+    cdef object _index_language
+    cdef object _min_chunk_size
+    cdef object _article_counter
 
     def __cinit__(self, str filename, str main_page = "", str index_language = "eng", min_chunk_size = 2048):
+        """Constructs a ZimCreator from parameters.
+        Parameters
+        ----------
+        filename : str
+            Zim file path
+        main_page : str
+            Zim file main_page
+        index_language : str
+            Zim file index language (default eng)
+        min_chunk_size : int
+            Minimum chunk size (default 2048)
+        """
+
         self.c_creator = ZimCreatorWrapper.create(filename.encode("UTF-8"), main_page.encode("UTF-8"), index_language.encode("UTF-8"), min_chunk_size)
-        self.set_metadata(date=datetime.date.today(), language= index_language)
-        self._finalised = False
+        self._finalized = False
+        self._filename = filename
+        self._main_page = self.c_creator.getMainUrl().getLongUrl().decode("UTF-8", "strict")
+        self._index_language = index_language
+        self._min_chunk_size = min_chunk_size
+        
+        self._article_counter = defaultdict(int)
 
-    def set_metadata(self, **kwargs):
-        # Converts python case to pascal case. example: long_description-> LongDescription
-        pascalize = lambda keyword: "".join(keyword.title().split("_"))
+    
+    @property
+    def filename(self):
+        """Get the filename of the ZimCreator object"""
+        return self._filename
 
-        if "date" in kwargs and isinstance(kwargs['date'],datetime.date):
-            kwargs['date'] = kwargs['date'].strftime('%Y-%m-%d')
+    @property
+    def main_page(self):
+        """Get the main page of the ZimCreator object"""
+        return self.c_creator.getMainUrl().getLongUrl().decode("UTF-8", "strict")[2:]
+    
+    @main_page.setter
+    def main_page(self,new_url):
+        """Set the main page of the ZimCreator object"""
+        # Check if url longformat is used
+        if new_url.find('/') == 1:
+            raise ValueError("Url should not include a namespace")
 
-        new_metadata = {pascalize(key): value for key, value in kwargs.items()}
-        self._metadata.update(new_metadata)
+        self.c_creator.setMainUrl(new_url.encode('UTF-8'))
+
+    @property
+    def index_language(self):
+        """Get the index language of the ZimCreator object"""
+        return self._index_language
+
+    @property
+    def min_chunk_size(self):
+        """Get the minimum chunk size of the ZimCreator object"""
+        return self._min_chunk_size
 
     def _update_article_counter(self, ZimArticle article):
         # default dict update
         self._article_counter[article.mimetype] += 1
 
     def add_article(self, ZimArticle article not None):
+        """Add a ZimArticle to the Creator object.
+        
+        Parameters
+        ----------
+        article : ZimArticle
+            The article to add to the file
+        Raises
+        ------
+            RuntimeError
+                If the ZimArticle provided is not ready for writing
+            RuntimeError
+                If the ZimCreator was already finalized
+        """
+        if self._finalized:
+            raise RuntimeError("ZimCreator already finalized")
+
         if not article.can_write:
             raise RuntimeError("Article is not good for writing")
 
@@ -226,14 +251,26 @@ cdef class ZimCreator:
         cdef shared_ptr[ZimArticleWrapper] art = make_shared[ZimArticleWrapper](dereference(article.c_article));
         try:
             self.c_creator.addArticle(art)
+        except:
+            raise
         else:
             if not article.is_redirect:
                 self._update_article_counter(article)
 
-    def finalise(self):
-        if not self._finalised:
-            #self._write_metadata(self.get_metadata())
-            self.c_creator.finalise()
-            self._finalised = True
+    def finalize(self):
+        """finalize and write added articles to the file.
+        
+        Raises
+        ------
+            RuntimeError
+                If the ZimCreator was already finalized
+        """
+
+        if not self._finalized:
+            self.c_creator.finalize()
+            self._finalized = True
         else:
-            raise RuntimeError("ZimCreator already finalised")
+            raise RuntimeError("ZimCreator already finalized")
+    
+    def __repr__(self):
+        return f"{self.__class__.__name__}(filename={self.filename})"
