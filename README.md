@@ -7,7 +7,7 @@ docker-compose run libzim /bin/bash
 ```
 ```bash
 python setup.py build_ext -i
-python tests/test_pyzim.py
+python tests/test_libzim.py
 
 # or
 
@@ -18,38 +18,63 @@ python tests/test_pyzim.py
 Example:
 
 ```python3
-import pyzim
+from libzim import ZimArticle, ZimBlob, ZimCreator
 
-zim_file_path = "/opt/python-libzim/tests/wikipedia_es_physics_mini.zim"
-zim_reader = pyzim.ZimReader(zim_file_path)
+class ZimTestArticle(ZimArticle):
+    content = '''<!DOCTYPE html> 
+                <html class="client-js">
+                <head><meta charset="UTF-8">
+                <title>Monadical</title>
+                <h1> ñññ Hello, it works ñññ </h1></html>'''
 
-article = pyzim.ZimArticle()
+    def __init__(self):
+        ZimArticle.__init__(self)
 
-# article content
+    def is_redirect(self):
+        return False
 
-article_title = "Monadical SAS"
-article_url = "Monadical_SAS"
-article_longurl ="A/Monadical_SAS"
-article_mimetype = "text/html"
-article_content =  '''<!DOCTYPE html> <html class="client-js"><head><meta charset="UTF-8">
-<title>Monadical SAS</title> <h1> Hello, it works Monadical ñññ </h1></html>'''
+    @property
+    def can_write(self):
+        return True
 
-article.title = article_title
-article.url = article_url
-article.mimetype = article_mimetype
-article.content = article_content
+    def get_url(self):
+        return "A/Monadical_SAS"
 
+    def get_title(self):
+        return "Monadical SAS"
+    
+    def get_mime_type(self):
+        return "text/html"
+    
+    def get_filename(self):
+        return ""
+    
+    def should_compress(self):
+        return True
 
+    def should_index(self):
+        return True
+
+    def get_data(self):
+        return ZimBlob(self.content.encode('UTF-8'))
+
+# Create a ZimTestArticle article
+
+article = ZimTestArticle()
+print(article.content)
+
+# Write the articles
 import uuid
-
 rnd_str = str(uuid.uuid1()) 
+
 test_zim_file_path = "/opt/python-libzim/tests/kiwix-test"
-zim_creator = pyzim.ZimCreator(test_zim_file_path + '-' + rnd_str + '.zim',"welcome","spa",2048)
 
+zim_creator = ZimCreator(test_zim_file_path + '-' + rnd_str + '.zim',main_page = "welcome",index_language= "eng", min_chunk_size= 2048)
 
-
-
-# Add and write article to second test zim file
+# Add article to zim file
 zim_creator.add_article(article)
-zim_creator.finalise()
+
+# Write article to zim file
+zim_creator.finalize()
+
 ```
