@@ -1,7 +1,7 @@
 #include <Python.h>
 #include "lib.h"
 
-#include "pyzim_api.h"
+#include "libzim_api.h"
 
 #include <iostream>
 #include <zim/writer/url.h>
@@ -16,10 +16,10 @@
 
 ZimArticleWrapper::ZimArticleWrapper(PyObject *obj) : m_obj(obj)
 {
-    if (import_pyzim())
+    if (import_libzim())
     {
-        std::cerr << "Error executing import_pyzim!\n";
-        throw std::runtime_error("Error executing import_pyzim");
+        std::cerr << "Error executing import_libzim!\n";
+        throw std::runtime_error("Error executing import_libzim");
     }
     else
     {
@@ -189,6 +189,11 @@ public:
         return zim::writer::Url('A', mainPage);
     }
 
+    void setMainUrl(std::string newUrl)
+    {
+        mainPage = newUrl;
+    }
+
     std::string mainPage;
 };
 
@@ -208,7 +213,7 @@ ZimCreatorWrapper::
 {
     bool shouldIndex = !fullTextIndexLanguage.empty();
 
-    OverriddenZimCreator *c = new OverriddenZimCreator(mainPage); // TODO: consider when to delete this
+    OverriddenZimCreator *c = new OverriddenZimCreator(mainPage);
     c->setIndexing(shouldIndex, fullTextIndexLanguage);
     c->setMinChunkSize(minChunkSize);
     c->startZimCreation(fileName);
@@ -220,8 +225,18 @@ void ZimCreatorWrapper::addArticle(std::shared_ptr<ZimArticleWrapper> article)
     _creator->addArticle(article);
 }
 
-void ZimCreatorWrapper::finalise()
+void ZimCreatorWrapper::finalize()
 {
     _creator->finishZimCreation();
     delete this;
+}
+
+void ZimCreatorWrapper::setMainUrl(std::string newUrl)
+{
+    _creator->setMainUrl(newUrl);
+}
+
+zim::writer::Url ZimCreatorWrapper::getMainUrl()
+{
+    return _creator->getMainUrl();
 }

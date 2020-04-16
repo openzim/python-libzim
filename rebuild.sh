@@ -1,5 +1,5 @@
 #!/bin/bash
-rm pyzim/pyzim.cpp
+rm libzim/libzim.cpp
 rm -rf build/
 rm *.so
 
