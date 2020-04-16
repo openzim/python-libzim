@@ -36,7 +36,7 @@ class ZimTestArticle(ZimArticle):
         return True
 
     def get_data(self):
-        return ZimBlob(self.content.encode('UTF-8'))
+        return ZimBlob(self.content)
 
 # Create a ZimTestArticle article
 
