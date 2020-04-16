@@ -1,6 +1,6 @@
 // -*- c++ -*-
-#ifndef PYZIM_LIB_H
-#define PYZIM_LIB_H 1
+#ifndef libzim_LIB_H
+#define libzim_LIB_H 1
 
 struct _object;
 typedef _object PyObject;
@@ -53,7 +53,9 @@ public:
     ~ZimCreatorWrapper();
     static ZimCreatorWrapper *create(std::string fileName, std::string mainPage, std::string fullTextIndexLanguage, int minChunkSize);
     void addArticle(std::shared_ptr<ZimArticleWrapper> article);
-    void finalise();
+    void finalize();
+    void setMainUrl(std::string newUrl);
+    zim::writer::Url getMainUrl();
 };
 
-#endif // !PYZIM_LIB_H
+#endif // !libzim_LIB_H
