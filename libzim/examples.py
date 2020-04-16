@@ -1,23 +1,3 @@
-
-# Setup
-
-```bash
-docker-compose build
-docker-compose run libzim /bin/bash
-```
-```bash
-python setup.py build_ext -i
-python tests/test_libzim.py
-
-# or
-
-./rebuild.sh
-./run_tests
-```
-
-Example:
-
-```python3
 from libzim import ZimArticle, ZimBlob, ZimCreator
 
 class ZimTestArticle(ZimArticle):
@@ -63,7 +43,7 @@ class ZimTestArticle(ZimArticle):
 article = ZimTestArticle()
 print(article.content)
 
-# Write the articles
+# Write the article
 import uuid
 rnd_str = str(uuid.uuid1()) 
 
@@ -74,7 +54,6 @@ zim_creator = ZimCreator(test_zim_file_path + '-' + rnd_str + '.zim',main_page =
 # Add article to zim file
 zim_creator.add_article(article)
 
-# Write article to zim file
+# Write articles to zim file
 zim_creator.finalize()
 
-```
