@@ -19,7 +19,8 @@ cdef class ZimBlob:
     cdef Blob* c_blob
 
     def __init__(self, bytes content):
-        self.c_blob = new Blob(<char *> content, len(content))
+        ref_content =  content
+        self.c_blob = new Blob(<char *> ref_content, len(content))
 
     def __dealloc__(self):
         if self.c_blob != NULL:
