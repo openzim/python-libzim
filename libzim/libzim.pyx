@@ -18,9 +18,14 @@ from collections import defaultdict
 cdef class ZimBlob:
     cdef Blob* c_blob
 
-    def __init__(self, bytes content):
-        ref_content =  content
-        self.c_blob = new Blob(<char *> ref_content, len(content))
+    def __init__(self, content):
+
+        if isinstance(content, str):
+            ref_content = content.encode('UTF-8')
+        else:
+            ref_content = content
+
+        self.c_blob = new Blob(<char *> ref_content, len(ref_content))
 
     def __dealloc__(self):
         if self.c_blob != NULL:
@@ -71,7 +76,11 @@ cdef class ZimArticle:
     @property
     def content(self):
         blob = self.c_article.getData()
-        return blob.data()[:blob.size()]
+        content =  blob.data()[:blob.size()]
+        try:
+            return content.decode('UTF-8')
+        except UnicodeDecodeError:
+            return content
 
     # This changes with implementation
     @property
