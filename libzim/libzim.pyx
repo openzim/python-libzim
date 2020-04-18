@@ -132,8 +132,24 @@ cdef public api:
 #       ZimCreator      #
 #########################
 
-#TODO Should we declare an article for metadata or left to the user managing ?
+#TODO Write metadata
 
+MANDATORY_METADATA_KEYS =[
+        "Name", 
+        "Title", 
+        "Creator",
+        "Publisher",
+        "Date",
+        "Description",
+        "Language"]
+        # Optional
+        #"LongDescription",
+        #"Licence",
+        #"Tags",
+        #"Flavour",
+        #"Source",
+        #"Counter",
+        #"Scraper"]
 
 cdef class ZimCreator:
     """ 
@@ -153,6 +169,10 @@ cdef class ZimCreator:
         Zim file Index language 
     _min_chunk_size : str
         Zim file minimum chunk size
+    _article_counter
+        Zim file article counter
+    _metadata
+        Zim file metadata
     """
     
     cdef ZimCreatorWrapper *c_creator
@@ -162,15 +182,16 @@ cdef class ZimCreator:
     cdef object _index_language
     cdef object _min_chunk_size
     cdef object _article_counter
+    cdef object _metadata
 
-    def __cinit__(self, str filename, str main_page = "", str index_language = "eng", min_chunk_size = 2048):
+    def __init__(self, str filename, str main_page = "", str index_language = "eng", min_chunk_size = 2048):
         """Constructs a ZimCreator from parameters.
         Parameters
         ----------
         filename : str
             Zim file path
         main_page : str
-            Zim file main_page
+            Zim file main page
         index_language : str
             Zim file index language (default eng)
         min_chunk_size : int
@@ -183,8 +204,10 @@ cdef class ZimCreator:
         self._main_page = self.c_creator.getMainUrl().getLongUrl().decode("UTF-8", "strict")
         self._index_language = index_language
         self._min_chunk_size = min_chunk_size
+        self._metadata = {k:None for k in MANDATORY_METADATA_KEYS}
         
         self._article_counter = defaultdict(int)
+        self.update_metadata(date=datetime.date.today(), language= index_language)
 
     
     @property
@@ -216,9 +239,38 @@ cdef class ZimCreator:
         """Get the minimum chunk size of the ZimCreator object"""
         return self._min_chunk_size
 
-    def _update_article_counter(self, ZimArticle article):
+    def get_article_counter_string(self):
+        return ";".join(["%s=%s" % (k,v) for (k,v) in self._article_counter.items()])
+
+    def _get_metadata(self):
+        metadata =  self._metadata
+
+        counter_string = self.get_article_counter_string() 
+        if counter_string:
+            metadata['Counter'] = counter_string
+
+        return metadata
+
+    @property
+    def mandatory_metadata_ok(self):
+        """Flag if mandatory metadata is complete and not empty"""
+        metadata_item_ok = [self._metadata[k] for k in MANDATORY_METADATA_KEYS]
+        return all(metadata_item_ok)
+
+    def update_metadata(self, **kwargs):
+        "Updates article metadata"""
+        # Converts python case to pascal case. example: long_description-> LongDescription
+        pascalize = lambda keyword: "".join(keyword.title().split("_"))
+
+        if "date" in kwargs and isinstance(kwargs['date'],datetime.date):
+            kwargs['date'] = kwargs['date'].strftime('%Y-%m-%d')
+
+        new_metadata = {pascalize(key): value for key, value in kwargs.items()}
+        self._metadata.update(new_metadata)
+
+    def _update_article_counter(self, ZimArticle article not None):
         # default dict update
-        self._article_counter[article.mimetype] += 1
+        self._article_counter[article.get_mime_type().strip()] += 1
 
     def add_article(self, ZimArticle article not None):
         """Add a ZimArticle to the Creator object.
@@ -247,7 +299,7 @@ cdef class ZimCreator:
         except:
             raise
         else:
-            if not article.is_redirect:
+            if not article.is_redirect():
                 self._update_article_counter(article)
 
     def finalize(self):
@@ -257,9 +309,13 @@ cdef class ZimCreator:
         ------
             RuntimeError
                 If the ZimCreator was already finalized
+            Runtime Error
+                If mandatory metadata is missing
         """
-
         if not self._finalized:
+            if not self.mandatory_metadata_ok:
+                raise RuntimeError("Mandatory metadata missing")
+
             self.c_creator.finalize()
             self._finalized = True
         else:
