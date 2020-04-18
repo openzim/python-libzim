@@ -55,6 +55,10 @@ zim_creator = ZimCreator(test_zim_file_path + '-' + rnd_str + '.zim',main_page =
 # Add article to zim file
 zim_creator.add_article(article)
 
+# Set mandatory metadata
+if not zim_creator.mandatory_metadata_ok:
+    zim_creator.update_metadata(creator='python-libzim',description='Created in python',name='Hola',publisher='Monadical',title='Test Zim')
+
 # Write articles to zim file
 zim_creator.finalize()
 
