@@ -228,7 +228,6 @@ void ZimCreatorWrapper::addArticle(std::shared_ptr<ZimArticleWrapper> article)
 void ZimCreatorWrapper::finalize()
 {
     _creator->finishZimCreation();
-    delete this;
 }
 
 void ZimCreatorWrapper::setMainUrl(std::string newUrl)
