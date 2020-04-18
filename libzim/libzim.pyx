@@ -107,7 +107,7 @@ cdef public api:
     Blob blob_cy_call_fct(void *ptr, string method, int *error):
         """Lookup and execute a pure virtual method on ZimArticle returning a Blob"""
         cdef ZimArticle art = <ZimArticle>(ptr)
-        cdef ZimBlob blob = ZimBlob(b'\x00')
+        cdef ZimBlob blob
         try:
             func = getattr(art, method.decode('UTF-8'))
         except AttributeError:
