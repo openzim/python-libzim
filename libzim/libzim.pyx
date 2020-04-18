@@ -88,62 +88,45 @@ cdef class ZimArticle:
         raise NotImplementedError
 
 
+#------ Helper for pure virtual methods --------
+
+cdef get_article_method_from_object_ptr(void *ptr, string method, int *error):
+    cdef ZimArticle art = <ZimArticle>(ptr)
+    try:
+        func = getattr(art, method.decode('UTF-8'))
+    except AttributeError:
+        error[0] = 1
+        raise 
+    else:
+        error[0] = 0
+        return func
 
 #------- ZimArticle pure virtual methods --------
-cdef public api:
+
+cdef public api: 
     string string_cy_call_fct(void *ptr, string method, int *error):
         """Lookup and execute a pure virtual method on ZimArticle returning a string"""
-        cdef ZimArticle art = <ZimArticle>(ptr)
-        try:
-            func = getattr(art, method.decode('UTF-8'))
-        except AttributeError:
-            error[0] = 1
-            raise 
-        else:
-            error[0] = 0
-            value = func()
-            return value.encode('UTF-8')
-    
+        func = get_article_method_from_object_ptr(ptr, method, error)         
+        ret_str = func()
+        return ret_str.encode('UTF-8')
+
     Blob blob_cy_call_fct(void *ptr, string method, int *error):
         """Lookup and execute a pure virtual method on ZimArticle returning a Blob"""
-        cdef ZimArticle art = <ZimArticle>(ptr)
         cdef ZimBlob blob
-        try:
-            func = getattr(art, method.decode('UTF-8'))
-        except AttributeError:
-            error[0] = 1
-            raise 
-        else:
-            error[0] = 0
-            blob = func()
-            return dereference(blob.c_blob) 
-    
-    bool bool_cy_call_fct(void *ptr, string method, int *error):
-        """Lookup and execute a pure virtual method on ZimArticle returning a bool"""
 
-        cdef ZimArticle art = <ZimArticle>(ptr)
-        try:
-            func = getattr(art, method.decode('UTF-8'))
-        except AttributeError:
-            error[0] = 1
-            raise 
-        else:
-            error[0] = 0
-            return func()
+        func = get_article_method_from_object_ptr(ptr, method, error) 
+        blob = func()
+        return dereference(blob.c_blob)
+
+    bool bool_cy_call_fct(void *ptr, string method, int *error):
+        """Lookup and execute a pure virtual method on ZimArticle returning a Blob"""
+        func = get_article_method_from_object_ptr(ptr, method, error) 
+        return func() 
 
     uint64_t int_cy_call_fct(void *ptr, string method, int *error):
         """Lookup and execute a pure virtual method on ZimArticle returning an int"""
-
-        cdef ZimArticle art = <ZimArticle>(ptr)
-        try:
-            func = getattr(art, method.decode('UTF-8'))
-        except AttributeError:
-            error[0] = 1
-            raise 
-        else:
-            error[0] = 0
-            return <uint64_t> func()
-
+        func = get_article_method_from_object_ptr(ptr, method, error) 
+        return <uint64_t> func()
 
 #########################
 #       ZimCreator      #
