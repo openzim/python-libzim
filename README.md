@@ -25,6 +25,7 @@ class ZimTestArticle(ZimArticle):
                 <html class="client-js">
                 <head><meta charset="UTF-8">
                 <title>Monadical</title>
+                </head>
                 <h1> ñññ Hello, it works ñññ </h1></html>'''
 
     def __init__(self):
