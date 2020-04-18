@@ -218,7 +218,7 @@ cdef class ZimCreator:
     def main_page(self,new_url):
         """Set the main page of the ZimCreator object"""
         # Check if url longformat is used
-        if new_url.find('/') == 1:
+        if new_url[1] == '/':
             raise ValueError("Url should not include a namespace")
 
         self.c_creator.setMainUrl(new_url.encode('UTF-8'))
