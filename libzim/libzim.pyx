@@ -182,9 +182,9 @@ cdef class ZimCreator:
     cdef object _index_language
     cdef object _min_chunk_size
     cdef object _article_counter
-    cdef object _metadata
+    cdef dict __dict__
 
-    def __init__(self, str filename, str main_page = "", str index_language = "eng", min_chunk_size = 2048):
+    def __cinit__(self, str filename, str main_page = "", str index_language = "eng", min_chunk_size = 2048):
         """Constructs a ZimCreator from parameters.
         Parameters
         ----------
@@ -251,7 +251,6 @@ cdef class ZimCreator:
 
         return metadata
 
-    @property
     def mandatory_metadata_ok(self):
         """Flag if mandatory metadata is complete and not empty"""
         metadata_item_ok = [self._metadata[k] for k in MANDATORY_METADATA_KEYS]
@@ -312,14 +311,11 @@ cdef class ZimCreator:
             Runtime Error
                 If mandatory metadata is missing
         """
-        if not self._finalized:
-            if not self.mandatory_metadata_ok:
-                raise RuntimeError("Mandatory metadata missing")
-
-            self.c_creator.finalize()
-            self._finalized = True
-        else:
+        if  self._finalized:
             raise RuntimeError("ZimCreator already finalized")
+
+        self.c_creator.finalize()
+        self._finalized = True
     
     def __repr__(self):
         return f"{self.__class__.__name__}(filename={self.filename})"
