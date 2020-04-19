@@ -59,6 +59,8 @@ zim_creator.add_article(article)
 if not zim_creator.mandatory_metadata_ok:
     zim_creator.update_metadata(creator='python-libzim',description='Created in python',name='Hola',publisher='Monadical',title='Test Zim')
 
+zim_creator.write_metadata(zim_creator._get_metadata())
+
 # Write articles to zim file
 zim_creator.finalize()
 
