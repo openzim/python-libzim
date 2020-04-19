@@ -308,8 +308,6 @@ cdef class ZimCreator:
         ------
             RuntimeError
                 If the ZimCreator was already finalized
-            Runtime Error
-                If mandatory metadata is missing
         """
         if  self._finalized:
             raise RuntimeError("ZimCreator already finalized")
