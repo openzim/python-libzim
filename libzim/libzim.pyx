@@ -134,6 +134,42 @@ cdef public api:
 
 #TODO Write metadata
 
+class ZimMetadataArticle(ZimArticle):
+
+    def __init__(self,url, metadata_content):
+        ZimArticle.__init__(self)
+        self.url = url
+        self.metadata_content = metadata_content
+
+    def is_redirect(self):
+        return False
+
+    @property
+    def can_write(self):
+        return True
+
+    def get_url(self):
+        return f"M/{self.url}"
+
+    def get_title(self):
+        return f"{self.url}"
+    
+    def get_mime_type(self):
+        return "text/plain"
+    
+    def get_filename(self):
+        return ""
+    
+    def should_compress(self):
+        return True
+
+    def should_index(self):
+        return True
+
+    def get_data(self):
+        return ZimBlob(self.metadata_content)
+
+
 MANDATORY_METADATA_KEYS =[
         "Name", 
         "Title", 
@@ -300,6 +336,11 @@ cdef class ZimCreator:
         else:
             if not article.is_redirect():
                 self._update_article_counter(article)
+
+    def write_metadata(self, dict metadata):
+        for key in metadata:
+            metadata_article = ZimMetadataArticle(url=key, metadata_content=metadata[key])
+            self.add_article(metadata_article)
 
     def finalize(self):
         """finalize and write added articles to the file.
