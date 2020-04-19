@@ -92,6 +92,9 @@ class TestZimCreator(unittest.TestCase):
         rnd_str = str(uuid.uuid1()) 
         zim_creator = ZimCreator(self.test_zim_file_path + '-' + rnd_str + '.zim',main_page = "welcome",index_language= "eng", min_chunk_size= 2048)
         zim_creator.add_article(self.test_article)
+        # Set mandatory metadata
+        zim_creator.update_metadata(creator='python-libzim',description='Created in python',name='Hola',publisher='Monadical',title='Test Zim')
+        zim_creator.write_metadata(zim_creator._get_metadata())
         zim_creator.finalize()
     
 
