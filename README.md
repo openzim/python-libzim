@@ -34,10 +34,6 @@ class ZimTestArticle(ZimArticle):
     def is_redirect(self):
         return False
 
-    @property
-    def can_write(self):
-        return True
-
     def get_url(self):
         return "A/Monadical_SAS"
 
@@ -77,7 +73,7 @@ zim_creator.add_article(article)
 
 
 # Set mandatory metadata
-if not zim_creator.mandatory_metadata_ok:
+if not zim_creator.mandatory_metadata_ok():
     zim_creator.update_metadata(creator='python-libzim',description='Created in python',name='Hola',publisher='Monadical',title='Test Zim')
 
 # Write article to zim file

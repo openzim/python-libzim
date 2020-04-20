@@ -17,7 +17,7 @@ from collections import defaultdict
 
 cdef class ZimBlob:
     cdef Blob* c_blob
-
+    
     def __init__(self, content):
 
         if isinstance(content, str):
@@ -38,6 +38,7 @@ cdef class ZimBlob:
 
 cdef class ZimArticle:
     cdef ZimArticleWrapper* c_article
+    cdef ZimBlob blob
 
     def __init__(self):
         self.c_article = new ZimArticleWrapper(<cpy_ref.PyObject*>self)
@@ -66,27 +67,16 @@ cdef class ZimArticle:
     def redirect_url(self):
         raise NotImplementedError
 
+    def _get_data(self):
+        self.blob = self.get_data()
+        return self.blob
+
     def get_data(self):
         raise NotImplementedError
 
     @property
     def mimetype(self):
         return self.c_article.getMimeType().decode('UTF-8')
-    
-    @property
-    def content(self):
-        blob = self.c_article.getData()
-        content =  blob.data()[:blob.size()]
-        try:
-            return content.decode('UTF-8')
-        except UnicodeDecodeError:
-            return content
-
-    # This changes with implementation
-    @property
-    def can_write(self):
-        raise NotImplementedError
-
 
 #------ Helper for pure virtual methods --------
 
@@ -144,15 +134,11 @@ class ZimMetadataArticle(ZimArticle):
     def is_redirect(self):
         return False
 
-    @property
-    def can_write(self):
-        return True
-
     def get_url(self):
         return f"M/{self.url}"
 
     def get_title(self):
-        return f"{self.url}"
+        return ""
     
     def get_mime_type(self):
         return "text/plain"
@@ -164,7 +150,7 @@ class ZimMetadataArticle(ZimArticle):
         return True
 
     def should_index(self):
-        return True
+        return False
 
     def get_data(self):
         return ZimBlob(self.metadata_content)
@@ -323,9 +309,6 @@ cdef class ZimCreator:
         """
         if self._finalized:
             raise RuntimeError("ZimCreator already finalized")
-
-        if not article.can_write:
-            raise RuntimeError("Article is not good for writing")
 
         # Make a shared pointer to ZimArticleWrapper from the ZimArticle object (dereference internal c_article)
         cdef shared_ptr[ZimArticleWrapper] art = make_shared[ZimArticleWrapper](dereference(article.c_article));
