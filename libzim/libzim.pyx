@@ -336,6 +336,7 @@ cdef class ZimCreator:
         if  self._finalized:
             raise RuntimeError("ZimCreator already finalized")
 
+        self.write_metadata(self._get_metadata())
         self.c_creator.finalize()
         self._finalized = True
     

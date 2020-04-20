@@ -23,13 +23,13 @@ TEST_METADATA = {
     "Description": "All articles (without images) from the english Wikipedia",
     "Language": "eng",
     # Optional
-    "LongDescription": "This ZIM file contains all articles (without images) from the english Wikipedia by 2009-11-10. The topics are ...",
+    "Longdescription": "This ZIM file contains all articles (without images) from the english Wikipedia by 2009-11-10. The topics are ...",
     "Licence": "CC-BY",
     "Tags": "wikipedia;_category:wikipedia;_pictures:no;_videos:no;_details:yes;_ftindex:yes",
     "Flavour": "nopic",
     "Source": "https://en.wikipedia.org/",
     "Counter": "image/jpeg=5;image/gif=3;image/png=2",
-    "Scraper": "mwoffliner 1.2.3"
+    "Scraper": "sotoki 1.2.3"
 }
 
 class ZimTestArticle(ZimArticle):
@@ -95,9 +95,24 @@ class TestZimCreator(unittest.TestCase):
         zim_creator.add_article(self.test_article)
         # Set mandatory metadata
         zim_creator.update_metadata(creator='python-libzim',description='Created in python',name='Hola',publisher='Monadical',title='Test Zim')
-        zim_creator.write_metadata(zim_creator._get_metadata())
         zim_creator.finalize()
-    
+
+    def test_article_metadata(self):
+        import uuid
+        rnd_str = str(uuid.uuid1()) 
+        zim_creator = ZimCreator(self.test_zim_file_path + '-' + rnd_str + '.zim',main_page = "welcome",index_language= "eng", min_chunk_size= 2048)
+        zim_creator.update_metadata(**TEST_METADATA)
+        self.assertEqual(zim_creator._get_metadata(), TEST_METADATA)
+
+    def test_check_mandatory_metadata(self):
+        import uuid
+        rnd_str = str(uuid.uuid1()) 
+        zim_creator = ZimCreator(self.test_zim_file_path + '-' + rnd_str + '.zim',main_page = "welcome",index_language= "eng", min_chunk_size= 2048)
+        self.assertFalse(zim_creator.mandatory_metadata_ok())
+        zim_creator.update_metadata(creator='python-libzim',description='Created in python',name='Hola',publisher='Monadical',title='Test Zim')
+        self.assertTrue(zim_creator.mandatory_metadata_ok())
+
+
 
 if __name__ == '__main__':
     unittest.main()
