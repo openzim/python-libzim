@@ -119,7 +119,7 @@ cdef public api:
         return dereference(blob.c_blob)
 
     bool bool_cy_call_fct(void *ptr, string method, int *error):
-        """Lookup and execute a pure virtual method on ZimArticle returning a Blob"""
+        """Lookup and execute a pure virtual method on ZimArticle returning a bool"""
         func = get_article_method_from_object_ptr(ptr, method, error) 
         return func() 
 
