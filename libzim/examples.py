@@ -71,7 +71,7 @@ if not zim_creator.mandatory_metadata_ok():
 
 print(zim_creator._get_metadata())
 
-zim_creator.write_metadata(zim_creator._get_metadata())
+#zim_creator.write_metadata(zim_creator._get_metadata())
 
 # Write articles to zim file
 zim_creator.finalize()
