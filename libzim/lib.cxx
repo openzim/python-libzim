@@ -147,7 +147,7 @@ ZimArticleWrapper::getRedirectUrl() const
 zim::Blob
 ZimArticleWrapper::getData() const
 {
-    return callCythonReturnBlob("get_data");
+    return callCythonReturnBlob("_get_data");
 }
 
 zim::size_type
