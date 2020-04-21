@@ -7,6 +7,8 @@ from libcpp.string cimport string
 from libcpp cimport bool
 from libcpp.memory cimport shared_ptr, make_shared
 
+from contextlib import contextmanager
+
 
 import datetime
 
@@ -345,7 +347,15 @@ cdef class ZimCreator:
     def __repr__(self):
         return f"{self.__class__.__name__}(filename={self.filename})"
 
-
+    
+@contextmanager
+def zimcreator(*args, **kwds):
+    """Context manager version of ZimCreator that calls .finalize() automatically on exit"""
+    zimcreator = ZimCreator(*args, **kwds)
+    try:
+        yield zimcreator
+    finally:
+        zimcreator.finalize()
 
 #########################
 #    ZimFileArticle     # 
