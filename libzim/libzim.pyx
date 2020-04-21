@@ -352,11 +352,11 @@ cdef class ZimCreator:
 
 cdef class ZimFileArticle:
     """ 
-    A class to represent a File Zim Article. 
+    A class to represent a Zim File Article. 
     
     Attributes
     ----------
-    *c_article : Article
+    *c_article : Article (zim::)
         a pointer to the C++ article object
 
     Properties
@@ -375,10 +375,7 @@ cdef class ZimFileArticle:
         the article mimetype
     is_redirect : bool
         flag if the article is a redirect 
-    redirect_longurl: str
-        the long redirect article url i.e {NAMESPACE}/{redirect_url}
-    redirect_url : str
-        the redirect article url
+
     Methods
     -------
     from_read_article(zim.Article art)
@@ -407,7 +404,7 @@ cdef class ZimFileArticle:
     # Factory functions - Currently Cython can't use classmethods
     @staticmethod
     cdef from_read_article(Article art):
-        """Creates a python ZimArticle from a C++ zim.Article article.
+        """Creates a python ZimFileArticle from a C++ Article (zim::).
         
         Parameters
         ----------
@@ -485,7 +482,7 @@ cdef class ZimFileReader:
     cdef object _filename
 
     def __cinit__(self, str filename):
-        """Constructs a ZimReader from full zim file path.
+        """Constructs a ZimFileReader from full zim file path.
         Parameters
         ----------
         filename : str
@@ -501,11 +498,11 @@ cdef class ZimFileReader:
 
     @property
     def filename(self):
-        """Get the filename of the ZimReader object"""
+        """Get the filename of the ZimFileReader object"""
         return self._filename
 
     def get_article(self, url):
-        """Get a ZimArticle with a copy of the file article by full url i.e including namespace
+        """Get a ZimFileArticle with a copy of the file article by full url i.e including namespace
         
         Parameters
         ----------
@@ -513,8 +510,8 @@ cdef class ZimFileReader:
             The full url, including namespace, of the article
         Returns
         -------
-        ZimArticle
-            The ZimArticle object
+        ZimFileArticle
+            The ZimFileArticle object
         Raises
         ------
             RuntimeError
@@ -546,7 +543,7 @@ cdef class ZimFileReader:
         return metadata
 
     def get_article_by_id(self, id):
-        """Get a ZimArticle with a copy of the file article by article id.
+        """Get a ZimFileArticle with a copy of the file article by article id.
         
         Parameters
         ----------
@@ -554,8 +551,8 @@ cdef class ZimFileReader:
             The id of the article
         Returns
         -------
-        ZimArticle
-            The ZimArticle object
+        ZimFileArticle
+            The ZimFileArticle object
         Raises
         ------
             RuntimeError
