@@ -103,6 +103,7 @@ class TestZimCreator(unittest.TestCase):
         zim_creator = ZimCreator(self.test_zim_file_path + '-' + rnd_str + '.zim',main_page = "welcome",index_language= "eng", min_chunk_size= 2048)
         zim_creator.update_metadata(**TEST_METADATA)
         self.assertEqual(zim_creator._get_metadata(), TEST_METADATA)
+        zim_creator.finalize()
 
     def test_check_mandatory_metadata(self):
         import uuid
@@ -111,7 +112,7 @@ class TestZimCreator(unittest.TestCase):
         self.assertFalse(zim_creator.mandatory_metadata_ok())
         zim_creator.update_metadata(creator='python-libzim',description='Created in python',name='Hola',publisher='Monadical',title='Test Zim')
         self.assertTrue(zim_creator.mandatory_metadata_ok())
-
+        zim_creator.finalize()
 
 
 if __name__ == '__main__':
