@@ -20,13 +20,13 @@
 
 cimport libzim.libzim_wrapper as clibzim
 
-from cython.operator import dereference
+from cython.operator import dereference, preincrement
 from cpython.ref cimport PyObject
 
 from libc.stdint cimport uint64_t
 from libcpp.string cimport string
 from libcpp cimport bool
-from libcpp.memory cimport shared_ptr, make_shared
+from libcpp.memory cimport shared_ptr, make_shared, unique_ptr
 
 import datetime
 
@@ -161,3 +161,356 @@ cdef class Creator:
         with nogil:
             self.c_creator.finalize()
         self._finalized = True
+
+########################
+#     ReadArticle      #
+########################
+
+cdef class ReadArticle:
+    """
+    A class to represent a Zim File Article.
+
+    Attributes
+    ----------
+    *c_article : Article (zim::)
+        a pointer to the C++ article object
+
+    Properties
+    -----------
+    namespace : str
+        the article namespace
+    title : str
+        the article title
+    content : str
+        the article content
+    longurl : str
+        the article long url i.e {NAMESPACE}/{redirect_url}
+    url : str
+        the article url
+    mimetype : str
+        the article mimetype
+    is_redirect : bool
+        flag if the article is a redirect
+
+    Methods
+    -------
+    from_read_article(zim.Article art)
+        Creates a python ZimArticle from a C++ zim.Article article.
+    """
+    cdef clibzim.Article c_article
+
+    #def __eq__(self, other):
+    #    if isinstance(other, ZimArticle):
+    #        return (self.longurl == other.longurl) and (self.content == other.content) and (self.is_redirect == other.is_redirect)
+    #    return False
+
+    cdef __setup(self, clibzim.Article art):
+        """Assigns an internal pointer to the wrapped C++ article object.
+
+        Parameters
+        ----------
+        *art : Article
+            Pointer to a C++ (zim::) article object
+        """
+        # Set new internal C zim.ZimArticle article
+        self.c_article = art
+
+
+
+    # Factory functions - Currently Cython can't use classmethods
+    @staticmethod
+    cdef from_read_article(clibzim.Article art):
+        """Creates a python ZimFileArticle from a C++ Article (zim::).
+
+        Parameters
+        ----------
+        art : Article
+            A C++ Article read with File
+        Return
+        ------
+
+        """
+        cdef ReadArticle article = ReadArticle()
+        article.__setup(art)
+        return article
+
+    @property
+    def namespace(self):
+        """Get the article's namespace"""
+        ns = self.c_article.getNamespace()
+        return chr(ns)
+
+    @property
+    def title(self):
+        """Get the article's title"""
+        return self.c_article.getTitle().decode('UTF-8')
+
+    @property
+    def content(self):
+        """Get the article's content"""
+        cdef clibzim.Blob blob = self.c_article.getData(<int> 0)
+        data =  blob.data()[:blob.size()]
+        return data
+
+    @property
+    def longurl(self):
+        """Get the article's long url i.e {NAMESPACE}/{url}"""
+        return self.c_article.getLongUrl().decode("UTF-8", "strict")
+
+    @property
+    def url(self):
+        """Get the article's url"""
+        return self.c_article.getUrl().decode("UTF-8", "strict")
+
+    @property
+    def mimetype(self):
+        """Get the article's mimetype"""
+        return self.c_article.getMimeType().decode('UTF-8')
+
+    @property
+    def is_redirect(self):
+        """Get if the article is a redirect"""
+        return self.c_article.isRedirect()
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(url={self.longurl}, title=)"
+
+
+
+
+#########################
+#        File           #
+#########################
+
+cdef class File:
+    """
+    A class to represent a Zim File Reader.
+
+    Attributes
+    ----------
+    *c_file : File
+        a pointer to a C++ File object
+    _filename : str
+        the file name of the File Reader object
+    """
+
+    cdef clibzim.File *c_file
+    cdef object _filename
+
+    def __cinit__(self, str filename):
+        """Constructs a File from full zim file path.
+        Parameters
+        ----------
+        filename : str
+            Full path to a zim file
+        """
+
+        self.c_file = new clibzim.File(filename.encode('UTF-8'))
+        self._filename = self.c_file.getFilename().decode("UTF-8", "strict")
+
+    def __dealloc__(self):
+        if self.c_file != NULL:
+            del self.c_file
+
+    @property
+    def filename(self):
+        """Get the filename of the File object"""
+        return self._filename
+
+    def get_article(self, url):
+        """Get a Article with a copy of the file article by full url i.e including namespace
+
+        Parameters
+        ----------
+        url : str
+            The full url, including namespace, of the article
+        Returns
+        -------
+        Article
+            The Article object
+        Raises
+        ------
+            RuntimeError
+                If an article with the provided long url is not found in the file
+        """
+        # Read to a zim::Article
+        cdef clibzim.Article art = self.c_file.getArticleByUrl(url.encode('UTF-8'))
+        if not art.good():
+            raise RuntimeError("Article not found for url")
+
+        article = ReadArticle.from_read_article(art)
+        return article
+
+    def get_metadata(self, name):
+        """Get the file metadata.
+        Returns
+        -------
+        dict
+            A dictionary with the file metadata
+        """
+        article = self.get_article(f"M/{name}")
+        return article.content
+
+    def get_article_by_id(self, id):
+        """Get a ZimFileArticle with a copy of the file article by article id.
+
+        Parameters
+        ----------
+        id : int
+            The id of the article
+        Returns
+        -------
+        ZimFileArticle
+            The ZimFileArticle object
+        Raises
+        ------
+            RuntimeError
+                If an article with the provided id is not found in the file
+        """
+
+        # Read to a zim::Article
+        cdef clibzim.Article art = self.c_file.getArticle(<int> id)
+        if not art.good():
+            raise RuntimeError("Article not found for id")
+
+        article = ReadArticle.from_read_article(art)
+        return article
+
+    @property
+    def main_page_url(self):
+        """Get the file main page url.
+        Returns
+        -------
+        str
+            The url of the main page
+        TODO Check old formats
+        """
+        cdef clibzim.Fileheader header = self.c_file.getFileheader()
+        cdef clibzim.Article article
+        if header.hasMainPage():
+            article = self.c_file.getArticle(header.getMainPage())
+            return article.getLongUrl().decode("UTF-8", "strict");
+
+        # TODO Ask about the old format, check libzim for tests
+        # Handle old zim where header has no mainPage.
+        # (We need to get first article in the zim)
+        article = self.c_file.getArticle(<int> 0)
+        if article.good():
+            return article.getLongUrl().decode("UTF-8", "strict")
+
+    @property
+    def checksum(self):
+        """Get the file checksum.
+        Returns
+        -------
+        str
+            The file checksum
+        """
+        return self.c_file.getChecksum().decode("UTF-8", "strict")
+
+    @property
+    def article_count(self):
+        """Get the file article count.
+        Returns
+        -------
+        int
+            The total number of articles from the file
+        """
+        return self.c_file.getCountArticles()
+
+    @property
+    def namespaces(self) -> str:
+        """Get the namespaces.
+
+        Returns
+        -------
+        str
+            A string containing all namespaces in the file
+
+        """
+        return self.c_file.getNamespaces().decode("UTF-8", "strict")
+
+    def get_namespaces_count(self, str ns):
+        """Get article count from a namespaces.
+        Returns
+        -------
+        int
+            The total number of articles from the namespace
+        """
+        return self.c_file.getNamespaceCount(ord(ns[0]))
+
+    def suggest(self, query, start=0, end=10):
+        """Get an iterator of the full urls of suggested articles in the file from a title query.
+        Parameters
+        ----------
+        query : str
+            Title query string
+        start : int
+            Iterator start (default 0)
+        end : end
+            Iterator end (default 10)
+        Returns
+        -------
+        iterator
+            An interator with the urls of suggested articles starting from start position
+        """
+        cdef unique_ptr[clibzim.Search] search = self.c_file.suggestions(query.encode('UTF-8'),start, end)
+        cdef clibzim.search_iterator it = dereference(search).begin()
+
+        while it != dereference(search).end():
+            yield it.get_url().decode('UTF-8')
+            preincrement(it)
+
+    def search(self, query, start=0, end=10):
+        """Get an iterator of the full urls of articles in the file from a search query.
+        Parameters
+        ----------
+        query : str
+            Query string
+        start : int
+            Iterator start (default 0)
+        end : end
+            Iterator end (default 10)
+        Returns
+        -------
+        iterator
+            An iterator with the urls of articles matching the search query starting from start position
+        """
+
+        cdef unique_ptr[clibzim.Search] search = self.c_file.search(query.encode('UTF-8'),start, end)
+        cdef clibzim.search_iterator it = dereference(search).begin()
+
+        while it != dereference(search).end():
+            yield it.get_url().decode('UTF-8')
+            preincrement(it)
+
+    def get_search_results_count(self, query):
+        """Get search results counts for a query.
+        Parameters
+        ----------
+        query : str
+            Query string
+        Returns
+        -------
+        int
+            Number of search results
+        """
+        cdef unique_ptr[clibzim.Search] search = self.c_file.search(query.encode('UTF-8'),0, 1)
+        return dereference(search).get_matches_estimated()
+
+    def get_suggestions_results_count(self, query):
+        """Get suggestions results counts for a query.
+        Parameters
+        ----------
+        query : str
+            Query string
+        Returns
+        -------
+        int
+            Number of article suggestions
+        """
+        cdef unique_ptr[clibzim.Search] search = self.c_file.suggestions(query.encode('UTF-8'),0 , 1)
+        return dereference(search).get_matches_estimated()
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(filename={self.filename}"
