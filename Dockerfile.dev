@@ -1,0 +1,60 @@
+# A full development environment with everything built from source.
+# Usage:
+#    docker build . -f Dockerfile.dev --tag openzim:python-libzim-dev
+#    docker run -it openzim:python-libzim-dev
+#    $ black . && flake8 . && pytest .
+#    $ pipenv install --dev <newpackagehere>
+#    $ python setup.py build_ext
+#    $ python setup.py sdist bdist_wheel
+#    $ python setup.py install
+#    $ python -c "from libzim import ZimArticle"
+
+FROM python:3.7-buster
+
+ENV LIBZIM_VERSION 6.1.1
+ENV LIBZIM_REPOSITORY https://github.com/openzim/libzim.git
+
+ENV XAPIAN_VERSION 1.4.14
+ENV XAPIAN_RELEASE xapian-core-1.4.14
+ENV XAPIAN_URL https://oligarchy.co.uk/xapian/$XAPIAN_VERSION/$XAPIAN_RELEASE.tar.xz
+
+WORKDIR /opt/
+
+# Install C++ build environment
+RUN apt-get -qq update && \
+    apt-get -qq install -y --no-install-recommends \
+        coreutils wget git ca-certificates \
+        g++ pkg-config libtool automake autoconf make meson ninja-build \
+        liblzma-dev zlib1g-dev libicu-dev libgumbo-dev libmagic-dev && \
+    apt-get clean -y && \
+    rm -rf /var/lib/apt/lists/*
+
+# Build & install Xapian from source: /opt/xapian
+RUN wget $XAPIAN_URL && \
+    tar xvf $XAPIAN_RELEASE.tar.xz && \
+    cd $XAPIAN_RELEASE && \
+    ./configure && \
+    make all install && \
+    ldconfig
+
+# Build & install libzim from source: /opt/libzim
+RUN git clone $LIBZIM_REPOSITORY --depth 1 --branch $LIBZIM_VERSION && \
+    cd libzim && \
+    meson . build && \
+    ninja -C build install && \
+    ldconfig
+
+# Install python dependecies
+RUN pip3 install --no-cache-dir --upgrade \
+    pip pipenv cython==0.29.6 wheel pytest tox ipython black flake8 mypy
+
+# Add local source code dir to docker container
+ADD . /opt/python-libzim
+VOLUME /opt/python-libzim
+WORKDIR /opt/python-libzim
+
+# Build & install python-libzim from source: /opt/python-libzim
+RUN python3 setup.py build_ext && \
+    pip install -e .
+
+CMD ["/bin/bash"]
