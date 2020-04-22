@@ -224,6 +224,8 @@ cdef class ZimCreator:
         self._article_counter = defaultdict(int)
         self.update_metadata(date=datetime.date.today(), language= index_language)
 
+    def __dealloc__(self):
+        del self.c_creator
     
     @property
     def filename(self):
