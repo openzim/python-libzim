@@ -219,7 +219,7 @@ cdef class ZimCreator:
         self._main_page = self.c_creator.getMainUrl().getLongUrl().decode("UTF-8", "strict")
         self._index_language = index_language
         self._min_chunk_size = min_chunk_size
-        self._metadata = {k:None for k in MANDATORY_METADATA_KEYS}
+        self._metadata = {k:b"" for k in MANDATORY_METADATA_KEYS}
         
         self._article_counter = defaultdict(int)
         self.update_metadata(date=datetime.date.today(), language= index_language)
