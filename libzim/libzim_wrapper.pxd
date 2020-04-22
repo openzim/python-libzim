@@ -23,6 +23,7 @@ from libcpp cimport bool
 from libcpp.memory cimport shared_ptr
 from libcpp.vector cimport vector
 
+
 from cpython.ref cimport PyObject
 
 cdef extern from "zim/blob.h" namespace "zim":
@@ -38,12 +39,12 @@ cdef extern from "zim/writer/url.h" namespace "zim::writer":
         string getLongUrl() except +
 
 
-cdef extern from "zim/writer/article.h" namespace "zim::writer": 
+cdef extern from "zim/writer/article.h" namespace "zim::writer":
     cdef cppclass Article:
         const string getTitle() except +
 
 
-cdef extern from "lib.h": 
+cdef extern from "lib.h":
     cdef cppclass ZimArticleWrapper(Article):
         ZimArticleWrapper(PyObject *obj) except +
         const Url getUrl() except +
@@ -55,7 +56,7 @@ cdef extern from "lib.h":
         const bool shouldIndex() except +
         const Url getRedirectUrl() except +
         const Blob getData() except +
-    
+
     cdef cppclass ZimCreatorWrapper:
         @staticmethod
         ZimCreatorWrapper *create(string fileName, string mainPage, string fullTextIndexLanguage, int minChunkSize) nogil except +
