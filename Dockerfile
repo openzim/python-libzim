@@ -1,51 +1,37 @@
-FROM ubuntu:bionic
+# A minimal runtime environment for python-libzim using pre-built releases.
+# Usage:
+#     docker build . --tag openzim:python-libzim
+#     docker run -it openzim:python-libzim
+#     >>> from libzim import ZimCreator, ZimArticle, ZimBlob
+#     docker run -it openzim:python-libzim ./some_example_script.py
 
-# Update system
-RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
+FROM python:3.7-buster
 
-# Configure locales
-RUN apt-get update -y && \
-    apt-get install -y --no-install-recommends locales && \
-    apt-get clean -y && \
-    rm -rf /var/lib/apt/lists/*
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US:en
-ENV LC_ALL en_US.UTF-8
-RUN locale-gen en_US.UTF-8
+ENV LIBZIM_VERSION 6.1.1
+ENV LIBZIM_RELEASE libzim_linux-x86_64-$LIBZIM_VERSION
+ENV LIBZIM_LIBRARY_PATH lib/x86_64-linux-gnu/libzim.so.$LIBZIM_VERSION
+ENV LIBZIM_INCLUDE_PATH include/zim
 
-# Install necessary packages
-RUN apt-get update -y && \
-    apt-get install -y --no-install-recommends git pkg-config libtool automake autoconf make g++ liblzma-dev coreutils meson ninja-build wget zlib1g-dev libicu-dev libgumbo-dev libmagic-dev ca-certificates && \
-    apt-get clean -y && \
-    rm -rf /var/lib/apt/lists/*
+# Install libzim from pre-built release
+RUN wget -qO- https://download.openzim.org/release/libzim/$LIBZIM_RELEASE.tar.gz \
+    | tar -xz -C . \
+    && mv $LIBZIM_RELEASE/$LIBZIM_LIBRARY_PATH /usr/lib/libzim.so \
+    && mv $LIBZIM_RELEASE/$LIBZIM_INCLUDE_PATH /usr/include/zim \
+    && ldconfig
+    # installing these system-wide inside of docker allows
+    # users to run their dockerized code without needing to muck
+    # around with LDFLAGS and CPPFLAGS to find libzim.
+    # there will be only one copy of libzim, and it will be 
+    # automatically available to all software system-wide
 
-# Update CA certificates
-RUN update-ca-certificates
+# Install python dependencies
+RUN pip3 install --no-cache-dir --upgrade \
+    pip cython==0.29.6 setuptools wheel pytest
 
-# Install Xapian (wget zlib1g-dev)
-RUN wget https://oligarchy.co.uk/xapian/1.4.14/xapian-core-1.4.14.tar.xz
-RUN tar xvf xapian-core-1.4.14.tar.xz
-RUN cd xapian-core-1.4.14 && ./configure
-RUN cd xapian-core-1.4.14 && make all install
-RUN rm -rf xapian
+# Install python-libzim from local source
+ADD . /opt/python-libzim
+WORKDIR /opt/python-libzim
+RUN pip install -e .
+VOLUME /opt/python-libzim
 
-# Install zimlib (libicu-dev)
-RUN git clone https://github.com/openzim/libzim.git
-RUN cd libzim && git checkout 6.0.2
-RUN cd libzim && meson . build
-RUN cd libzim && ninja -C build install
-RUN rm -rf libzim
-
-RUN ldconfig
-ENV LD_LIBRARY_PATH /usr/local/lib/x86_64-linux-gnu/
-
-# Install python dependecies
-
-RUN apt-get update -y && \
-    apt-get install -y --no-install-recommends python-dev python3-dev python3-pip && \
-    apt-get clean -y && \
-    rm -rf /var/lib/apt/lists/*
-
-# Install Cython
-
-RUN pip3 install Cython
+ENTRYPOINT ["/usr/bin/env", "python3"]
