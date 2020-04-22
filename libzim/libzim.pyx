@@ -67,7 +67,8 @@ cdef class ZimArticle:
         raise NotImplementedError
 
     def _get_data(self):
-        self.blob = self.get_data()
+        if self.blob is None:
+            self.blob = self.get_data()
         return self.blob
 
     def get_data(self):
