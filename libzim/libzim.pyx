@@ -36,12 +36,8 @@ cdef class ZimBlob:
 #########################
 
 cdef class ZimArticle:
-    cdef ZimArticleWrapper* c_article
     cdef ZimBlob blob
 
-    def __init__(self):
-        self.c_article = new ZimArticleWrapper(<cpy_ref.PyObject*>self)
-    
     def get_url(self):
         raise NotImplementedError
 
@@ -74,9 +70,6 @@ cdef class ZimArticle:
     def get_data(self):
         raise NotImplementedError
 
-    @property
-    def mimetype(self):
-        return self.c_article.getMimeType().decode('UTF-8')
 
 #------ Helper for pure virtual methods --------
 
@@ -293,7 +286,7 @@ cdef class ZimCreator:
         # default dict update
         self._article_counter[article.get_mime_type().strip()] += 1
 
-    def add_article(self, ZimArticle article not None):
+    def add_article(self, article not None):
         """Add a ZimArticle to the Creator object.
         
         Parameters
@@ -311,7 +304,8 @@ cdef class ZimCreator:
             raise RuntimeError("ZimCreator already finalized")
 
         # Make a shared pointer to ZimArticleWrapper from the ZimArticle object (dereference internal c_article)
-        cdef shared_ptr[ZimArticleWrapper] art = make_shared[ZimArticleWrapper](dereference(article.c_article));
+        cdef shared_ptr[ZimArticleWrapper] art = shared_ptr[ZimArticleWrapper](
+            new ZimArticleWrapper(<PyObject*>article));
         try:
             with nogil:
                 self.c_creator.addArticle(art)
