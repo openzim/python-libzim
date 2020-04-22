@@ -1,7 +1,7 @@
 # This file is part of python-libzim
 # (see https://github.com/libzim/python-libzim)
 #
-i# Copyright (c) 2020 Juan Diego Caballero <jdc@monadical.com>
+# Copyright (c) 2020 Juan Diego Caballero <jdc@monadical.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -120,7 +120,7 @@ class TestZimCreator(unittest.TestCase):
         rnd_str = str(uuid.uuid1()) 
         zim_creator = ZimCreator(self.test_zim_file_path + '-' + rnd_str + '.zim',main_page = "welcome",index_language= "eng", min_chunk_size= 2048)
         zim_creator.update_metadata(**TEST_METADATA)
-        self.assertEqual(zim_creator._get_metadata(), TEST_METADATA)
+        self.assertEqual(zim_creator._metadata, TEST_METADATA)
 
     def test_check_mandatory_metadata(self):
         import uuid
