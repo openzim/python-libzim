@@ -17,15 +17,14 @@ from collections import defaultdict
 
 cdef class ZimBlob:
     cdef Blob* c_blob
-    
-    def __init__(self, content):
+    cdef bytes ref_content
 
+    def __cinit__(self, content):
         if isinstance(content, str):
-            ref_content = content.encode('UTF-8')
+            self.ref_content = content.encode('UTF-8')
         else:
-            ref_content = content
-
-        self.c_blob = new Blob(<char *> ref_content, len(ref_content))
+            self.ref_content = content
+        self.c_blob = new Blob(<char *> self.ref_content, len(self.ref_content))
 
     def __dealloc__(self):
         if self.c_blob != NULL:
