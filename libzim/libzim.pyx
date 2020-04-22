@@ -94,13 +94,13 @@ cdef get_article_method_from_object_ptr(void *ptr, string method, int *error):
 #------- ZimArticle pure virtual methods --------
 
 cdef public api: 
-    string string_cy_call_fct(void *ptr, string method, int *error):
+    string string_cy_call_fct(void *ptr, string method, int *error) with gil:
         """Lookup and execute a pure virtual method on ZimArticle returning a string"""
         func = get_article_method_from_object_ptr(ptr, method, error)         
         ret_str = func()
         return ret_str.encode('UTF-8')
 
-    Blob blob_cy_call_fct(void *ptr, string method, int *error):
+    Blob blob_cy_call_fct(void *ptr, string method, int *error) with gil:
         """Lookup and execute a pure virtual method on ZimArticle returning a Blob"""
         cdef ZimBlob blob
 
@@ -108,12 +108,12 @@ cdef public api:
         blob = func()
         return dereference(blob.c_blob)
 
-    bool bool_cy_call_fct(void *ptr, string method, int *error):
+    bool bool_cy_call_fct(void *ptr, string method, int *error) with gil:
         """Lookup and execute a pure virtual method on ZimArticle returning a bool"""
         func = get_article_method_from_object_ptr(ptr, method, error) 
         return func() 
 
-    uint64_t int_cy_call_fct(void *ptr, string method, int *error):
+    uint64_t int_cy_call_fct(void *ptr, string method, int *error) with gil:
         """Lookup and execute a pure virtual method on ZimArticle returning an int"""
         func = get_article_method_from_object_ptr(ptr, method, error) 
         return <uint64_t> func()
@@ -313,7 +313,8 @@ cdef class ZimCreator:
         # Make a shared pointer to ZimArticleWrapper from the ZimArticle object (dereference internal c_article)
         cdef shared_ptr[ZimArticleWrapper] art = make_shared[ZimArticleWrapper](dereference(article.c_article));
         try:
-            self.c_creator.addArticle(art)
+            with nogil:
+                self.c_creator.addArticle(art)
         except:
             raise
         else:
@@ -337,7 +338,8 @@ cdef class ZimCreator:
             raise RuntimeError("ZimCreator already finalized")
 
         self.write_metadata(self._get_metadata())
-        self.c_creator.finalize()
+        with nogil:
+            self.c_creator.finalize()
         self._finalized = True
     
     def __repr__(self):
