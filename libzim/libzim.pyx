@@ -17,15 +17,14 @@ from collections import defaultdict
 
 cdef class ZimBlob:
     cdef Blob* c_blob
-    
-    def __init__(self, content):
+    cdef bytes ref_content
 
+    def __cinit__(self, content):
         if isinstance(content, str):
-            ref_content = content.encode('UTF-8')
+            self.ref_content = content.encode('UTF-8')
         else:
-            ref_content = content
-
-        self.c_blob = new Blob(<char *> ref_content, len(ref_content))
+            self.ref_content = content
+        self.c_blob = new Blob(<char *> self.ref_content, len(self.ref_content))
 
     def __dealloc__(self):
         if self.c_blob != NULL:
@@ -37,12 +36,8 @@ cdef class ZimBlob:
 #########################
 
 cdef class ZimArticle:
-    cdef ZimArticleWrapper* c_article
     cdef ZimBlob blob
 
-    def __init__(self):
-        self.c_article = new ZimArticleWrapper(<cpy_ref.PyObject*>self)
-    
     def get_url(self):
         raise NotImplementedError
 
@@ -68,19 +63,17 @@ cdef class ZimArticle:
         raise NotImplementedError
 
     def _get_data(self):
-        self.blob = self.get_data()
+        if self.blob is None:
+            self.blob = self.get_data()
         return self.blob
 
     def get_data(self):
         raise NotImplementedError
 
-    @property
-    def mimetype(self):
-        return self.c_article.getMimeType().decode('UTF-8')
 
 #------ Helper for pure virtual methods --------
 
-cdef get_article_method_from_object_ptr(void *ptr, string method, int *error):
+cdef get_article_method_from_object_ptr(void *ptr, string method, int *error) with gil:
     cdef ZimArticle art = <ZimArticle>(ptr)
     try:
         func = getattr(art, method.decode('UTF-8'))
@@ -94,13 +87,13 @@ cdef get_article_method_from_object_ptr(void *ptr, string method, int *error):
 #------- ZimArticle pure virtual methods --------
 
 cdef public api: 
-    string string_cy_call_fct(void *ptr, string method, int *error):
+    string string_cy_call_fct(void *ptr, string method, int *error) with gil:
         """Lookup and execute a pure virtual method on ZimArticle returning a string"""
         func = get_article_method_from_object_ptr(ptr, method, error)         
         ret_str = func()
         return ret_str.encode('UTF-8')
 
-    Blob blob_cy_call_fct(void *ptr, string method, int *error):
+    Blob blob_cy_call_fct(void *ptr, string method, int *error) with gil:
         """Lookup and execute a pure virtual method on ZimArticle returning a Blob"""
         cdef ZimBlob blob
 
@@ -108,12 +101,12 @@ cdef public api:
         blob = func()
         return dereference(blob.c_blob)
 
-    bool bool_cy_call_fct(void *ptr, string method, int *error):
+    bool bool_cy_call_fct(void *ptr, string method, int *error) with gil:
         """Lookup and execute a pure virtual method on ZimArticle returning a bool"""
         func = get_article_method_from_object_ptr(ptr, method, error) 
         return func() 
 
-    uint64_t int_cy_call_fct(void *ptr, string method, int *error):
+    uint64_t int_cy_call_fct(void *ptr, string method, int *error) with gil:
         """Lookup and execute a pure virtual method on ZimArticle returning an int"""
         func = get_article_method_from_object_ptr(ptr, method, error) 
         return <uint64_t> func()
@@ -226,11 +219,13 @@ cdef class ZimCreator:
         self._main_page = self.c_creator.getMainUrl().getLongUrl().decode("UTF-8", "strict")
         self._index_language = index_language
         self._min_chunk_size = min_chunk_size
-        self._metadata = {k:None for k in MANDATORY_METADATA_KEYS}
+        self._metadata = {k:b"" for k in MANDATORY_METADATA_KEYS}
         
         self._article_counter = defaultdict(int)
         self.update_metadata(date=datetime.date.today(), language= index_language)
 
+    def __dealloc__(self):
+        del self.c_creator
     
     @property
     def filename(self):
@@ -293,7 +288,7 @@ cdef class ZimCreator:
         # default dict update
         self._article_counter[article.get_mime_type().strip()] += 1
 
-    def add_article(self, ZimArticle article not None):
+    def add_article(self, article not None):
         """Add a ZimArticle to the Creator object.
         
         Parameters
@@ -311,9 +306,11 @@ cdef class ZimCreator:
             raise RuntimeError("ZimCreator already finalized")
 
         # Make a shared pointer to ZimArticleWrapper from the ZimArticle object (dereference internal c_article)
-        cdef shared_ptr[ZimArticleWrapper] art = make_shared[ZimArticleWrapper](dereference(article.c_article));
+        cdef shared_ptr[ZimArticleWrapper] art = shared_ptr[ZimArticleWrapper](
+            new ZimArticleWrapper(<PyObject*>article));
         try:
-            self.c_creator.addArticle(art)
+            with nogil:
+                self.c_creator.addArticle(art)
         except:
             raise
         else:
@@ -337,7 +334,8 @@ cdef class ZimCreator:
             raise RuntimeError("ZimCreator already finalized")
 
         self.write_metadata(self._get_metadata())
-        self.c_creator.finalize()
+        with nogil:
+            self.c_creator.finalize()
         self._finalized = True
     
     def __repr__(self):
