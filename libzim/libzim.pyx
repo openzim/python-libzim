@@ -73,7 +73,7 @@ cdef class ZimArticle:
 
 #------ Helper for pure virtual methods --------
 
-cdef get_article_method_from_object_ptr(void *ptr, string method, int *error):
+cdef get_article_method_from_object_ptr(void *ptr, string method, int *error) with gil:
     cdef ZimArticle art = <ZimArticle>(ptr)
     try:
         func = getattr(art, method.decode('UTF-8'))
