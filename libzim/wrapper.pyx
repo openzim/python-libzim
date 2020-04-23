@@ -32,6 +32,7 @@ from libcpp.memory cimport shared_ptr, make_shared, unique_ptr
 
 import pathlib
 import datetime
+import traceback
 
 
 #########################
@@ -98,44 +99,52 @@ cdef class ReadingBlob:
         self.view_count -= 1
 
 
-#------ Helper for pure virtual methods --------
-
-cdef get_article_method_from_object(object obj, string method, int *error) with gil:
-    try:
-        func = getattr(obj, method.decode('UTF-8'))
-    except AttributeError:
-        error[0] = 1
-        raise
-    else:
-        error[0] = 0
-        return func
-
 #------- ZimArticle pure virtual methods --------
 
 cdef public api:
-    string string_cy_call_fct(object obj, string method, int *error) with gil:
+    string string_cy_call_fct(object obj, string method, string *error) with gil:
         """Lookup and execute a pure virtual method on ZimArticle returning a string"""
-        func = get_article_method_from_object(obj, method, error)
-        ret_str = func()
-        return ret_str.encode('UTF-8')
+        try:
+            func = getattr(obj, method.decode('UTF-8'))
+            ret_str = func()
+            return ret_str.encode('UTF-8')
+        except Exception as e:
+            error[0] = traceback.format_exc().encode('UTF-8')
+        return b""
 
-    wrapper.Blob blob_cy_call_fct(object obj, string method, int *error) with gil:
+    wrapper.Blob blob_cy_call_fct(object obj, string method, string *error) with gil:
         """Lookup and execute a pure virtual method on ZimArticle returning a Blob"""
         cdef WritingBlob blob
 
-        func = get_article_method_from_object(obj, method, error)
-        blob = func()
-        return dereference(blob.c_blob)
+        try:
+            func = getattr(obj, method.decode('UTF-8'))
+            blob = func()
+            if blob is None:
+                raise RuntimeError("Blob is none")
+            return dereference(blob.c_blob)
+        except Exception as e:
+            error[0] = traceback.format_exc().encode('UTF-8')
 
-    bool bool_cy_call_fct(object obj, string method, int *error) with gil:
+        return Blob()
+
+    bool bool_cy_call_fct(object obj, string method, string *error) with gil:
         """Lookup and execute a pure virtual method on ZimArticle returning a bool"""
-        func = get_article_method_from_object(obj, method, error)
-        return func()
+        try:
+            func = getattr(obj, method.decode('UTF-8'))
+            return func()
+        except Exception as e:
+            error[0] = traceback.format_exc().encode('UTF-8')
+        return False
 
-    uint64_t int_cy_call_fct(object obj, string method, int *error) with gil:
+    uint64_t int_cy_call_fct(object obj, string method, string *error) with gil:
         """Lookup and execute a pure virtual method on ZimArticle returning an int"""
-        func = get_article_method_from_object(obj, method, error)
-        return <uint64_t> func()
+        try:
+            func = getattr(obj, method.decode('UTF-8'))
+            return <uint64_t>func()
+        except Exception as e:
+            error[0] = traceback.format_exc().encode('UTF-8')
+
+        return 0
 
 cdef class Creator:
     """ Zim Creator
