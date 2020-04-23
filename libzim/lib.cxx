@@ -29,7 +29,10 @@ ZimArticleWrapper::ZimArticleWrapper(PyObject *obj) : m_obj(obj)
 
 ZimArticleWrapper::~ZimArticleWrapper()
 {
+  PyGILState_STATE gstate;
+  gstate = PyGILState_Ensure();
     Py_XDECREF(this->m_obj);
+  PyGILState_Release(gstate);
 }
 
 std::string ZimArticleWrapper::callCythonReturnString(std::string methodName) const
