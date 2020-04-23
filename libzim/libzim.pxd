@@ -39,8 +39,8 @@ cdef extern from "lib.h":
     
     cdef cppclass ZimCreatorWrapper:
         @staticmethod
-        ZimCreatorWrapper *create(string fileName, string mainPage, string fullTextIndexLanguage, int minChunkSize) except +
-        void addArticle(shared_ptr[ZimArticleWrapper] article) except +
-        void finalize() except +
+        ZimCreatorWrapper *create(string fileName, string mainPage, string fullTextIndexLanguage, int minChunkSize) nogil except +
+        void addArticle(shared_ptr[ZimArticleWrapper] article) nogil except +
+        void finalize() nogil except +
         Url getMainUrl() except +
         void setMainUrl(string) except +
