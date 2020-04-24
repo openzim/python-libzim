@@ -136,7 +136,7 @@ zim::writer::Url
 ZimArticleWrapper::getRedirectUrl() const
 {
 
-    std::string redirectUrl = callCythonReturnString("get_url");
+    std::string redirectUrl = callCythonReturnString("get_redirect_url");
     return zim::writer::Url(redirectUrl.substr(0, 1)[0], redirectUrl.substr(2, redirectUrl.length()));
 }
 
