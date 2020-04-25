@@ -73,3 +73,17 @@ print(zim_creator._get_metadata())
 
 # Write articles to zim file
 zim_creator.finalize()
+
+
+# Example using context manager to ensure finalize is called.
+
+rnd_str = str(uuid.uuid1())
+
+with ZimCreator(test_zim_file_path + '-' + rnd_str + '.zim') as zc:
+    zc.add_article(article)
+    zc.add_article(article2)
+    zc.update_metadata(creator='python-libzim',
+                       description='Created in python',
+                       name='Hola',publisher='Monadical',
+                       title='Test Zim')
+
