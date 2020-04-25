@@ -58,25 +58,19 @@ class ZimTestArticle(ZimArticle):
 # Create a ZimTestArticle article
 
 article = ZimTestArticle()
-print(article.content)
 
 # Write the articles
+
 import uuid
 rnd_str = str(uuid.uuid1()) 
-
 test_zim_file_path = "/opt/python-libzim/tests/kiwix-test"
 
-zim_creator = ZimCreator(test_zim_file_path + '-' + rnd_str + '.zim',main_page = "welcome",index_language= "eng", min_chunk_size= 2048)
-
-# Add article to zim file
-zim_creator.add_article(article)
-
-
-# Set mandatory metadata
-if not zim_creator.mandatory_metadata_ok():
-    zim_creator.update_metadata(creator='python-libzim',description='Created in python',name='Hola',publisher='Monadical',title='Test Zim')
-
-# Write article to zim file
-zim_creator.finalize()
+with ZimCreator(test_zim_file_path + '-' + rnd_str + '.zim') as zc:
+    zc.add_article(article)
+    if not zc.mandatory_metadata_ok():
+        zc.update_metadata(creator='python-libzim',
+                                    description='Created in python',
+                                    name='Hola',publisher='Monadical',
+                                    title='Test Zim')
 
 ```
