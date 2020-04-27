@@ -8,7 +8,7 @@ from libcpp cimport bool
 from libcpp.memory cimport shared_ptr, make_shared
 
 import datetime
-
+from contextlib import contextmanager
 from collections import defaultdict
 
 #########################
@@ -172,7 +172,7 @@ cdef class ZimCreator:
     
     Attributes
     ----------
-    *c_creator : zim.ZimCreator
+    *c_creator : zim.ZimCreatorWrapper
         a pointer to the C++ Creator object
     _finalized : bool
         flag if the creator was finalized
@@ -223,6 +223,12 @@ cdef class ZimCreator:
         
         self._article_counter = defaultdict(int)
         self.update_metadata(date=datetime.date.today(), language= index_language)
+
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, *args):
+        self.finalize()
 
     def __dealloc__(self):
         del self.c_creator
