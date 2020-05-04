@@ -16,7 +16,7 @@ setup(
     author = "Monadical SAS",
     author_email = "hello@monadical.com",
     description = ("A python-facing API for creating and interacting with ZIM files"),
-    license = "GPLv3",
+    license = "GPLv3+",
     long_description=read('README.md'),
     ext_modules = cythonize([
         Extension("libzim",  ["libzim/*.pyx","libzim/lib.cxx"],
