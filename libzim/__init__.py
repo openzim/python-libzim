@@ -18,14 +18,16 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
+import datetime
+from collections import defaultdict
+
 import libzim_wrapper
 
 ZimBlob = libzim_wrapper.ZimBlob
 
-from collections import defaultdict
-import datetime
 
-__all__  = ["ZimArticle", "ZimCreator", "ZimBlob"]
+__all__ = ["ZimArticle", "ZimCreator", "ZimBlob"]
+
 
 class ZimArticle:
     def __init__(self):
@@ -95,14 +97,16 @@ class ZimMetadataArticle(ZimArticle):
         return ZimBlob(self.metadata_content)
 
 
-MANDATORY_METADATA_KEYS =[
+MANDATORY_METADATA_KEYS = [
     "Name",
     "Title",
     "Creator",
     "Publisher",
     "Date",
     "Description",
-    "Language"]
+    "Language",
+]
+
 
 class ZimCreator:
     """
@@ -131,10 +135,8 @@ class ZimCreator:
     def __init__(self, filename, main_page, index_language, min_chunk_size):
         print(filename)
         self._creatorWrapper = libzim_wrapper.ZimCreator(
-            filename,
-            main_page,
-            index_language,
-            min_chunk_size)
+            filename, main_page, index_language, min_chunk_size
+        )
         self.filename = filename
         self.main_page = main_page
         self.language = index_language
@@ -162,14 +164,12 @@ class ZimCreator:
         metadata_item_ok = [k in self._metadata for k in MANDATORY_METADATA_KEYS]
         return all(metadata_item_ok)
 
-
     def update_metadata(self, **kwargs):
-        "Updates article metadata"""
+        "Updates article metadata" ""
         # Converts python case to pascal case. example: long_description-> LongDescription
         pascalize = lambda keyword: "".join(keyword.title().split("_"))
         new_metadata = {pascalize(k): v for k, v in kwargs.items()}
         self._metadata.update(new_metadata)
-
 
     def write_metadata(self):
         for key, value in self._metadata.items():
@@ -182,9 +182,7 @@ class ZimCreator:
         self._creatorWrapper.add_article(article)
 
     def _get_counter_string(self):
-        return ";".join(
-            ["%s=%s" % (k,v) for (k,v) in self._article_counter.items()]
-        )
+        return ";".join(["%s=%s" % (k, v) for (k, v) in self._article_counter.items()])
 
     def close(self):
         self.write_metadata()

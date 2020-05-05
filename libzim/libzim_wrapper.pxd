@@ -17,14 +17,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from libcpp.string cimport string
+from cpython.ref cimport PyObject
+
 from libc.stdint cimport uint32_t, uint64_t
 from libcpp cimport bool
 from libcpp.memory cimport shared_ptr
+from libcpp.string cimport string
 from libcpp.vector cimport vector
 
-
-from cpython.ref cimport PyObject
 
 cdef extern from "zim/blob.h" namespace "zim":
     cdef cppclass Blob:
