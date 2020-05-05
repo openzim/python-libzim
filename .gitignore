@@ -1,0 +1,7 @@
+__pycache__
+build
+libzim_wrapper.*.so
+libzim/libzim_wrapper.cpp
+libzim/libzim_wrapper.h
+libzim/libzim_wrapper_api.h
+*.egg-info
