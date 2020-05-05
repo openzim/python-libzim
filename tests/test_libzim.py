@@ -101,49 +101,46 @@ def article(article_content):
 
 
 def test_write_article(tmpdir, article):
-    zim_creator = ZimCreator(
-        str(tmpdir/"test.zim"),
+    with ZimCreator(
+        str(tmpdir / "test.zim"),
         main_page="welcome",
         index_language="eng",
-        min_chunk_size=2048
-    )
-    zim_creator.add_article(article)
-    zim_creator.update_metadata(
-        creator='python-libzim',
-        description='Created in python',
-        name='Hola',
-        publisher='Monadical',
-        title='Test Zim'
-    )
-    zim_creator.close()
+        min_chunk_size=2048,
+    ) as zim_creator:
+        zim_creator.add_article(article)
+        zim_creator.update_metadata(
+            creator="python-libzim",
+            description="Created in python",
+            name="Hola",
+            publisher="Monadical",
+            title="Test Zim",
+        )
 
 
 def test_article_metadata(tmpdir, metadata):
-    zim_creator = ZimCreator(
-        str(tmpdir/"test.zim"),
-        main_page = "welcome",
-        index_language= "eng",
-        min_chunk_size= 2048
-    )
-    zim_creator.update_metadata(**metadata)
-    assert zim_creator._metadata == metadata
-    zim_creator.close()
+    with ZimCreator(
+        str(tmpdir / "test.zim"),
+        main_page="welcome",
+        index_language="eng",
+        min_chunk_size=2048,
+    ) as zim_creator:
+        zim_creator.update_metadata(**metadata)
+        assert zim_creator._metadata == metadata
 
 
 def test_check_mandatory_metadata(tmpdir):
-    zim_creator = ZimCreator(
-        str(tmpdir/"test.zim"),
-        main_page = "welcome",
-        index_language= "eng",
-        min_chunk_size= 2048
-    )
-    assert not zim_creator.mandatory_metadata_ok()
-    zim_creator.update_metadata(
-        creator='python-libzim',
-        description='Created in python',
-        name='Hola',
-        publisher='Monadical',
-        title='Test Zim'
-    )
-    assert zim_creator.mandatory_metadata_ok()
-    zim_creator.close()
+    with ZimCreator(
+        str(tmpdir / "test.zim"),
+        main_page="welcome",
+        index_language="eng",
+        min_chunk_size=2048,
+    ) as zim_creator:
+        assert not zim_creator.mandatory_metadata_ok()
+        zim_creator.update_metadata(
+            creator="python-libzim",
+            description="Created in python",
+            name="Hola",
+            publisher="Monadical",
+            title="Test Zim",
+        )
+        assert zim_creator.mandatory_metadata_ok()
