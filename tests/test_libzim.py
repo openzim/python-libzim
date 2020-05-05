@@ -92,7 +92,7 @@ class ZimTestArticle(ZimArticle):
 
 class TestZimCreator(unittest.TestCase):
     def setUp(self):
-        self.test_zim_file_path = "/opt/python-libzim/tests/kiwix-test"
+        self.test_zim_file_path = "/tmp/python-libzim/tests/kiwix-test"
          
         # Test article
         self.test_article =  ZimTestArticle()
@@ -113,7 +113,7 @@ class TestZimCreator(unittest.TestCase):
         zim_creator.add_article(self.test_article)
         # Set mandatory metadata
         zim_creator.update_metadata(creator='python-libzim',description='Created in python',name='Hola',publisher='Monadical',title='Test Zim')
-        zim_creator.finalize()
+        zim_creator.close()
 
     def test_article_metadata(self):
         import uuid
@@ -121,6 +121,7 @@ class TestZimCreator(unittest.TestCase):
         zim_creator = ZimCreator(self.test_zim_file_path + '-' + rnd_str + '.zim',main_page = "welcome",index_language= "eng", min_chunk_size= 2048)
         zim_creator.update_metadata(**TEST_METADATA)
         self.assertEqual(zim_creator._metadata, TEST_METADATA)
+        zim_creator.close()
 
     def test_check_mandatory_metadata(self):
         import uuid
@@ -129,6 +130,7 @@ class TestZimCreator(unittest.TestCase):
         self.assertFalse(zim_creator.mandatory_metadata_ok())
         zim_creator.update_metadata(creator='python-libzim',description='Created in python',name='Hola',publisher='Monadical',title='Test Zim')
         self.assertTrue(zim_creator.mandatory_metadata_ok())
+        zim_creator.close()
 
 
 
