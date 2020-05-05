@@ -17,7 +17,6 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import pytest
-import os,sys,inspect
 
 from libzim import ZimArticle, ZimBlob, ZimCreator
 
@@ -29,7 +28,7 @@ from libzim import ZimArticle, ZimBlob, ZimCreator
 def metadata():
     return {
         # Mandatory
-        "Name" : "wikipedia_fr_football",
+        "Name": "wikipedia_fr_football",
         "Title": "English Wikipedia",
         "Creator": "English speaking Wikipedia contributors",
         "Publisher": "Wikipedia user Foobar",
@@ -43,21 +42,23 @@ def metadata():
         "Flavour": "nopic",
         "Source": "https://en.wikipedia.org/",
         "Counter": "image/jpeg=5;image/gif=3;image/png=2",
-        "Scraper": "sotoki 1.2.3"
+        "Scraper": "sotoki 1.2.3",
     }
+
 
 @pytest.fixture(scope="session")
 def article_content():
-    content = '''<!DOCTYPE html>
+    content = """<!DOCTYPE html>
         <html class="client-js">
         <head><meta charset="UTF-8">
         <title>Monadical</title>
         </head>
-        <h1> ñññ Hello, it works ñññ </h1></html>'''
+        <h1> ñññ Hello, it works ñññ </h1></html>"""
     url = "A/Monadical_SAS"
     title = "Monadical SAS"
     mime_type = "text/html"
     return (content, url, title, mime_type)
+
 
 class ZimTestArticle(ZimArticle):
     def __init__(self, content, url, title, mime_type):
@@ -93,7 +94,8 @@ class ZimTestArticle(ZimArticle):
         return True
 
     def get_data(self):
-        return ZimBlob(self.content.encode('UTF-8'))
+        return ZimBlob(self.content.encode("UTF-8"))
+
 
 @pytest.fixture(scope="session")
 def article(article_content):

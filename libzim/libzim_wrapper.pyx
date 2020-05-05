@@ -19,7 +19,9 @@
 
 
 cimport libzim.libzim_wrapper as clibzim
+
 from cython.operator import dereference
+from cpython.ref cimport PyObject
 
 from libc.stdint cimport uint64_t
 from libcpp.string cimport string
@@ -28,7 +30,8 @@ from libcpp.memory cimport shared_ptr, make_shared
 
 import datetime
 
-from cpython.ref cimport PyObject
+
+
 
 #########################
 #       ZimBlob         #
@@ -162,4 +165,3 @@ cdef class ZimCreator:
         with nogil:
             self.c_creator.finalize()
         self._finalized = True
-
