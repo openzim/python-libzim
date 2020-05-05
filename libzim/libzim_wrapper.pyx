@@ -34,10 +34,10 @@ import datetime
 
 
 #########################
-#       ZimBlob         #
+#         Blob          #
 #########################
 
-cdef class ZimBlob:
+cdef class Blob:
     cdef clibzim.Blob* c_blob
     cdef bytes ref_content
 
@@ -52,10 +52,6 @@ cdef class ZimBlob:
         if self.c_blob != NULL:
             del self.c_blob
 
-
-#########################
-#       ZimArticle      #
-#########################
 
 #------ Helper for pure virtual methods --------
 
@@ -80,7 +76,7 @@ cdef public api:
 
     clibzim.Blob blob_cy_call_fct(object obj, string method, int *error) with gil:
         """Lookup and execute a pure virtual method on ZimArticle returning a Blob"""
-        cdef ZimBlob blob
+        cdef Blob blob
 
         func = get_article_method_from_object(obj, method, error)
         blob = func()
@@ -96,7 +92,7 @@ cdef public api:
         func = get_article_method_from_object(obj, method, error)
         return <uint64_t> func()
 
-cdef class ZimCreator:
+cdef class Creator:
     """
     A class to represent a Zim Creator.
 
