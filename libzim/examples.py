@@ -20,12 +20,12 @@
 # Write the article
 import uuid
 
-from libzim import ZimArticle, ZimBlob, ZimCreator
+from libzim.writer import Article, Blob, Creator
 
 
-class ZimTestArticle(ZimArticle):
+class TestArticle(Article):
     def __init__(self, url, title, content):
-        ZimArticle.__init__(self)
+        Article.__init__(self)
         self.url = url
         self.title = title
         self.content = content
@@ -52,10 +52,10 @@ class ZimTestArticle(ZimArticle):
         return True
 
     def get_data(self):
-        return ZimBlob(self.content)
+        return Blob(self.content)
 
 
-# Create a ZimTestArticle article
+# Create a TestArticle article
 
 content = """<!DOCTYPE html>
                 <html class="client-js">
@@ -71,8 +71,8 @@ content2 = """<!DOCTYPE html>
                 </head>
                 <h1> ñññ Hello, it works 2 ñññ </h1></html>"""
 
-article = ZimTestArticle("Monadical_SAS", "Monadical", content)
-article2 = ZimTestArticle("Monadical_2", "Monadical 2", content2)
+article = TestArticle("Monadical_SAS", "Monadical", content)
+article2 = TestArticle("Monadical_2", "Monadical 2", content2)
 
 print(article.content)
 
@@ -81,7 +81,7 @@ rnd_str = str(uuid.uuid1())
 
 test_zim_file_path = "/opt/python-libzim/tests/kiwix-test"
 
-zim_creator = ZimCreator(
+zim_creator = Creator(
     test_zim_file_path + "-" + rnd_str + ".zim",
     main_page="Monadical",
     index_language="eng",
@@ -112,7 +112,7 @@ zim_creator.finalize()
 
 rnd_str = str(uuid.uuid1())
 
-with ZimCreator(test_zim_file_path + "-" + rnd_str + ".zim") as zc:
+with Creator(test_zim_file_path + "-" + rnd_str + ".zim") as zc:
     zc.add_article(article)
     zc.add_article(article2)
     zc.update_metadata(

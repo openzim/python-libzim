@@ -18,7 +18,7 @@
 
 import pytest
 
-from libzim import ZimArticle, ZimBlob, ZimCreator
+from libzim.writer import Article, Blob, Creator
 
 # test files https://wiki.kiwix.org/wiki/Content_in_all_languages
 
@@ -60,9 +60,9 @@ def article_content():
     return (content, url, title, mime_type)
 
 
-class ZimTestArticle(ZimArticle):
+class SimpleArticle(Article):
     def __init__(self, content, url, title, mime_type):
-        ZimArticle.__init__(self)
+        Article.__init__(self)
         self.content = content
         self.url = url
         self.title = title
@@ -94,16 +94,16 @@ class ZimTestArticle(ZimArticle):
         return True
 
     def get_data(self):
-        return ZimBlob(self.content.encode("UTF-8"))
+        return Blob(self.content.encode("UTF-8"))
 
 
 @pytest.fixture(scope="session")
 def article(article_content):
-    return ZimTestArticle(*article_content)
+    return SimpleArticle(*article_content)
 
 
 def test_write_article(tmpdir, article):
-    with ZimCreator(
+    with Creator(
         str(tmpdir / "test.zim"),
         main_page="welcome",
         index_language="eng",
@@ -120,7 +120,7 @@ def test_write_article(tmpdir, article):
 
 
 def test_article_metadata(tmpdir, metadata):
-    with ZimCreator(
+    with Creator(
         str(tmpdir / "test.zim"),
         main_page="welcome",
         index_language="eng",
@@ -131,7 +131,7 @@ def test_article_metadata(tmpdir, metadata):
 
 
 def test_check_mandatory_metadata(tmpdir):
-    with ZimCreator(
+    with Creator(
         str(tmpdir / "test.zim"),
         main_page="welcome",
         index_language="eng",
