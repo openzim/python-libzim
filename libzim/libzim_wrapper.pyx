@@ -22,6 +22,7 @@ cimport libzim.libzim_wrapper as clibzim
 
 from cython.operator import dereference, preincrement
 from cpython.ref cimport PyObject
+from cpython.buffer cimport PyBUF_WRITABLE
 
 from libc.stdint cimport uint64_t
 from libcpp.string cimport string
@@ -30,14 +31,11 @@ from libcpp.memory cimport shared_ptr, make_shared, unique_ptr
 
 import datetime
 
-
-
-
 #########################
 #         Blob          #
 #########################
 
-cdef class Blob:
+cdef class WritingBlob:
     cdef clibzim.Blob* c_blob
     cdef bytes ref_content
 
@@ -51,6 +49,50 @@ cdef class Blob:
     def __dealloc__(self):
         if self.c_blob != NULL:
             del self.c_blob
+
+cdef Py_ssize_t itemsize = 1
+
+cdef class ReadingBlob:
+    cdef clibzim.Blob c_blob
+    cdef Py_ssize_t size
+    cdef int view_count
+
+    cdef __setup(self, clibzim.Blob blob):
+        """Assigns an internal pointer to the wrapped C++ article object.
+
+        Parameters
+        ----------
+        *art : Article
+            Pointer to a C++ (zim::) article object
+        """
+        # Set new internal C zim.ZimArticle article
+        self.c_blob = blob
+        self.size = blob.size()
+        self.view_count = 0
+
+    def __dealloc__(self):
+        if self.view_count:
+            raise RuntimeError("Blob has views")
+
+    def __getbuffer__(self, Py_buffer *buffer, int flags):
+        if flags&PyBUF_WRITABLE:
+            raise BufferError("Cannot create writable memoryview on readonly data")
+        buffer.obj = self
+        buffer.buf = <void*>self.c_blob.data()
+        buffer.len = self.size
+        buffer.readonly = 1
+        buffer.format = 'c'
+        buffer.internal = NULL                  # see References
+        buffer.itemsize = itemsize
+        buffer.ndim = 1
+        buffer.shape = &self.size
+        buffer.strides = &itemsize
+        buffer.suboffsets = NULL                # for pointer arrays only
+
+        self.view_count += 1
+
+    def __releasebuffer__(self, Py_buffer *buffer):
+        self.view_count -= 1
 
 
 #------ Helper for pure virtual methods --------
@@ -76,7 +118,7 @@ cdef public api:
 
     clibzim.Blob blob_cy_call_fct(object obj, string method, int *error) with gil:
         """Lookup and execute a pure virtual method on ZimArticle returning a Blob"""
-        cdef Blob blob
+        cdef WritingBlob blob
 
         func = get_article_method_from_object(obj, method, error)
         blob = func()
@@ -198,11 +240,16 @@ cdef class ReadArticle:
         Creates a python ZimArticle from a C++ zim.Article article.
     """
     cdef clibzim.Article c_article
+    cdef ReadingBlob _blob
+    cdef bool _haveBlob
 
     #def __eq__(self, other):
     #    if isinstance(other, ZimArticle):
     #        return (self.longurl == other.longurl) and (self.content == other.content) and (self.is_redirect == other.is_redirect)
     #    return False
+
+    def __cinit__(self):
+        self._haveBlob = False
 
     cdef __setup(self, clibzim.Article art):
         """Assigns an internal pointer to the wrapped C++ article object.
@@ -214,6 +261,7 @@ cdef class ReadArticle:
         """
         # Set new internal C zim.ZimArticle article
         self.c_article = art
+        self._blob = None
 
 
 
@@ -248,9 +296,11 @@ cdef class ReadArticle:
     @property
     def content(self):
         """Get the article's content"""
-        cdef clibzim.Blob blob = self.c_article.getData(<int> 0)
-        data =  blob.data()[:blob.size()]
-        return data
+        if not self._haveBlob:
+            self._blob = ReadingBlob()
+            self._blob.__setup(self.c_article.getData(<int> 0))
+            self._haveBlob = True
+        return memoryview(self._blob)
 
     @property
     def longurl(self):
