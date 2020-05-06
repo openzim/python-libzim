@@ -1,7 +1,7 @@
 # This file is part of python-libzim
 # (see https://github.com/libzim/python-libzim)
 #
-i# Copyright (c) 2020 Juan Diego Caballero <jdc@monadical.com>
+# Copyright (c) 2020 Juan Diego Caballero <jdc@monadical.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,50 +16,57 @@ i# Copyright (c) 2020 Juan Diego Caballero <jdc@monadical.com>
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import unittest
-import os,sys,inspect
+import pytest
 
-# Import local libzim module from parent
-current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parent_dir = os.path.dirname(current_dir)
-sys.path.insert(0, parent_dir)
-
-from libzim import ZimArticle, ZimBlob, ZimCreator
+from libzim.writer import Article, Blob, Creator
 
 # test files https://wiki.kiwix.org/wiki/Content_in_all_languages
 
 
 # https://wiki.openzim.org/wiki/Metadata
+@pytest.fixture(scope="session")
+def metadata():
+    return {
+        # Mandatory
+        "Name": "wikipedia_fr_football",
+        "Title": "English Wikipedia",
+        "Creator": "English speaking Wikipedia contributors",
+        "Publisher": "Wikipedia user Foobar",
+        "Date": "2009-11-21",
+        "Description": "All articles (without images) from the english Wikipedia",
+        "Language": "eng",
+        # Optional
+        "Longdescription": "This ZIM file contains all articles (without images) from the english Wikipedia by 2009-11-10. The topics are ...",
+        "Licence": "CC-BY",
+        "Tags": "wikipedia;_category:wikipedia;_pictures:no;_videos:no;_details:yes;_ftindex:yes",
+        "Flavour": "nopic",
+        "Source": "https://en.wikipedia.org/",
+        "Counter": "image/jpeg=5;image/gif=3;image/png=2",
+        "Scraper": "sotoki 1.2.3",
+    }
 
-TEST_METADATA = { 
-    # Mandatory
-    "Name" : "wikipedia_fr_football",
-    "Title": "English Wikipedia",
-    "Creator": "English speaking Wikipedia contributors",
-    "Publisher": "Wikipedia user Foobar",
-    "Date": "2009-11-21",
-    "Description": "All articles (without images) from the english Wikipedia",
-    "Language": "eng",
-    # Optional
-    "Longdescription": "This ZIM file contains all articles (without images) from the english Wikipedia by 2009-11-10. The topics are ...",
-    "Licence": "CC-BY",
-    "Tags": "wikipedia;_category:wikipedia;_pictures:no;_videos:no;_details:yes;_ftindex:yes",
-    "Flavour": "nopic",
-    "Source": "https://en.wikipedia.org/",
-    "Counter": "image/jpeg=5;image/gif=3;image/png=2",
-    "Scraper": "sotoki 1.2.3"
-}
 
-class ZimTestArticle(ZimArticle):
-    content = '''<!DOCTYPE html> 
-                <html class="client-js">
-                <head><meta charset="UTF-8">
-                <title>Monadical</title>
-                </head>
-                <h1> ñññ Hello, it works ñññ </h1></html>'''
+@pytest.fixture(scope="session")
+def article_content():
+    content = """<!DOCTYPE html>
+        <html class="client-js">
+        <head><meta charset="UTF-8">
+        <title>Monadical</title>
+        </head>
+        <h1> ñññ Hello, it works ñññ </h1></html>"""
+    url = "A/Monadical_SAS"
+    title = "Monadical SAS"
+    mime_type = "text/html"
+    return (content, url, title, mime_type)
 
-    def __init__(self):
-        ZimArticle.__init__(self)
+
+class SimpleArticle(Article):
+    def __init__(self, content, url, title, mime_type):
+        Article.__init__(self)
+        self.content = content
+        self.url = url
+        self.title = title
+        self.mime_type = mime_type
 
     def is_redirect(self):
         return False
@@ -69,17 +76,17 @@ class ZimTestArticle(ZimArticle):
         return True
 
     def get_url(self):
-        return "A/Monadical_SAS"
+        return self.url
 
     def get_title(self):
-        return "Monadical SAS"
-    
+        return self.title
+
     def get_mime_type(self):
-        return "text/html"
-    
+        return self.mime_type
+
     def get_filename(self):
         return ""
-    
+
     def should_compress(self):
         return True
 
@@ -87,50 +94,55 @@ class ZimTestArticle(ZimArticle):
         return True
 
     def get_data(self):
-        return ZimBlob(self.content.encode('UTF-8'))
-       
-
-class TestZimCreator(unittest.TestCase):
-    def setUp(self):
-        self.test_zim_file_path = "/opt/python-libzim/tests/kiwix-test"
-         
-        # Test article
-        self.test_article =  ZimTestArticle()
-
-    def tearDown(self):
-        pass
-
-    def _assert_article_properties(self, written_article, article):
-        pass
-    
-    def _add_article_to_test_zim_file_read_it_back(self, article, delete_zim_file=True):
-        pass
-
-    def test_write_article(self):
-        import uuid
-        rnd_str = str(uuid.uuid1()) 
-        zim_creator = ZimCreator(self.test_zim_file_path + '-' + rnd_str + '.zim',main_page = "welcome",index_language= "eng", min_chunk_size= 2048)
-        zim_creator.add_article(self.test_article)
-        # Set mandatory metadata
-        zim_creator.update_metadata(creator='python-libzim',description='Created in python',name='Hola',publisher='Monadical',title='Test Zim')
-        zim_creator.finalize()
-
-    def test_article_metadata(self):
-        import uuid
-        rnd_str = str(uuid.uuid1()) 
-        zim_creator = ZimCreator(self.test_zim_file_path + '-' + rnd_str + '.zim',main_page = "welcome",index_language= "eng", min_chunk_size= 2048)
-        zim_creator.update_metadata(**TEST_METADATA)
-        self.assertEqual(zim_creator._get_metadata(), TEST_METADATA)
-
-    def test_check_mandatory_metadata(self):
-        import uuid
-        rnd_str = str(uuid.uuid1()) 
-        zim_creator = ZimCreator(self.test_zim_file_path + '-' + rnd_str + '.zim',main_page = "welcome",index_language= "eng", min_chunk_size= 2048)
-        self.assertFalse(zim_creator.mandatory_metadata_ok())
-        zim_creator.update_metadata(creator='python-libzim',description='Created in python',name='Hola',publisher='Monadical',title='Test Zim')
-        self.assertTrue(zim_creator.mandatory_metadata_ok())
+        return Blob(self.content.encode("UTF-8"))
 
 
+@pytest.fixture(scope="session")
+def article(article_content):
+    return SimpleArticle(*article_content)
 
-if __name__ == '__main__':
-    unittest.main()
+
+def test_write_article(tmpdir, article):
+    with Creator(
+        str(tmpdir / "test.zim"),
+        main_page="welcome",
+        index_language="eng",
+        min_chunk_size=2048,
+    ) as zim_creator:
+        zim_creator.add_article(article)
+        zim_creator.update_metadata(
+            creator="python-libzim",
+            description="Created in python",
+            name="Hola",
+            publisher="Monadical",
+            title="Test Zim",
+        )
+
+
+def test_article_metadata(tmpdir, metadata):
+    with Creator(
+        str(tmpdir / "test.zim"),
+        main_page="welcome",
+        index_language="eng",
+        min_chunk_size=2048,
+    ) as zim_creator:
+        zim_creator.update_metadata(**metadata)
+        assert zim_creator._metadata == metadata
+
+
+def test_check_mandatory_metadata(tmpdir):
+    with Creator(
+        str(tmpdir / "test.zim"),
+        main_page="welcome",
+        index_language="eng",
+        min_chunk_size=2048,
+    ) as zim_creator:
+        assert not zim_creator.mandatory_metadata_ok()
+        zim_creator.update_metadata(
+            creator="python-libzim",
+            description="Created in python",
+            name="Hola",
+            publisher="Monadical",
+            title="Test Zim",
+        )
+        assert zim_creator.mandatory_metadata_ok()
