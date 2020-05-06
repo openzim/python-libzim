@@ -19,12 +19,12 @@ setup(
     license = "GPLv3+",
     long_description=read('README.md'),
     ext_modules = cythonize([
-        Extension("libzim",  ["libzim/*.pyx","libzim/lib.cxx"],
+        Extension("libzim_wrapper",  ["libzim/*.pyx", "libzim/lib.cxx"],
                   include_dirs=["libzim"],
                   libraries=["zim"],
                   extra_compile_args=["-std=c++11"],
                   language="c++"),
-    ],
-    compiler_directives={'language_level' : "3"}
-    )
+        ],
+        compiler_directives={'language_level' : "3"}
+    ),
 )
