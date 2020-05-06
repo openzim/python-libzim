@@ -22,7 +22,7 @@ import datetime
 from collections import defaultdict
 
 import libzim_wrapper
-from libzim_wrapper import Blob
+from libzim_wrapper import WritingBlob as Blob
 
 __all__ = ["Article", "Blob", "Creator"]
 
