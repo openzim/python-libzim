@@ -1,0 +1,73 @@
+name: release
+on:
+  release:
+    types: [published]
+    tags:
+      - v*
+
+env:
+  LIBZIM_RELEASE: libzim_linux-x86_64-6.1.1
+  LIBZIM_LIBRARY_PATH: lib/x86_64-linux-gnu/libzim.so.6.1.1
+  LIBZIM_INCLUDE_PATH: include/zim
+  CYTHON_VERSION: 0.29.6
+
+jobs:
+  release:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        # TODO: expand this to cross-platform builds (see V2 approach below)
+        # os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: [3.6, 3.7, 3.8]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
+
+      - name: Cache libzim dylib & headers
+        uses: actions/cache@master
+        id: cache-libzim
+        with:
+          path: libzim_linux
+          key: ${{ env.LIBZIM_RELEASE }}-libzim-cache
+
+      - name: Download libzim dylib & headers from OpenZIM.org releases
+        if: steps.cache-libzim.outputs.cache-hit != 'true'
+        run: |
+          wget -q https://download.openzim.org/release/libzim/$LIBZIM_RELEASE.tar.gz
+          tar --gunzip --extract --file=$LIBZIM_RELEASE.tar.gz
+          mv $LIBZIM_RELEASE libzim_linux
+
+      - name: Link libzim dylib & headers into workspace lib and include folders
+        run: |
+          cp -p $GITHUB_WORKSPACE/libzim_linux/$LIBZIM_LIBRARY_PATH lib/libzim.so
+          cp -p $GITHUB_WORKSPACE/libzim_linux/$LIBZIM_LIBRARY_PATH lib/
+          sudo ldconfig $GITHUB_WORKSPACE/lib
+          ln -s $GITHUB_WORKSPACE/libzim_linux/$LIBZIM_INCLUDE_PATH include/zim
+
+      - name: Build cython, sdist, and bdist_wheels
+        run: |
+          pip install --upgrade cython==$CYTHON_VERSION setuptools pip
+          python3 setup.py build_ext
+          python3 setup.py sdist bdist_wheel
+          python -m cibuildwheel --output-dir wheelhouse
+
+      - uses: actions/upload-artifact@v1
+        with:
+          name: wheels
+          path: ./wheelhouse
+
+      - name: Push release to PyPI
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          # TODO: remove this line to upload to the real PyPI when ready
+          repository_url: https://test.pypi.org/legacy/
