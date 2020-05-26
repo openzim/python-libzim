@@ -106,6 +106,11 @@ MANDATORY_METADATA_KEYS = [
 ]
 
 
+def pascalize(keyword):
+    """ Converts python case to pascal case. example: long_description-> LongDescription """
+    return "".join(keyword.title().split("_"))
+
+
 class Creator:
     """
     A class to represent a Zim Creator.
@@ -132,9 +137,7 @@ class Creator:
 
     def __init__(self, filename, main_page, index_language, min_chunk_size):
         print(filename)
-        self._creatorWrapper = libzim_wrapper.Creator(
-            filename, main_page, index_language, min_chunk_size
-        )
+        self._creatorWrapper = libzim_wrapper.Creator(filename, main_page, index_language, min_chunk_size)
         self.filename = filename
         self.main_page = main_page
         self.language = index_language
@@ -164,8 +167,6 @@ class Creator:
 
     def update_metadata(self, **kwargs):
         "Updates article metadata" ""
-        # Converts python case to pascal case. example: long_description-> LongDescription
-        pascalize = lambda keyword: "".join(keyword.title().split("_"))
         new_metadata = {pascalize(k): v for k, v in kwargs.items()}
         self._metadata.update(new_metadata)
 

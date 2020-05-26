@@ -36,7 +36,10 @@ def metadata():
         "Description": "All articles (without images) from the english Wikipedia",
         "Language": "eng",
         # Optional
-        "Longdescription": "This ZIM file contains all articles (without images) from the english Wikipedia by 2009-11-10. The topics are ...",
+        "Longdescription": (
+            "This ZIM file contains all articles (without images) from the english Wikipedia by 2009-11-10."
+            " The topics are ..."
+        ),
         "Licence": "CC-BY",
         "Tags": "wikipedia;_category:wikipedia;_pictures:no;_videos:no;_details:yes;_ftindex:yes",
         "Flavour": "nopic",
@@ -104,10 +107,7 @@ def article(article_content):
 
 def test_write_article(tmpdir, article):
     with Creator(
-        str(tmpdir / "test.zim"),
-        main_page="welcome",
-        index_language="eng",
-        min_chunk_size=2048,
+        str(tmpdir / "test.zim"), main_page="welcome", index_language="eng", min_chunk_size=2048,
     ) as zim_creator:
         zim_creator.add_article(article)
         zim_creator.update_metadata(
@@ -121,10 +121,7 @@ def test_write_article(tmpdir, article):
 
 def test_article_metadata(tmpdir, metadata):
     with Creator(
-        str(tmpdir / "test.zim"),
-        main_page="welcome",
-        index_language="eng",
-        min_chunk_size=2048,
+        str(tmpdir / "test.zim"), main_page="welcome", index_language="eng", min_chunk_size=2048,
     ) as zim_creator:
         zim_creator.update_metadata(**metadata)
         assert zim_creator._metadata == metadata
@@ -132,10 +129,7 @@ def test_article_metadata(tmpdir, metadata):
 
 def test_check_mandatory_metadata(tmpdir):
     with Creator(
-        str(tmpdir / "test.zim"),
-        main_page="welcome",
-        index_language="eng",
-        min_chunk_size=2048,
+        str(tmpdir / "test.zim"), main_page="welcome", index_language="eng", min_chunk_size=2048,
     ) as zim_creator:
         assert not zim_creator.mandatory_metadata_ok()
         zim_creator.update_metadata(
