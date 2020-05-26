@@ -1,0 +1,88 @@
+name: test
+on: [push]
+
+env:
+  LIBZIM_RELEASE: libzim_linux-x86_64-6.1.1
+  LIBZIM_LIBRARY_PATH: lib/x86_64-linux-gnu/libzim.so.6.1.1
+  LIBZIM_INCLUDE_PATH: include/zim
+  CYTHON_VERSION: 0.29.6
+  MAX_LINE_LENGTH: 110
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.6
+          architecture: x64
+
+      - name: Autoformat with black
+        run: |
+          pip install black
+          black --check --exclude=setup.py .
+
+      - name: Lint with flake8
+        run: |
+          pip install flake8
+          # one pass for show-stopper syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --exclude=setup.py --show-source --statistics
+          # one pass for small stylistic things
+          flake8 . --count --exclude=setup.py --max-line-length=$MAX_LINE_LENGTH --statistics
+
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        # TODO: expand this once macos and windows libzim releases become available
+        # os: [ubuntu-latest, windows-latest, macos-latest]
+        # alternatively we can compile libzim in docker and use the container as an action
+        python: [3.6, 3.7, 3.8]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python }}
+          architecture: x64
+
+      - name: Cache libzim dylib & headers
+        uses: actions/cache@master
+        id: cache-libzim
+        with:
+          path: libzim_linux
+          key: ${{ env.LIBZIM_RELEASE }}-libzim-cache
+
+      - name: Download libzim dylib & headers from OpenZIM.org releases
+        if: steps.cache-libzim.outputs.cache-hit != 'true'
+        run: |
+          wget -q https://download.openzim.org/release/libzim/$LIBZIM_RELEASE.tar.gz
+          tar --gunzip --extract --file=$LIBZIM_RELEASE.tar.gz
+          mv $LIBZIM_RELEASE libzim_linux
+
+      - name: Link libzim dylib & headers into workspace lib and include folders
+        run: |
+          cp -p $GITHUB_WORKSPACE/libzim_linux/$LIBZIM_LIBRARY_PATH lib/libzim.so
+          cp -p $GITHUB_WORKSPACE/libzim_linux/$LIBZIM_LIBRARY_PATH lib/
+          sudo ldconfig $GITHUB_WORKSPACE/lib
+          ln -s $GITHUB_WORKSPACE/libzim_linux/$LIBZIM_INCLUDE_PATH include/zim
+      
+      - name: Build cython, sdist, and bdist_wheel
+        run: |
+          pip install --upgrade cython==$CYTHON_VERSION setuptools pip wheel
+          python3 setup.py build_ext
+          python3 setup.py sdist bdist_wheel
+          
+      - name: Test built package with pytest
+        run: |
+          export LD_LIBRARY_PATH=$PWD/lib:$LD_LIBRARY_PATH
+          sudo ldconfig
+          pip install pytest
+          pip install -e .
+          pytest .
