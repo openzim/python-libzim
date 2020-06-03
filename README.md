@@ -10,28 +10,28 @@ pip3 install libzim
 
 This library allows you to interact with `.zim` files via Python.
 
-It just provides a shallow Python interface on top of the  `libzim` C++ library (maintained by [OpenZIM](https://github.com/openzim)). The versions are pinned between the two packages (`python-libzim==6.1.1 <=> libzim==6.1.1`).
+It just provides a shallow Python interface on top of the  `libzim` C++ library (maintained by [OpenZIM](https://github.com/openzim)).
 
 It is primarily used by [`sotoki`](https://github.com/openzim/sotoki).
 
 ## Quickstart
 
-```python3
-# Writer API
-from libzim import ZimCreator, ZimArticle, ZimBlob, ...
-
-with zimcreator('test.zim') as zc:
-    zc.add_article(ZimArticle(...))
-```
+### Reader API
 
 ```python3
-# Reader API (coming soon...)
-from libzim import zimreader
+from libzim.reader import File
 
-with zimreader('test.zim') as zr:
-    for article in zr.namespace('A'):
-        print(article.url, article.title, article.content.decode())
+f = File("test.zim")
+article = f.get_article("article/url.html")
+print(article.url, article.title)
+if not article.is_redirect():
+    print(article.content)
 ```
+
+### Write API
+
+See [example](examples/basic_writer.py) for a basic usage of the writer API.
+
 
 ---
 
@@ -40,30 +40,29 @@ with zimreader('test.zim') as zr:
 ### Setup: Ubuntu/Debian `x86_64` (Recommended)
 
 Install the python `libzim` package from PyPI.
+
 ```bash
 pip3 install libzim
-python -c "from libzim import ZimArticle"
 ```
 
 The `x86_64` linux wheel automatically includes the `libzim.so` dylib and headers, but other platforms may need to install `libzim` and its headers manually.
 
-#### Installing the `libzim` dylib and headers manually
+
+### Installing the `libzim` dylib and headers manually
+
+If you are not on a linux `x86_64` platform, you will have to install libzim manually.
+
+Either by get a prebuilt binary at https://download.openzim.org/release/libzim
+or [compile `libzim` from source](https://github.com/openzim/libzim).
+
+If you have not installed libzim in standard directory, you will have to set `LD_LIBRARY_PATH` to allow python to find the library :
+
+Assuming you have extracted (or installed) the library if LIBZIM_DIR:
+
 
 ```bash
-# Install the `libzim` dylib and headers from a pre-built release
-LIBZIM_VERSION=6.1.1
-LIBZIM_RELEASE=libzim_linux-x86_64-$LIBZIM_VERSION
-LIBZIM_LIBRARY_PATH=lib/x86_64-linux-gnu/libzim.so.$LIBZIM_VERSION
-LIBZIM_INCLUDE_PATH=include/zim
-
-wget -qO- https://download.openzim.org/release/libzim/$LIBZIM_RELEASE.tar.gz | tar -xz -C .
-sudo mv $LIBZIM_RELEASE/$LIBZIM_LIBRARY_PATH lib/libzim.so
-sudo mv $LIBZIM_RELEASE/$LIBZIM_INCLUDE_PATH include/zim
-export LD_LIBRARY_PATH="$PWD/lib:$LD_LIBRARY_PATH"
-sudo ldconfig
+export LD_LIBRARY_PATH="${LIBZIM_DIR}/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
 ```
-If a pre-built release is not available for your platform, you can also [install `libzim` from source](https://github.com/openzim/libzim#dependencies).
-
 
 ## Setup: Docker (Optional)
 
@@ -75,7 +74,7 @@ docker run -it openzim:python-libzim ./some_example_script.py
 
 # Or use the python repl interactively
 docker run -it openzim:python-libzim
->>> from libzim import ZimCreator, ZimArticle, ZimBlob
+>>> import libzim
 ```
 
 ---
@@ -95,12 +94,13 @@ apt install coreutils wget git ca-certificates \
 
 pip3 install --upgrade pip pipenv
 
+export CFLAGS="-I${LIBZIM_DIR}/include"
+export LDFLAGS="-L${LIBZIM_DIR}/lib/x86_64-linux-gnu"
 git clone https://github.com/openzim/python-libzim
 cd python-libzim
 python setup.py build_ext
 pipenv install --dev
 pipenv run pip install -e .
-pipenv run python -c "from libzim import ZimArticle"
 ```
 
 ### Setup: Docker
@@ -116,7 +116,7 @@ $ pipenv install --dev <newpackagehere>
 $ python setup.py build_ext
 $ python setup.py sdist bdist_wheel
 $ python setup.py install
-$ python -c "from libzim import ZimArticle"
+$ python -c "import libzim"
 
 ```
 
@@ -160,90 +160,12 @@ twine upload dist/*
 ### Use a specific `libzim` dylib and headers when compiling `python-libzim`
 
 ```bash
-export CFLAGS="-I/tmp/libzim_linux-x86_64-6.1.1/include"
-export LDFLAGS="-L/tmp/libzim_linux-x86_64-6.1.1/lib/x86_64-linux-gnu"
-export LD_LIBRARY_PATH="/tmp/libzim_linux-x86_64-6.1.1/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
+export CFLAGS="-I${LIBZIM_DIR}/include"
+export LDFLAGS="-L${LIBZIM_DIR}/lib/x86_64-linux-gnu"
+export LD_LIBRARY_PATH="${LIBZIM_DIR}/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
 python setup.py build_ext
 python setup.py install
 ```
-
----
-
-## Examples
-
-```python3
-from libzim import zimcreator, ZimArticle, ZimBlob, ZimCreator
-
-class ZimTestArticle(ZimArticle):
-    content = '''<!DOCTYPE html> 
-                <html class="client-js">
-                <head><meta charset="UTF-8">
-                <title>Monadical</title>
-                </head>
-                <h1> ñññ Hello, it works ñññ </h1></html>'''
-
-    def __init__(self):
-        ZimArticle.__init__(self)
-
-    def is_redirect(self):
-        return False
-
-    def get_url(self):
-        return "A/Monadical_SAS"
-
-    def get_title(self):
-        return "Monadical SAS"
-    
-    def get_mime_type(self):
-        return "text/html"
-    
-    def get_filename(self):
-        return ""
-    
-    def should_compress(self):
-        return True
-
-    def should_index(self):
-        return True
-
-    def get_data(self):
-        return ZimBlob(self.content.encode('UTF-8'))
-
-
-# Set up a ZimCreator instance to collect articles into one .zim file
-zim_creator = ZimCreator(
-    'test.zim',
-    main_page="welcome",
-    index_language="eng",
-    min_chunk_size=2048,
-)
-zim_creator.update_metadata(
-    name='Hola',
-    title='Test Zim',
-    publisher='Monadical',
-    creator='python-libzim',
-    description='Created in python', 
-)
-
-# Write the test article to .zim file by adding it via the ZimCreator
-zim_creator.add_article(ZimTestArticle())
-
-# ZimCreator.finalize() must be called in order to save the writes to disk
-zim_creator.finalize()
-
-# Alternatively, use the context manager form of ZimCreator
-#   to avoid having to call .finalize() manually:
-with zimcreator('test.zim', main_index="welcome", ...) as zc:
-    zc.add_article(article)
-    if not zc.mandatory_metadata_ok():
-        zc.update_metadata(creator='python-libzim',
-                                    description='Created in python',
-                                    name='Hola',
-                                    publisher='Monadical',
-                                    title='Test Zim')
-    # zc.finalize() is called automatically when context manager exits
-```
-
 ---
 
 ## Further Reading
