@@ -172,7 +172,7 @@ class Creator:
 
     def write_metadata(self):
         for key, value in self._metadata.items():
-            if key == "date" and isinstance(value, datetime.date):
+            if key == "Date" and isinstance(value, datetime.date):
                 value = value.strftime("%Y-%m-%d")
             article = MetadataArticle(key, value)
             self._creatorWrapper.add_article(article)

@@ -74,45 +74,10 @@ content2 = """<!DOCTYPE html>
 article = TestArticle("Monadical_SAS", "Monadical", content)
 article2 = TestArticle("Monadical_2", "Monadical 2", content2)
 
-print(article.content)
-
-
 rnd_str = str(uuid.uuid1())
+zim_file_path = f"kiwix-test-{rnd_str}.zim"
 
-test_zim_file_path = "/opt/python-libzim/tests/kiwix-test"
-
-zim_creator = Creator(
-    test_zim_file_path + "-" + rnd_str + ".zim",
-    main_page="Monadical",
-    index_language="eng",
-    min_chunk_size=2048,
-)
-
-# Add articles to zim file
-zim_creator.add_article(article)
-zim_creator.add_article(article2)
-
-# Set mandatory metadata
-if not zim_creator.mandatory_metadata_ok():
-    zim_creator.update_metadata(
-        creator="python-libzim",
-        description="Created in python",
-        name="Hola",
-        publisher="Monadical",
-        title="Test Zim",
-    )
-
-print(zim_creator._get_metadata())
-
-# Write articles to zim file
-zim_creator.finalize()
-
-
-# Example using context manager to ensure finalize is called.
-
-rnd_str = str(uuid.uuid1())
-
-with Creator(test_zim_file_path + "-" + rnd_str + ".zim") as zc:
+with Creator(zim_file_path, main_page="Monadical", index_language="eng", min_chunk_size=2048) as zc:
     zc.add_article(article)
     zc.add_article(article2)
     zc.update_metadata(
