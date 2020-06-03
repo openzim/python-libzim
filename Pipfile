@@ -4,8 +4,14 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-pytest = "*"
 cython = "==0.29.6"
-e1839a8 = {editable = true, path = "."}
+setuptools = "*"
+wheel = "*"
+ipython = "*"
+black = "*"
+flake8 = "*"
+mypy = "*"
+pytest = "*"
+twine = "*"
 
 [packages]
