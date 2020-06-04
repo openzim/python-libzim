@@ -3,6 +3,6 @@ include README.md
 include tests/*.py
 include pyproject.toml
 
-recursive-include lib *
-recursive-include include *
 recursive-include libzim *
+global-exclude __pycache__/*
+exclude *.egg-info/*
