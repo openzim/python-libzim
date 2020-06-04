@@ -71,5 +71,3 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
-          # TODO: remove this line to upload to the real PyPI when ready
-          repository_url: https://test.pypi.org/legacy/
