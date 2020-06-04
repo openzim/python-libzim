@@ -62,8 +62,8 @@ def get_long_description():
     return (BASE_DIR/'README.md').read_text()
 
 wrapper_extension = Extension(
-    name = "libzim_wrapper",
-    sources = ["libzim/*.pyx", "libzim/lib.cxx"],
+    name = "libzim.wrapper",
+    sources = ["libzim/wrapper.pyx", "libzim/lib.cxx"],
     include_dirs=["libzim", LIBZIM_INCLUDE_DIR],
     libraries=['zim'],
     library_dirs=[LIBZIM_LIBRARY_DIR],
