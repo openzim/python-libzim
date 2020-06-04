@@ -93,6 +93,7 @@ setup(
     python_requires='>=3.6',
 
     # Content
+    packages=["libzim"],
     ext_modules=cythonize([wrapper_extension],
         compiler_directives={"language_level": "3"}
     ),
@@ -121,7 +122,7 @@ setup(
         "Intended Audience :: End Users/Desktop",
         "Intended Audience :: Information Technology",
         "Intended Audience :: System Administrators",
-        
+
         "Programming Language :: Cython",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
