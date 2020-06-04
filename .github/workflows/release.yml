@@ -6,8 +6,7 @@ on:
       - v*
 
 env:
-  LIBZIM_RELEASE: libzim_linux-x86_64-6.1.1
-  LIBZIM_LIBRARY_PATH: lib/x86_64-linux-gnu/libzim.so.6.1.1
+  LIBZIM_RELEASE: libzim_linux-x86_64-6.1.5
   LIBZIM_INCLUDE_PATH: include/zim
   CYTHON_VERSION: 0.29.6
 
@@ -46,22 +45,25 @@ jobs:
 
       - name: Link libzim dylib & headers into workspace lib and include folders
         run: |
-          cp -p $GITHUB_WORKSPACE/libzim_linux/$LIBZIM_LIBRARY_PATH lib/libzim.so
-          cp -p $GITHUB_WORKSPACE/libzim_linux/$LIBZIM_LIBRARY_PATH lib/
-          sudo ldconfig $GITHUB_WORKSPACE/lib
+          cp -dp $GITHUB_WORKSPACE/libzim_linux/lib/x86_64-linux-gnu/* lib/
+          ln -s libzim.so.6 lib/libzim.so
           ln -s $GITHUB_WORKSPACE/libzim_linux/$LIBZIM_INCLUDE_PATH include/zim
 
       - name: Build cython, sdist, and bdist_wheels
         run: |
-          pip install --upgrade cython==$CYTHON_VERSION setuptools pip
-          python3 setup.py build_ext
-          python3 setup.py sdist bdist_wheel
-          python -m cibuildwheel --output-dir wheelhouse
+          pip install --upgrade cython==$CYTHON_VERSION setuptools pip wheel
+          python3 setup.py build_ext --rpath='$ORIGIN'
+          if [[  "${{ matrix.python-version }}" == "3.6" ]]
+          then
+            python3 setup.py sdist
+          fi
+          cp -p lib/libzim.so.6 libzim
+          python3 setup.py bdist_wheel --plat-name=manylinux1_x86_64
 
       - uses: actions/upload-artifact@v1
         with:
           name: wheels
-          path: ./wheelhouse
+          path: ./dist
 
       - name: Push release to PyPI
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
@@ -69,5 +71,3 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
-          # TODO: remove this line to upload to the real PyPI when ready
-          repository_url: https://test.pypi.org/legacy/

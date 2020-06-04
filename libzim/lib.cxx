@@ -23,7 +23,7 @@
 #include <Python.h>
 #include "lib.h"
 
-#include "libzim_wrapper_api.h"
+#include "wrapper_api.h"
 
 #include <iostream>
 #include <zim/writer/url.h>
@@ -38,7 +38,7 @@
 
 ZimArticleWrapper::ZimArticleWrapper(PyObject *obj) : m_obj(obj)
 {
-    if (import_libzim_wrapper())
+    if (import_libzim__wrapper())
     {
         std::cerr << "Error executing import_libzim!\n";
         throw std::runtime_error("Error executing import_libzim");
