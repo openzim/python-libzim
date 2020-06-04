@@ -34,17 +34,8 @@ from ctypes.util import find_library
 from setuptools import setup, Extension
 from Cython.Build import cythonize
 
-
-PACKAGE_NAME = "libzim_wrapper"
-VERSION = "0.0.1"  # pegged to be the same version as libzim since they are always released together
-LICENSE = "GPLv3+"
-DESCRIPTION = "A python-facing API for creating and interacting with ZIM files"
-AUTHOR = "Monadical Inc."
-AUTHOR_EMAIL = "jdc@monadical.com"
 GITHUB_URL = "https://github.com/openzim/python-libzim"
-
 BASE_DIR = Path(__file__).parent
-BINDINGS_CYTHON_DIR = 'libzim'   # the cython binding source dir (containing .pyx, .pyd, etc.)
 LIBZIM_INCLUDE_DIR = 'include'   # the libzim C++ header src dir (containing zim/*.h)
 LIBZIM_LIBRARY_DIR = 'lib'       # the libzim .so binary lib dir (containing libzim.so)
 
@@ -55,7 +46,7 @@ if not (BASE_DIR / LIBZIM_INCLUDE_DIR / 'zim/zim.h').exists():
         f"[!] Warning: Couldn't find zim/*.h in ./{LIBZIM_INCLUDE_DIR}!\n"
         f"    Hint: You can install them from source from https://github.com/openzim/libzim\n"
         f"          or download a prebuilt release's headers into ./include/zim/*.h\n"
-        f"          (or set CFLAGS='-I/tmp/libzim_linux-x86_64-{VERSION}/include')"
+        f"          (or set CFLAGS='-I<library_path>/include')"
     )
 
 # Check for the CPP Libzim shared library in expected directory or system paths
@@ -64,12 +55,27 @@ if not ((BASE_DIR / LIBZIM_LIBRARY_DIR / 'libzim.so').exists() or find_library('
         f"[!] Warning: Couldn't find libzim.so in ./{LIBZIM_LIBRARY_DIR} or system library paths!"
         f"    Hint: You can install it from source from https://github.com/openzim/libzim\n"
         f"          or download a prebuilt zimlib.so release into ./lib.\n"
-        f"          (or set LDFLAGS='-L/tmp/libzim_linux-x86_64-{VERSION}/lib/x86_64-linux-gnu')"
+        f"          (or set LDFLAGS='-L<library_path>/lib/x86_64-linux-gnu')"
     )
 
+def get_long_description():
+    return (BASE_DIR/'README.md').read_text()
+
+wrapper_extension = Extension(
+    name = "libzim_wrapper",
+    sources = ["libzim/*.pyx", "libzim/lib.cxx"],
+    include_dirs=["libzim", LIBZIM_INCLUDE_DIR],
+    libraries=['zim'],
+    library_dirs=[LIBZIM_LIBRARY_DIR],
+    extra_compile_args=["-std=c++11", "-Wall", "-Wextra"],
+    language="c++",
+)
+
+
 setup(
-    name=PACKAGE_NAME,
-    version=VERSION,
+# Basic information about libzim module
+    name="libzim",
+    version="0.0.1",
     url=GITHUB_URL,
     project_urls={
         'Source': GITHUB_URL,
@@ -78,43 +84,24 @@ setup(
         'Documentation': f'{GITHUB_URL}/blob/master/README.md',
         'Donate': 'https://www.kiwix.org/en/support-us/',
     },
-    author=AUTHOR,
-    author_email=AUTHOR_EMAIL,
-    license=LICENSE,
-    description=DESCRIPTION,
-    long_description=(BASE_DIR / 'README.md').read_text(),
+    author="Monadical Inc.",
+    author_email="jdc@monadical.com",
+    license="GPLv3+",
+    description="A python-facing API for creating and interacting with ZIM files",
+    long_description=get_long_description(),
     long_description_content_type="text/markdown",
     python_requires='>=3.6',
-    include_package_data=True,
-    ext_modules=cythonize(
-        [
-            Extension(
-                "libzim_wrapper",
-                sources=[
-                    f"{BINDINGS_CYTHON_DIR}/*.pyx",
-                    f"{BINDINGS_CYTHON_DIR}/lib.cxx",
-                ],
-                include_dirs=[
-                    BINDINGS_CYTHON_DIR,
-                    LIBZIM_INCLUDE_DIR,
-                ],
-                libraries=[
-                    'zim',
-                ],
-                library_dirs=[
-                    LIBZIM_LIBRARY_DIR,
-                ],
-                extra_compile_args=[
-                    "-std=c++11",
-                    "-Wall",
-                    "-Wextra",
-                ],
-                language="c++",
-            )
-        ],
-        compiler_directives={"language_level" : "3"},
+
+    # Content
+    ext_modules=cythonize([wrapper_extension],
+        compiler_directives={"language_level": "3"}
     ),
+
+# Packaging
+    include_package_data=True,
     zip_safe=False,
+
+# Extra
     classifiers=[
         "Development Status :: 3 - Alpha",
 
