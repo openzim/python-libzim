@@ -18,7 +18,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
-cimport libzim.libzim_wrapper as clibzim
+cimport libzim.wrapper as wrapper
 
 from cython.operator import dereference, preincrement
 from cpython.ref cimport PyObject
@@ -36,7 +36,7 @@ import datetime
 #########################
 
 cdef class WritingBlob:
-    cdef clibzim.Blob* c_blob
+    cdef wrapper.Blob* c_blob
     cdef bytes ref_content
 
     def __cinit__(self, content):
@@ -44,7 +44,7 @@ cdef class WritingBlob:
             self.ref_content = content.encode('UTF-8')
         else:
             self.ref_content = content
-        self.c_blob = new clibzim.Blob(<char *> self.ref_content, len(self.ref_content))
+        self.c_blob = new wrapper.Blob(<char *> self.ref_content, len(self.ref_content))
 
     def __dealloc__(self):
         if self.c_blob != NULL:
@@ -53,11 +53,11 @@ cdef class WritingBlob:
 cdef Py_ssize_t itemsize = 1
 
 cdef class ReadingBlob:
-    cdef clibzim.Blob c_blob
+    cdef wrapper.Blob c_blob
     cdef Py_ssize_t size
     cdef int view_count
 
-    cdef __setup(self, clibzim.Blob blob):
+    cdef __setup(self, wrapper.Blob blob):
         """Assigns an internal pointer to the wrapped C++ article object.
 
         Parameters
@@ -116,7 +116,7 @@ cdef public api:
         ret_str = func()
         return ret_str.encode('UTF-8')
 
-    clibzim.Blob blob_cy_call_fct(object obj, string method, int *error) with gil:
+    wrapper.Blob blob_cy_call_fct(object obj, string method, int *error) with gil:
         """Lookup and execute a pure virtual method on ZimArticle returning a Blob"""
         cdef WritingBlob blob
 
@@ -146,7 +146,7 @@ cdef class Creator:
         flag if the creator was finalized
     """
 
-    cdef clibzim.ZimCreatorWrapper *c_creator
+    cdef wrapper.ZimCreatorWrapper *c_creator
     cdef bool _finalized
 
     def __cinit__(self, str filename, str main_page = "", str index_language = "eng", min_chunk_size = 2048):
@@ -163,7 +163,7 @@ cdef class Creator:
             Minimum chunk size (default 2048)
         """
 
-        self.c_creator = clibzim.ZimCreatorWrapper.create(filename.encode("UTF-8"), main_page.encode("UTF-8"), index_language.encode("UTF-8"), min_chunk_size)
+        self.c_creator = wrapper.ZimCreatorWrapper.create(filename.encode("UTF-8"), main_page.encode("UTF-8"), index_language.encode("UTF-8"), min_chunk_size)
         self._finalized = False
 
     def __dealloc__(self):
@@ -185,8 +185,8 @@ cdef class Creator:
             raise RuntimeError("ZimCreator already finalized")
 
         # Make a shared pointer to ZimArticleWrapper from the ZimArticle object
-        cdef shared_ptr[clibzim.ZimArticleWrapper] art = shared_ptr[clibzim.ZimArticleWrapper](
-            new clibzim.ZimArticleWrapper(<PyObject*>article));
+        cdef shared_ptr[wrapper.ZimArticleWrapper] art = shared_ptr[wrapper.ZimArticleWrapper](
+            new wrapper.ZimArticleWrapper(<PyObject*>article));
         with nogil:
             self.c_creator.addArticle(art)
 
@@ -239,7 +239,7 @@ cdef class ReadArticle:
     from_read_article(zim.Article art)
         Creates a python ZimArticle from a C++ zim.Article article.
     """
-    cdef clibzim.Article c_article
+    cdef wrapper.Article c_article
     cdef ReadingBlob _blob
     cdef bool _haveBlob
 
@@ -251,7 +251,7 @@ cdef class ReadArticle:
     def __cinit__(self):
         self._haveBlob = False
 
-    cdef __setup(self, clibzim.Article art):
+    cdef __setup(self, wrapper.Article art):
         """Assigns an internal pointer to the wrapped C++ article object.
 
         Parameters
@@ -267,7 +267,7 @@ cdef class ReadArticle:
 
     # Factory functions - Currently Cython can't use classmethods
     @staticmethod
-    cdef from_read_article(clibzim.Article art):
+    cdef from_read_article(wrapper.Article art):
         """Creates a python ZimFileArticle from a C++ Article (zim::).
 
         Parameters
@@ -332,7 +332,7 @@ cdef class ReadArticle:
 #        File           #
 #########################
 
-cdef class File:
+cdef class FilePy:
     """
     A class to represent a Zim File Reader.
 
@@ -344,7 +344,7 @@ cdef class File:
         the file name of the File Reader object
     """
 
-    cdef clibzim.File *c_file
+    cdef wrapper.File *c_file
     cdef object _filename
 
     def __cinit__(self, str filename):
@@ -355,7 +355,7 @@ cdef class File:
             Full path to a zim file
         """
 
-        self.c_file = new clibzim.File(filename.encode('UTF-8'))
+        self.c_file = new wrapper.File(filename.encode('UTF-8'))
         self._filename = self.c_file.getFilename().decode("UTF-8", "strict")
 
     def __dealloc__(self):
@@ -384,7 +384,7 @@ cdef class File:
                 If an article with the provided long url is not found in the file
         """
         # Read to a zim::Article
-        cdef clibzim.Article art = self.c_file.getArticleByUrl(url.encode('UTF-8'))
+        cdef wrapper.Article art = self.c_file.getArticleByUrl(url.encode('UTF-8'))
         if not art.good():
             raise RuntimeError("Article not found for url")
 
@@ -419,7 +419,7 @@ cdef class File:
         """
 
         # Read to a zim::Article
-        cdef clibzim.Article art = self.c_file.getArticle(<int> id)
+        cdef wrapper.Article art = self.c_file.getArticle(<int> id)
         if not art.good():
             raise RuntimeError("Article not found for id")
 
@@ -435,8 +435,8 @@ cdef class File:
             The url of the main page
         TODO Check old formats
         """
-        cdef clibzim.Fileheader header = self.c_file.getFileheader()
-        cdef clibzim.Article article
+        cdef wrapper.Fileheader header = self.c_file.getFileheader()
+        cdef wrapper.Article article
         if header.hasMainPage():
             article = self.c_file.getArticle(header.getMainPage())
             return article.getLongUrl().decode("UTF-8", "strict");
@@ -504,8 +504,8 @@ cdef class File:
         iterator
             An interator with the urls of suggested articles starting from start position
         """
-        cdef unique_ptr[clibzim.Search] search = self.c_file.suggestions(query.encode('UTF-8'),start, end)
-        cdef clibzim.search_iterator it = dereference(search).begin()
+        cdef unique_ptr[wrapper.Search] search = self.c_file.suggestions(query.encode('UTF-8'),start, end)
+        cdef wrapper.search_iterator it = dereference(search).begin()
 
         while it != dereference(search).end():
             yield it.get_url().decode('UTF-8')
@@ -527,8 +527,8 @@ cdef class File:
             An iterator with the urls of articles matching the search query starting from start position
         """
 
-        cdef unique_ptr[clibzim.Search] search = self.c_file.search(query.encode('UTF-8'),start, end)
-        cdef clibzim.search_iterator it = dereference(search).begin()
+        cdef unique_ptr[wrapper.Search] search = self.c_file.search(query.encode('UTF-8'),start, end)
+        cdef wrapper.search_iterator it = dereference(search).begin()
 
         while it != dereference(search).end():
             yield it.get_url().decode('UTF-8')
@@ -545,7 +545,7 @@ cdef class File:
         int
             Number of search results
         """
-        cdef unique_ptr[clibzim.Search] search = self.c_file.search(query.encode('UTF-8'),0, 1)
+        cdef unique_ptr[wrapper.Search] search = self.c_file.search(query.encode('UTF-8'),0, 1)
         return dereference(search).get_matches_estimated()
 
     def get_suggestions_results_count(self, query):
@@ -559,7 +559,7 @@ cdef class File:
         int
             Number of article suggestions
         """
-        cdef unique_ptr[clibzim.Search] search = self.c_file.suggestions(query.encode('UTF-8'),0 , 1)
+        cdef unique_ptr[wrapper.Search] search = self.c_file.suggestions(query.encode('UTF-8'),0 , 1)
         return dereference(search).get_matches_estimated()
 
     def __repr__(self):
