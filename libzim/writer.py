@@ -21,8 +21,8 @@
 import datetime
 from collections import defaultdict
 
-import libzim_wrapper
-from libzim_wrapper import WritingBlob as Blob
+from .wrapper import Creator as _Creator
+from .wrapper import WritingBlob as Blob
 
 __all__ = ["Article", "Blob", "Creator"]
 
@@ -137,7 +137,7 @@ class Creator:
 
     def __init__(self, filename, main_page, index_language, min_chunk_size):
         print(filename)
-        self._creatorWrapper = libzim_wrapper.Creator(filename, main_page, index_language, min_chunk_size)
+        self._creatorWrapper = _Creator(filename, main_page, index_language, min_chunk_size)
         self.filename = filename
         self.main_page = main_page
         self.language = index_language
