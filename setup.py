@@ -75,7 +75,7 @@ wrapper_extension = Extension(
 setup(
 # Basic information about libzim module
     name="libzim",
-    version="0.0.1",
+    version="0.0.2",
     url=GITHUB_URL,
     project_urls={
         'Source': GITHUB_URL,
