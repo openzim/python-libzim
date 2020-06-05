@@ -42,7 +42,7 @@ See [example](examples/basic_writer.py) for a basic usage of the writer API.
 
 ## User Documentation
 
-### Setup: Ubuntu/Debian `x86_64` (Recommended)
+### Setup: Ubuntu/Debian and macOS `x86_64` (Recommended)
 
 Install the python `libzim` package from PyPI.
 
@@ -50,12 +50,12 @@ Install the python `libzim` package from PyPI.
 pip3 install libzim
 ```
 
-The `x86_64` linux wheel automatically includes the `libzim.so` dylib and headers, but other platforms may need to install `libzim` and its headers manually.
+The `x86_64` linux and macOS wheels automatically includes the `libzim.(so|dylib)` dylib and headers, but other platforms may need to install `libzim` and its headers manually.
 
 
 ### Installing the `libzim` dylib and headers manually
 
-If you are not on a linux `x86_64` platform, you will have to install libzim manually.
+If you are not on a linux or macOS `x86_64` platform, you will have to install libzim manually.
 
 Either by get a prebuilt binary at https://download.openzim.org/release/libzim
 or [compile `libzim` from source](https://github.com/openzim/libzim).
