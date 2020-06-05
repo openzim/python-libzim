@@ -28,6 +28,7 @@ Either place the `libzim.so` and `zim/*.h` files in `./lib/` and `./include/`,
  $ export LDFLAGS="-L/tmp/libzim_linux-x86_64-6.1.1/lib/x86_64-linux-gnu"
  $ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/tmp/libzim_linux-x86_64-6.1.1/lib/x86_64-linux-gnu"
 """
+import platform
 from pathlib import Path
 from ctypes.util import find_library
 
@@ -38,6 +39,7 @@ GITHUB_URL = "https://github.com/openzim/python-libzim"
 BASE_DIR = Path(__file__).parent
 LIBZIM_INCLUDE_DIR = 'include'   # the libzim C++ header src dir (containing zim/*.h)
 LIBZIM_LIBRARY_DIR = 'lib'       # the libzim .so binary lib dir (containing libzim.so)
+LIBZIM_DYLIB = 'libzim.{ext}'.format(ext='dylib' if platform.system() == 'Darwin' else 'so')
 
 
 # Check for the CPP Libzim library headers in expected directory
@@ -50,12 +52,12 @@ if not (BASE_DIR / LIBZIM_INCLUDE_DIR / 'zim/zim.h').exists():
     )
 
 # Check for the CPP Libzim shared library in expected directory or system paths
-if not ((BASE_DIR / LIBZIM_LIBRARY_DIR / 'libzim.so').exists() or find_library('zim')):
+if not ((BASE_DIR / LIBZIM_LIBRARY_DIR / LIBZIM_DYLIB).exists() or find_library('zim')):
     print(
-        f"[!] Warning: Couldn't find libzim.so in ./{LIBZIM_LIBRARY_DIR} or system library paths!"
+        f"[!] Warning: Couldn't find {LIBZIM_DYLIB} in ./{LIBZIM_LIBRARY_DIR} or system library paths!"
         f"    Hint: You can install it from source from https://github.com/openzim/libzim\n"
-        f"          or download a prebuilt zimlib.so release into ./lib.\n"
-        f"          (or set LDFLAGS='-L<library_path>/lib/x86_64-linux-gnu')"
+        f"          or download a prebuilt {LIBZIM_DYLIB} release into ./lib.\n"
+        f"          (or set LDFLAGS='-L<library_path>/lib/[x86_64-linux-gnu]')"
     )
 
 def get_long_description():

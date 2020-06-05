@@ -1,1 +1,1 @@
-Put your libzim.so file in here.
+Put your libzim.(so|dylib) file in here.
