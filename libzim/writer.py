@@ -136,7 +136,6 @@ class Creator:
     """
 
     def __init__(self, filename, main_page, index_language, min_chunk_size):
-        print(filename)
         self._creatorWrapper = _Creator(filename, main_page, index_language, min_chunk_size)
         self.filename = filename
         self.main_page = main_page
