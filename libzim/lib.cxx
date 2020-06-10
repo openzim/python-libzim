@@ -209,7 +209,7 @@ public:
         : zim::writer::Creator(true),
           mainPage(mainPage) {}
 
-    virtual zim::writer::Url getMainUrl()
+    virtual zim::writer::Url getMainUrl() const
     {
         return zim::writer::Url('A', mainPage);
     }
