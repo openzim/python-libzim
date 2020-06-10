@@ -150,6 +150,9 @@ class Creator:
     def __exit__(self, *args):
         self.close()
 
+    def __del__(self):
+        self.close()
+
     def add_article(self, article):
         self._creatorWrapper.add_article(article)
         if not article.is_redirect():
