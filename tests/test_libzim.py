@@ -19,6 +19,7 @@
 import pytest
 
 from libzim.writer import Article, Blob, Creator
+from libzim.reader import File
 
 # test files https://wiki.kiwix.org/wiki/Content_in_all_languages
 
@@ -140,3 +141,21 @@ def test_check_mandatory_metadata(tmpdir):
             title="Test Zim",
         )
         assert zim_creator.mandatory_metadata_ok()
+
+
+def test_creator_params(tmpdir):
+    path = str(tmpdir / "test.zim")
+    main_page = "welcome"
+    main_page_url = f"A/{main_page}"
+    index_language = "eng"
+    with Creator(
+        path, main_page=main_page_url, index_language=index_language, min_chunk_size=2048
+    ) as zim_creator:
+        zim_creator.add_article(
+            SimpleArticle(title="Welcome", mime_type="text/html", content="", url=main_page_url)
+        )
+
+    zim = File(path)
+    assert zim.filename == path
+    assert zim.main_page_url == main_page_url
+    assert bytes(zim.get_article("/M/Language").content).decode("UTF-8") == index_language
