@@ -2,8 +2,8 @@ name: test
 on: [push]
 
 env:
-  LIBZIM_RELEASE: libzim_linux-x86_64-6.1.1
-  LIBZIM_LIBRARY_PATH: lib/x86_64-linux-gnu/libzim.so.6.1.1
+  LIBZIM_RELEASE: libzim_linux-x86_64-6.1.5
+  LIBZIM_LIBRARY_PATH: lib/x86_64-linux-gnu/libzim.so.6.1.5
   LIBZIM_INCLUDE_PATH: include/zim
   CYTHON_VERSION: 0.29.6
   MAX_LINE_LENGTH: 110
