@@ -1,18 +1,23 @@
 
 # python-libzim
 
-> The Python bindings for [`libzim`](https://github.com/openzim/libzim).
-
-```bash
-# Install from PyPI: https://pypi.org/project/libzim/
-pip3 install libzim
-```
+The Python bindings for [`libzim`](https://github.com/openzim/libzim).
 
 This library allows you to interact with `.zim` files via Python.
 
 It just provides a shallow Python interface on top of the  `libzim` C++ library (maintained by [OpenZIM](https://github.com/openzim)).
 
 It is primarily used by [`sotoki`](https://github.com/openzim/sotoki).
+
+[![](https://img.shields.io/pypi/v/libzim.svg)](https://pypi.python.org/pypi/libzim)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
+## Installation
+
+```bash
+# Install from PyPI: https://pypi.org/project/libzim/
+pip3 install libzim
+```
 
 ## Quickstart
 
@@ -196,3 +201,8 @@ python setup.py install
 - https://github.com/pypa/manylinux
 - https://github.com/RalfG/python-wheels-manylinux-build/blob/master/full_workflow_example.yml
 - https://packaging.python.org/guides/packaging-binary-extensions/#publishing-binary-extensions
+
+## License
+
+[GPLv3](https://www.gnu.org/licenses/gpl-3.0) or later, see
+[LICENSE](LICENSE) for more details.
