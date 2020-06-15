@@ -159,3 +159,28 @@ def test_creator_params(tmpdir):
     assert zim.filename == path
     assert zim.main_page_url == main_page_url
     assert bytes(zim.get_article("/M/Language").content).decode("UTF-8") == index_language
+
+
+def test_segfault_on_realloc(tmpdir):
+    """ assert that we are able to delete an unclosed Creator #31 """
+    creator = Creator(str(tmpdir / "test.zim"), "welcome", "eng", 2048)
+    del creator  # used to segfault
+    assert True
+
+
+def test_noleftbehind_empty(tmpdir):
+    """ assert that ZIM with no articles don't leave files behind #41 """
+    fname = "test_empty.zim"
+    with Creator(
+        str(tmpdir / fname), main_page="welcome", index_language="eng", min_chunk_size=2048,
+    ) as zim_creator:
+        print(zim_creator)
+
+    assert len([p for p in tmpdir.listdir() if p.basename.startswith(fname)]) == 1
+
+
+def test_double_close(tmpdir):
+    creator = Creator(str(tmpdir / "test.zim"), "welcome", "eng", 2048)
+    creator.close()
+    with pytest.raises(RuntimeError):
+        creator.close()
