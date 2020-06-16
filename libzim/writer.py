@@ -63,6 +63,9 @@ class Article:
     def get_data(self):
         raise NotImplementedError
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}(url={self.get_url()}, title={self.get_title()})"
+
 
 class MetadataArticle(Article):
     def __init__(self, url, metadata_content):
