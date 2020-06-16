@@ -184,3 +184,11 @@ def test_double_close(tmpdir):
     creator.close()
     with pytest.raises(RuntimeError):
         creator.close()
+
+
+def test_default_creator_params(tmpdir):
+    """ ensure we can init a Creator without specifying all params """
+    creator = Creator(str(tmpdir / "test.zim"), "welcome")
+    assert True  # we could init the Creator without specifying other params
+    assert creator.language == "eng"
+    assert creator.main_page == "welcome"
