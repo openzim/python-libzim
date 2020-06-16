@@ -31,6 +31,7 @@ from libcpp.memory cimport shared_ptr, make_shared, unique_ptr
 
 import datetime
 
+
 class NotFound(RuntimeError):
     pass
 
@@ -407,14 +408,13 @@ cdef class FilePy:
         return article
 
     def get_metadata(self, name):
-        """Get the file metadata.
+        """Get a metadata
         Returns
         -------
-        dict
-            A dictionary with the file metadata
+        bytes
+            Metadata article's content. Can be of any type.
         """
-        article = self.get_article(f"M/{name}")
-        return article.content
+        return bytes(self.get_article(f"M/{name}").content)
 
     def get_article_by_id(self, article_id):
         """Get a ZimFileArticle with a copy of the file article by article id.
