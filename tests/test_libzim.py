@@ -17,6 +17,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import pytest
+import pathlib
 
 from libzim.writer import Article, Blob, Creator
 from libzim.reader import File
@@ -108,7 +109,7 @@ def article(article_content):
 
 def test_write_article(tmpdir, article):
     with Creator(
-        str(tmpdir / "test.zim"), main_page="welcome", index_language="eng", min_chunk_size=2048,
+        tmpdir / "test.zim", main_page="welcome", index_language="eng", min_chunk_size=2048,
     ) as zim_creator:
         zim_creator.add_article(article)
         zim_creator.update_metadata(
@@ -122,14 +123,14 @@ def test_write_article(tmpdir, article):
 
 def test_article_metadata(tmpdir, metadata):
     with Creator(
-        str(tmpdir / "test.zim"), main_page="welcome", index_language="eng", min_chunk_size=2048,
+        tmpdir / "test.zim", main_page="welcome", index_language="eng", min_chunk_size=2048,
     ) as zim_creator:
         zim_creator.update_metadata(**metadata)
         assert zim_creator._metadata == metadata
 
 
 def test_creator_params(tmpdir):
-    path = str(tmpdir / "test.zim")
+    path = tmpdir / "test.zim"
     main_page = "welcome"
     main_page_url = f"A/{main_page}"
     index_language = "eng"
@@ -148,7 +149,7 @@ def test_creator_params(tmpdir):
 
 def test_segfault_on_realloc(tmpdir):
     """ assert that we are able to delete an unclosed Creator #31 """
-    creator = Creator(str(tmpdir / "test.zim"), "welcome", "eng", 2048)
+    creator = Creator(tmpdir / "test.zim", "welcome", "eng", 2048)
     del creator  # used to segfault
     assert True
 
@@ -157,7 +158,7 @@ def test_noleftbehind_empty(tmpdir):
     """ assert that ZIM with no articles don't leave files behind #41 """
     fname = "test_empty.zim"
     with Creator(
-        str(tmpdir / fname), main_page="welcome", index_language="eng", min_chunk_size=2048,
+        tmpdir / fname, main_page="welcome", index_language="eng", min_chunk_size=2048,
     ) as zim_creator:
         print(zim_creator)
 
@@ -165,7 +166,7 @@ def test_noleftbehind_empty(tmpdir):
 
 
 def test_double_close(tmpdir):
-    creator = Creator(str(tmpdir / "test.zim"), "welcome", "eng", 2048)
+    creator = Creator(tmpdir / "test.zim", "welcome", "eng", 2048)
     creator.close()
     with pytest.raises(RuntimeError):
         creator.close()
@@ -173,7 +174,17 @@ def test_double_close(tmpdir):
 
 def test_default_creator_params(tmpdir):
     """ ensure we can init a Creator without specifying all params """
-    creator = Creator(str(tmpdir / "test.zim"), "welcome")
+    creator = Creator(tmpdir / "test.zim", "welcome")
     assert True  # we could init the Creator without specifying other params
     assert creator.language == "eng"
     assert creator.main_page == "welcome"
+
+
+def test_filename_param_types(tmpdir):
+    path = tmpdir / "test.zim"
+    with Creator(path, "welcome") as creator:
+        assert creator.filename == path
+        assert isinstance(creator.filename, pathlib.Path)
+    with Creator(str(path), "welcome") as creator:
+        assert creator.filename == path
+        assert isinstance(creator.filename, pathlib.Path)
