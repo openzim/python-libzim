@@ -31,6 +31,9 @@ from libcpp.memory cimport shared_ptr, make_shared, unique_ptr
 
 import datetime
 
+class NotFound(RuntimeError):
+    pass
+
 #########################
 #         Blob          #
 #########################
@@ -392,13 +395,13 @@ cdef class FilePy:
             The Article object
         Raises
         ------
-            RuntimeError
+            NotFound
                 If an article with the provided long url is not found in the file
         """
         # Read to a zim::Article
         cdef wrapper.Article art = self.c_file.getArticleByUrl(url.encode('UTF-8'))
         if not art.good():
-            raise RuntimeError("Article not found for url")
+            raise NotFound("Article not found for url")
 
         article = ReadArticle.from_read_article(art)
         return article
@@ -413,12 +416,12 @@ cdef class FilePy:
         article = self.get_article(f"M/{name}")
         return article.content
 
-    def get_article_by_id(self, id):
+    def get_article_by_id(self, article_id):
         """Get a ZimFileArticle with a copy of the file article by article id.
 
         Parameters
         ----------
-        id : int
+        article_id : int
             The id of the article
         Returns
         -------
@@ -427,13 +430,15 @@ cdef class FilePy:
         Raises
         ------
             RuntimeError
+                If there is a problem in retrieving article (ex: id is out of bound)
+            NotFound
                 If an article with the provided id is not found in the file
         """
 
         # Read to a zim::Article
-        cdef wrapper.Article art = self.c_file.getArticle(<int> id)
+        cdef wrapper.Article art = self.c_file.getArticle(<int> article_id)
         if not art.good():
-            raise RuntimeError("Article not found for id")
+            raise NotFound("Article not found for id")
 
         article = ReadArticle.from_read_article(art)
         return article
