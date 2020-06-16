@@ -335,7 +335,7 @@ cdef class ReadArticle:
         return article
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(url={self.longurl}, title=)"
+        return f"{self.__class__.__name__}(url={self.longurl}, title={self.title})"
 
 
 
@@ -575,4 +575,4 @@ cdef class FilePy:
         return dereference(search).get_matches_estimated()
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(filename={self.filename}"
+        return f"{self.__class__.__name__}(filename={self.filename})"
