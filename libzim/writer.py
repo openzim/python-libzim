@@ -135,7 +135,7 @@ class Creator:
         Zim file metadata
     """
 
-    def __init__(self, filename, main_page, index_language, min_chunk_size):
+    def __init__(self, filename, main_page, index_language="eng", min_chunk_size=2048):
         self._creatorWrapper = _Creator(filename, main_page, index_language, min_chunk_size)
         self.filename = filename
         self.main_page = main_page
