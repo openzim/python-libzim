@@ -98,17 +98,6 @@ class MetadataArticle(Article):
         return Blob(self.metadata_content)
 
 
-MANDATORY_METADATA_KEYS = [
-    "Name",
-    "Title",
-    "Creator",
-    "Publisher",
-    "Date",
-    "Description",
-    "Language",
-]
-
-
 def pascalize(keyword):
     """ Converts python case to pascal case. example: long_description-> LongDescription """
     return "".join(keyword.title().split("_"))
@@ -165,13 +154,8 @@ class Creator:
         # default dict update
         self._article_counter[article.get_mime_type().strip()] += 1
 
-    def mandatory_metadata_ok(self):
-        """Flag if mandatory metadata is complete and not empty"""
-        metadata_item_ok = [k in self._metadata for k in MANDATORY_METADATA_KEYS]
-        return all(metadata_item_ok)
-
-    def update_metadata(self, **kwargs):
-        "Updates article metadata" ""
+    def update_metadata(self, **kwargs: str):
+        """ Updates Creator metadata for ZIM, supplied as keyword arguments """
         new_metadata = {pascalize(k): v for k, v in kwargs.items()}
         self._metadata.update(new_metadata)
 
