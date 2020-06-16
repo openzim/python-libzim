@@ -29,6 +29,7 @@ from libcpp.string cimport string
 from libcpp cimport bool
 from libcpp.memory cimport shared_ptr, make_shared, unique_ptr
 
+import pathlib
 import datetime
 
 
@@ -356,14 +357,14 @@ cdef class FilePy:
     ----------
     *c_file : File
         a pointer to a C++ File object
-    _filename : str
+    _filename : pathlib.Path
         the file name of the File Reader object
     """
 
     cdef wrapper.File *c_file
     cdef object _filename
 
-    def __cinit__(self, str filename):
+    def __cinit__(self, object filename):
         """Constructs a File from full zim file path.
         Parameters
         ----------
@@ -371,8 +372,8 @@ cdef class FilePy:
             Full path to a zim file
         """
 
-        self.c_file = new wrapper.File(filename.encode('UTF-8'))
-        self._filename = self.c_file.getFilename().decode("UTF-8", "strict")
+        self.c_file = new wrapper.File(str(filename).encode('UTF-8'))
+        self._filename = pathlib.Path(self.c_file.getFilename().decode("UTF-8", "strict"))
 
     def __dealloc__(self):
         if self.c_file != NULL:

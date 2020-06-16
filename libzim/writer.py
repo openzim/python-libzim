@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-
+import pathlib
 import datetime
 from collections import defaultdict
 
@@ -113,7 +113,7 @@ class Creator:
         a pointer to the C++ Creator object
     _finalized : bool
         flag if the creator was finalized
-    _filename : str
+    _filename : pathlib.Path
         Zim file path
     _main_page : str
         Zim file main page
@@ -128,8 +128,8 @@ class Creator:
     """
 
     def __init__(self, filename, main_page, index_language="eng", min_chunk_size=2048):
-        self._creatorWrapper = _Creator(filename, main_page, index_language, min_chunk_size)
-        self.filename = filename
+        self._creatorWrapper = _Creator(str(filename), main_page, index_language, min_chunk_size)
+        self.filename = pathlib.Path(filename)
         self.main_page = main_page
         self.language = index_language
         self._metadata = {}
