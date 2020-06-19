@@ -96,7 +96,7 @@ def test_get_article_by_id(reader, article_data):
 
 def test_namespace_count(reader):
     namespaces = reader.namespaces
-    num_articles = sum(reader.get_namespaces_count(ns) for ns in namespaces)
+    num_articles = sum(reader.get_namespace_count(ns) for ns in namespaces)
     assert reader.article_count == num_articles
 
 
