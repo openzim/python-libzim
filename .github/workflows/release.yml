@@ -6,16 +6,19 @@ on:
       - v*
 
 env:
-  LIBZIM_RELEASE: libzim_linux-x86_64-6.1.5
+  LIBZIM_VERSION: 6.1.6
   LIBZIM_INCLUDE_PATH: include/zim
   CYTHON_VERSION: 0.29.6
+  TWINE_USERNAME: __token__
+  TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+  # TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
 
 jobs:
   release:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest]
         # TODO: expand this to cross-platform builds (see V2 approach below)
         # os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: [3.6, 3.7, 3.8]
@@ -29,11 +32,27 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: x64
 
+      - name: set macOS environ
+        if: matrix.os == 'macos-latest'
+        run: |
+          echo ::set-env name=LIBZIM_EXT::dylib
+          echo ::set-env name=LIBZIM_RELEASE::libzim_macos-x86_64-$LIBZIM_VERSION
+          echo ::set-env name=LIBZIM_LIBRARY_PATH::lib/libzim.${LIBZIM_VERSION:0:1}.dylib
+          echo ::set-env name=PLAFTORM_NAME::macosx_10.9_x86_64
+
+      - name: set linux environ
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          echo ::set-env name=LIBZIM_EXT::so
+          echo ::set-env name=LIBZIM_RELEASE::libzim_linux-x86_64-$LIBZIM_VERSION
+          echo ::set-env name=LIBZIM_LIBRARY_PATH::lib/x86_64-linux-gnu/libzim.so.$LIBZIM_VERSION
+          echo ::set-env name=PLAFTORM_NAME::manylinux1_x86_64
+
       - name: Cache libzim dylib & headers
         uses: actions/cache@master
         id: cache-libzim
         with:
-          path: libzim_linux
+          path: libzim_dist
           key: ${{ env.LIBZIM_RELEASE }}-libzim-cache
 
       - name: Download libzim dylib & headers from OpenZIM.org releases
@@ -41,13 +60,21 @@ jobs:
         run: |
           wget -q https://download.openzim.org/release/libzim/$LIBZIM_RELEASE.tar.gz
           tar --gunzip --extract --file=$LIBZIM_RELEASE.tar.gz
-          mv $LIBZIM_RELEASE libzim_linux
+          mv $LIBZIM_RELEASE libzim_dist
 
-      - name: Link libzim dylib & headers into workspace lib and include folders
+      - name: Link Linux libzim dylib & headers into workspace lib and include folders
+        if: matrix.os == 'ubuntu-latest'
         run: |
-          cp -dp $GITHUB_WORKSPACE/libzim_linux/lib/x86_64-linux-gnu/* lib/
-          ln -s libzim.so.6 lib/libzim.so
-          ln -s $GITHUB_WORKSPACE/libzim_linux/$LIBZIM_INCLUDE_PATH include/zim
+          cp -dp $GITHUB_WORKSPACE/libzim_dist/lib/x86_64-linux-gnu/* lib/
+          ln -s libzim.so.${LIBZIM_VERSION:0:1} lib/libzim.so
+          ln -s $GITHUB_WORKSPACE/libzim_dist/$LIBZIM_INCLUDE_PATH include/zim
+
+      - name: Link macOS libzim dylib & headers into workspace lib and include folders
+        if: matrix.os == 'macos-latest'
+        run: |
+          cp -Pp $GITHUB_WORKSPACE/libzim_dist/lib/* lib/
+          ln -sf libzim.${LIBZIM_VERSION:0:1}.dylib lib/libzim.dylib
+          ln -s $GITHUB_WORKSPACE/libzim_dist/$LIBZIM_INCLUDE_PATH include/zim
 
       - name: Build cython, sdist, and bdist_wheels
         run: |
@@ -57,8 +84,17 @@ jobs:
           then
             python3 setup.py sdist
           fi
-          cp -p lib/libzim.so.6 libzim
-          python3 setup.py bdist_wheel --plat-name=manylinux1_x86_64
+
+      - name: add macOS libzim binary to source for wheel
+        if: matrix.os == 'macos-latest'
+        run: cp -p lib/libzim.${LIBZIM_VERSION:0:1}.dylib libzim
+
+      - name: add Linux libzim binary to source for wheel
+        if: matrix.os == 'ubuntu-latest'
+        run: cp -p lib/libzim.so.${LIBZIM_VERSION:0:1} libzim
+
+      - name: build wheel
+        run: python3 setup.py bdist_wheel --plat-name=$PLAFTORM_NAME
 
       - uses: actions/upload-artifact@v1
         with:
@@ -67,7 +103,11 @@ jobs:
 
       - name: Push release to PyPI
         if: github.event_name == 'release'
-        uses: pypa/gh-action-pypi-publish@master
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
+        run: |
+          pip install --upgrade twine
+          twine check dist/*
+          if [  "${{ matrix.os }}" == "ubuntu-latest" -a "${{ matrix.python-version }}" = "3.6" ]
+          then
+            twine upload dist/*.tar.gz
+          fi
+          twine upload dist/*.whl
