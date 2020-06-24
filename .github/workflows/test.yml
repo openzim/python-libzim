@@ -2,8 +2,7 @@ name: test
 on: [push]
 
 env:
-  LIBZIM_RELEASE: libzim_linux-x86_64-6.1.5
-  LIBZIM_LIBRARY_PATH: lib/x86_64-linux-gnu/libzim.so.6.1.5
+  LIBZIM_VERSION: 6.1.6
   LIBZIM_INCLUDE_PATH: include/zim
   CYTHON_VERSION: 0.29.6
   MAX_LINE_LENGTH: 110
@@ -37,7 +36,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest]
         # TODO: expand this once macos and windows libzim releases become available
         # os: [ubuntu-latest, windows-latest, macos-latest]
         # alternatively we can compile libzim in docker and use the container as an action
@@ -52,11 +51,25 @@ jobs:
           python-version: ${{ matrix.python }}
           architecture: x64
 
+      - name: set macOS environ
+        if: matrix.os == 'macos-latest'
+        run: |
+          echo ::set-env name=LIBZIM_EXT::dylib
+          echo ::set-env name=LIBZIM_RELEASE::libzim_macos-x86_64-$LIBZIM_VERSION
+          echo ::set-env name=LIBZIM_LIBRARY_PATH::lib/libzim.${LIBZIM_VERSION:0:1}.dylib
+
+      - name: set linux environ
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          echo ::set-env name=LIBZIM_EXT::so
+          echo ::set-env name=LIBZIM_RELEASE::libzim_linux-x86_64-$LIBZIM_VERSION
+          echo ::set-env name=LIBZIM_LIBRARY_PATH::lib/x86_64-linux-gnu/libzim.so.$LIBZIM_VERSION
+
       - name: Cache libzim dylib & headers
         uses: actions/cache@master
         id: cache-libzim
         with:
-          path: libzim_linux
+          path: libzim_dist
           key: ${{ env.LIBZIM_RELEASE }}-libzim-cache
 
       - name: Download libzim dylib & headers from OpenZIM.org releases
@@ -64,25 +77,34 @@ jobs:
         run: |
           wget -q https://download.openzim.org/release/libzim/$LIBZIM_RELEASE.tar.gz
           tar --gunzip --extract --file=$LIBZIM_RELEASE.tar.gz
-          mv $LIBZIM_RELEASE libzim_linux
+          mv $LIBZIM_RELEASE libzim_dist
 
       - name: Link libzim dylib & headers into workspace lib and include folders
         run: |
-          cp -p $GITHUB_WORKSPACE/libzim_linux/$LIBZIM_LIBRARY_PATH lib/libzim.so
-          cp -p $GITHUB_WORKSPACE/libzim_linux/$LIBZIM_LIBRARY_PATH lib/
-          sudo ldconfig $GITHUB_WORKSPACE/lib
-          ln -s $GITHUB_WORKSPACE/libzim_linux/$LIBZIM_INCLUDE_PATH include/zim
-      
+          cp -p $GITHUB_WORKSPACE/libzim_dist/$LIBZIM_LIBRARY_PATH lib/libzim.$LIBZIM_EXT
+          cp -p $GITHUB_WORKSPACE/libzim_dist/$LIBZIM_LIBRARY_PATH lib/
+          ln -s $GITHUB_WORKSPACE/libzim_dist/$LIBZIM_INCLUDE_PATH include/zim
+          export LD_LIBRARY_PATH="$PWD/lib:$LD_LIBRARY_PATH"
+
+      - name: update Linux shared objects cache
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo ldconfig $PWD/lib
+
+      - name: update macOS shared objects cache
+        if: matrix.os == 'macos-latest'
+        run: |
+          export DYLD_LIBRARY_PATH="$PWD/lib:$DYLD_LIBRARY_PATH"
+
       - name: Build cython, sdist, and bdist_wheel
         run: |
           pip install --upgrade cython==$CYTHON_VERSION setuptools pip wheel
           python3 setup.py build_ext
           python3 setup.py sdist bdist_wheel
-          
+
       - name: Test built package with pytest
         run: |
-          export LD_LIBRARY_PATH=$PWD/lib:$LD_LIBRARY_PATH
-          sudo ldconfig
           pip install pytest
           pip install -e .
+          export DYLD_LIBRARY_PATH="$PWD/lib:$DYLD_LIBRARY_PATH"
           pytest .
