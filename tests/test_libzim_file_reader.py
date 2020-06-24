@@ -114,3 +114,16 @@ def test_get_wrong_article(reader):
         reader.get_article_by_id(reader.article_count + 100)
     with pytest.raises(RuntimeError):
         reader.get_article("A/I_do_not_exists")
+
+
+def test_redirects(reader):
+    # we can access target article from a redirect one
+    abundante = reader.get_article("A/Abundante")
+    assert abundante.is_redirect
+    target = abundante.get_redirect_article()
+    assert target.longurl != abundante.longurl
+
+    # we can't access a target on non-redirect articles
+    assert target.is_redirect is False
+    with pytest.raises(RuntimeError):
+        target.get_redirect_article()
