@@ -322,6 +322,18 @@ cdef class ReadArticle:
         """Get if the article is a redirect"""
         return self.c_article.isRedirect()
 
+    def get_redirect_article(self) -> ReadArticle:
+        """ Target ReadArticle of this one """
+        if not self.is_redirect:
+            raise RuntimeError("Article is not a redirect")
+
+        cdef wrapper.Article art = self.c_article.getRedirectArticle()
+        if not art.good():
+            raise RuntimeError("Redirect article not found")
+
+        article = ReadArticle.from_read_article(art)
+        return article
+
     def __repr__(self):
         return f"{self.__class__.__name__}(url={self.longurl}, title=)"
 
