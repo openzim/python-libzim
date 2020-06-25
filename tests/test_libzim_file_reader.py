@@ -3,14 +3,14 @@ from pathlib import Path
 
 import pytest
 
-from libzim.reader import File
+from libzim.reader import File, NotFound
 
 DATA_DIR = Path(__file__).parent
 
 
 ZIMFILES = [
     {
-        "filename": str(DATA_DIR / "wikipedia_es_physics_mini.zim"),
+        "filename": DATA_DIR / "wikipedia_es_physics_mini.zim",
         "checksum": "99ea7a5598c6040c4f50b8ac0653b703",
         "namespaces": "-AIMX",
         "article_count": 22027,
@@ -43,6 +43,7 @@ def article_data():
 def test_zim_filename(reader, zimdata):
     for k, v in zimdata.items():
         assert getattr(reader, k) == v
+    assert isinstance(reader.filename, Path)
 
 
 def test_zim_read(reader, article_data):
@@ -110,9 +111,9 @@ def test_search(reader):
 
 
 def test_get_wrong_article(reader):
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError):  # out of range
         reader.get_article_by_id(reader.article_count + 100)
-    with pytest.raises(RuntimeError):
+    with pytest.raises(NotFound):
         reader.get_article("A/I_do_not_exists")
 
 
