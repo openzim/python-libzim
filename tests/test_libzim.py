@@ -188,3 +188,36 @@ def test_filename_param_types(tmpdir):
     with Creator(str(path), "welcome") as creator:
         assert creator.filename == path
         assert isinstance(creator.filename, pathlib.Path)
+
+
+def test_in_article_exceptions(tmpdir):
+    """ make sure we raise RuntimeError from article's virtual methods """
+
+    class BoolErrorArticle(SimpleArticle):
+        def is_redirect(self):
+            raise IOError
+
+    class StringErrorArticle(SimpleArticle):
+        def get_url(self):
+            raise IOError
+
+    class BlobErrorArticle(SimpleArticle):
+        def get_data(self):
+            raise IOError
+
+    path, main_page = tmpdir / "test.zim", "welcome"
+    args = {"title": "Hello", "mime_type": "text/html", "content": "", "url": "welcome"}
+
+    with Creator(path, main_page) as zim_creator:
+        # make sure we can can exception of all types (except int, not used)
+        with pytest.raises(RuntimeError):
+            zim_creator.add_article(BoolErrorArticle(**args))
+        with pytest.raises(RuntimeError):
+            zim_creator.add_article(StringErrorArticle(**args))
+        with pytest.raises(RuntimeError):
+            zim_creator.add_article(BlobErrorArticle(**args))
+
+    # make sure we can catch it from outside creator
+    with pytest.raises(RuntimeError):
+        with Creator(path, main_page) as zim_creator:
+            zim_creator.add_article(BlobErrorArticle(**args))

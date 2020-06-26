@@ -119,7 +119,11 @@ cdef public api:
     string string_cy_call_fct(object obj, string method, int *error) with gil:
         """Lookup and execute a pure virtual method on ZimArticle returning a string"""
         func = get_article_method_from_object(obj, method, error)
-        ret_str = func()
+        try:
+            ret_str = func()
+        except Exception:
+            error[0] = 2
+            raise
         return ret_str.encode('UTF-8')
 
     wrapper.Blob blob_cy_call_fct(object obj, string method, int *error) with gil:
@@ -127,18 +131,30 @@ cdef public api:
         cdef WritingBlob blob
 
         func = get_article_method_from_object(obj, method, error)
-        blob = func()
+        try:
+            blob = func()
+        except Exception:
+            error[0] = 2
+            raise
         return dereference(blob.c_blob)
 
     bool bool_cy_call_fct(object obj, string method, int *error) with gil:
         """Lookup and execute a pure virtual method on ZimArticle returning a bool"""
         func = get_article_method_from_object(obj, method, error)
-        return func()
+        try:
+            return func()
+        except Exception:
+            error[0] = 2
+            raise
 
     uint64_t int_cy_call_fct(object obj, string method, int *error) with gil:
         """Lookup and execute a pure virtual method on ZimArticle returning an int"""
         func = get_article_method_from_object(obj, method, error)
-        return <uint64_t> func()
+        try:
+            return <uint64_t> func()
+        except Exception:
+            error[0] = 2
+            raise
 
 cdef class Creator:
     """ Zim Creator

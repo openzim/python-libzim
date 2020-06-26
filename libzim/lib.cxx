@@ -65,8 +65,10 @@ std::string ZimArticleWrapper::callCythonReturnString(std::string methodName) co
     int error;
 
     std::string ret_val = string_cy_call_fct(this->m_obj, methodName, &error);
-    if (error)
+    if (error && error == 1)
         throw std::runtime_error("The pure virtual function " + methodName + " must be override");
+    if (error)
+        throw std::runtime_error("The virtual function " + methodName + " threw an exception");
 
     return ret_val;
 }
@@ -79,8 +81,10 @@ zim::Blob ZimArticleWrapper::callCythonReturnBlob(std::string methodName) const
     int error;
 
     zim::Blob ret_val = blob_cy_call_fct(this->m_obj, methodName, &error);
-    if (error)
+    if (error && error == 1)
         throw std::runtime_error("The pure virtual function " + methodName + " must be override");
+    if (error)
+        throw std::runtime_error("The virtual function " + methodName + " threw an exception");
 
     return ret_val;
 }
@@ -93,8 +97,10 @@ bool ZimArticleWrapper::callCythonReturnBool(std::string methodName) const
     int error;
 
     bool ret_val = bool_cy_call_fct(this->m_obj, methodName, &error);
-    if (error)
+    if (error && error == 1)
         throw std::runtime_error("The pure virtual function " + methodName + " must be override");
+    if (error)
+        throw std::runtime_error("The virtual function " + methodName + " threw an exception");
 
     return ret_val;
 }
@@ -107,8 +113,10 @@ uint64_t ZimArticleWrapper::callCythonReturnInt(std::string methodName) const
     int error;
 
     int ret_val = int_cy_call_fct(this->m_obj, methodName, &error);
-    if (error)
+    if (error && error == 1)
         throw std::runtime_error("The pure virtual function " + methodName + " must be override");
+    if (error)
+        throw std::runtime_error("The virtual function " + methodName + " threw an exception");
 
     return ret_val;
 }
