@@ -2,7 +2,6 @@
 
     - File to open and read ZIM files
     - Article are returned by File on get_article() and get_article_by_id()
-    - NotFound is raised on incorrect article URL query
 
     Usage:
 
@@ -12,5 +11,5 @@
     """
 
 # flake8: noqa
-from .wrapper import FilePy as File, NotFound
+from .wrapper import FilePy as File
 from .wrapper import ReadArticle as Article
