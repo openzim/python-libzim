@@ -227,3 +227,29 @@ def test_in_article_exceptions(tmpdir):
         with Creator(path, main_page) as zim_creator:
             zim_creator.add_article(BlobErrorArticle(**args))
 
+
+def test_dontcreatezim_onexception(tmpdir):
+    """ make sure we can prevent ZIM file creation (workaround missing cancel())
+
+        A new interpreter is instanciated to get a different memory space.
+        This workaround is not safe and may segfault at GC under some circumstances
+
+        Unless we get a proper cancel() on libzim, that's the only way to not create
+        a ZIM file on error """
+    path, main_page = tmpdir / "test.zim", "welcome"
+    pycode = f"""
+from libzim.writer import Creator
+from libzim.writer import Article
+class BlobErrorArticle(Article):
+    def get_data(self):
+        raise ValueError
+zim_creator = Creator("{path}", "{main_page}")
+try:
+    zim_creator.add_article(BlobErrorArticle(**args))
+except Exception:
+    zim_creator._closed = True
+"""
+
+    py = subprocess.run([sys.executable, "-c", pycode])
+    assert py.returncode == 0
+    assert not path.exists()
