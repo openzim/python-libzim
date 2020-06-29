@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from libzim.reader import File, NotFound
+from libzim.reader import File
 
 DATA_DIR = Path(__file__).parent
 
@@ -111,9 +111,9 @@ def test_search(reader):
 
 
 def test_get_wrong_article(reader):
-    with pytest.raises(RuntimeError):  # out of range
+    with pytest.raises(IndexError):  # out of range
         reader.get_article_by_id(reader.article_count + 100)
-    with pytest.raises(NotFound):
+    with pytest.raises(KeyError):
         reader.get_article("A/I_do_not_exists")
 
 
