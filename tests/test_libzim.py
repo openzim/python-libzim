@@ -16,8 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import pytest
+import sys
+import subprocess
 import pathlib
+
+import pytest
 
 from libzim.writer import Article, Blob, Creator
 from libzim.reader import File
@@ -188,3 +191,65 @@ def test_filename_param_types(tmpdir):
     with Creator(str(path), "welcome") as creator:
         assert creator.filename == path
         assert isinstance(creator.filename, pathlib.Path)
+
+
+def test_in_article_exceptions(tmpdir):
+    """ make sure we raise RuntimeError from article's virtual methods """
+
+    class BoolErrorArticle(SimpleArticle):
+        def is_redirect(self):
+            raise RuntimeError("OUPS Redirect")
+
+    class StringErrorArticle(SimpleArticle):
+        def get_url(self):
+            raise IOError
+
+    class BlobErrorArticle(SimpleArticle):
+        def get_data(self):
+            raise IOError
+
+    path, main_page = tmpdir / "test.zim", "welcome"
+    args = {"title": "Hello", "mime_type": "text/html", "content": "", "url": "welcome"}
+
+    with Creator(path, main_page) as zim_creator:
+        # make sure we can can exception of all types (except int, not used)
+        with pytest.raises(RuntimeError, match="OUPS Redirect"):
+            zim_creator.add_article(BoolErrorArticle(**args))
+        with pytest.raises(RuntimeError, match="in get_url"):
+            zim_creator.add_article(StringErrorArticle(**args))
+        with pytest.raises(RuntimeError, match="IOError"):
+            zim_creator.add_article(BlobErrorArticle(**args))
+        with pytest.raises(RuntimeError, match="NotImplementedError"):
+            zim_creator.add_article(Article())
+
+    # make sure we can catch it from outside creator
+    with pytest.raises(RuntimeError):
+        with Creator(path, main_page) as zim_creator:
+            zim_creator.add_article(BlobErrorArticle(**args))
+
+
+def test_dontcreatezim_onexception(tmpdir):
+    """ make sure we can prevent ZIM file creation (workaround missing cancel())
+
+        A new interpreter is instanciated to get a different memory space.
+        This workaround is not safe and may segfault at GC under some circumstances
+
+        Unless we get a proper cancel() on libzim, that's the only way to not create
+        a ZIM file on error """
+    path, main_page = tmpdir / "test.zim", "welcome"
+    pycode = f"""
+from libzim.writer import Creator
+from libzim.writer import Article
+class BlobErrorArticle(Article):
+    def get_data(self):
+        raise ValueError
+zim_creator = Creator("{path}", "{main_page}")
+try:
+    zim_creator.add_article(BlobErrorArticle(**args))
+except Exception:
+    zim_creator._closed = True
+"""
+
+    py = subprocess.run([sys.executable, "-c", pycode])
+    assert py.returncode == 0
+    assert not path.exists()
