@@ -25,6 +25,7 @@
 
 #include "wrapper_api.h"
 
+#include <cstdlib>
 #include <iostream>
 #include <zim/writer/url.h>
 #include <zim/blob.h>
@@ -62,11 +63,11 @@ std::string ZimArticleWrapper::callCythonReturnString(std::string methodName) co
     if (!this->m_obj)
         throw std::runtime_error("Python object not set");
 
-    int error;
+    std::string error;
 
     std::string ret_val = string_cy_call_fct(this->m_obj, methodName, &error);
-    if (error)
-        throw std::runtime_error("The pure virtual function " + methodName + " must be override");
+    if (!error.empty())
+        throw std::runtime_error(error);
 
     return ret_val;
 }
@@ -76,11 +77,11 @@ zim::Blob ZimArticleWrapper::callCythonReturnBlob(std::string methodName) const
     if (!this->m_obj)
         throw std::runtime_error("Python object not set");
 
-    int error;
+    std::string error;
 
     zim::Blob ret_val = blob_cy_call_fct(this->m_obj, methodName, &error);
-    if (error)
-        throw std::runtime_error("The pure virtual function " + methodName + " must be override");
+    if (!error.empty())
+        throw std::runtime_error(error);
 
     return ret_val;
 }
@@ -90,11 +91,11 @@ bool ZimArticleWrapper::callCythonReturnBool(std::string methodName) const
     if (!this->m_obj)
         throw std::runtime_error("Python object not set");
 
-    int error;
+    std::string error;
 
     bool ret_val = bool_cy_call_fct(this->m_obj, methodName, &error);
-    if (error)
-        throw std::runtime_error("The pure virtual function " + methodName + " must be override");
+    if (!error.empty())
+        throw std::runtime_error(error);
 
     return ret_val;
 }
@@ -104,11 +105,11 @@ uint64_t ZimArticleWrapper::callCythonReturnInt(std::string methodName) const
     if (!this->m_obj)
         throw std::runtime_error("Python object not set");
 
-    int error;
+    std::string error;
 
-    int ret_val = int_cy_call_fct(this->m_obj, methodName, &error);
-    if (error)
-        throw std::runtime_error("The pure virtual function " + methodName + " must be override");
+    int64_t ret_val = int_cy_call_fct(this->m_obj, methodName, &error);
+    if (!error.empty())
+        throw std::runtime_error(error);
 
     return ret_val;
 }
