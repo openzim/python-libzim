@@ -50,35 +50,35 @@ class Article:
 
     def get_url(self) -> str:
         """ Full URL of article including namespace """
-        raise NotImplementedError
+        raise NotImplementedError("get_url must be implemented.")
 
     def get_title(self) -> str:
         """ Article title. Might be indexed and used in suggestions """
-        raise NotImplementedError
+        raise NotImplementedError("get_title must be implemented.")
 
     def is_redirect(self) -> bool:
         """ Whether this redirects to another article (cf. redirec_url) """
-        raise NotImplementedError
+        raise NotImplementedError("get_redirect must be implemented.")
 
     def get_mime_type(self) -> str:
         """ MIME-type of the article's content. A/ namespace reserved to text/html """
-        raise NotImplementedError
+        raise NotImplementedError("get_mime_type must be implemented.")
 
     def get_filename(self) -> str:
         """ Filename to get content from. Blank string "" if not used """
-        raise NotImplementedError
+        raise NotImplementedError("get_filename must be implemented.")
 
     def should_compress(self) -> bool:
         """ Whether the article's content should be compressed or not """
-        raise NotImplementedError
+        raise NotImplementedError("should_compress must be implemented.")
 
     def should_index(self) -> bool:
         """ Whether the article's content should be indexed or not """
-        raise NotImplementedError
+        raise NotImplementedError("should_index must be implemented.")
 
     def redirect_url(self) -> str:
         """ Full URL including namespace of another article """
-        raise NotImplementedError
+        raise NotImplementedError("redirect_url must be implemented.")
 
     def _get_data(self) -> Blob:
         """ Internal data-retrieval with a cache to the content's pointer
@@ -90,7 +90,7 @@ class Article:
 
     def get_data(self) -> Blob:
         """ Blob containing the complete content of the article """
-        raise NotImplementedError
+        raise NotImplementedError("get_data must be implemented.")
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(url={self.get_url()}, title={self.get_title()})"
