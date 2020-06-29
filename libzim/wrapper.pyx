@@ -481,7 +481,7 @@ cdef class FilePy:
             A string containing initials of all namespaces in the file (ex: "-AIMX") """
         return self.c_file.getNamespaces().decode("UTF-8", "strict")
 
-    def get_namespaces_count(self, str ns) -> int:
+    def get_namespace_count(self, str ns) -> int:
         """ Articles count within a namespace -> int
 
             Returns
