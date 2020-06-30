@@ -4,7 +4,6 @@ on: [push]
 env:
   LIBZIM_VERSION: 6.1.6
   LIBZIM_INCLUDE_PATH: include/zim
-  CYTHON_VERSION: 0.29.6
   MAX_LINE_LENGTH: 110
 
 jobs:
@@ -98,7 +97,7 @@ jobs:
 
       - name: Build cython, sdist, and bdist_wheel
         run: |
-          pip install --upgrade cython==$CYTHON_VERSION setuptools pip wheel
+          pip install --upgrade pip install "cython>=0.29.20,<3.0" setuptools pip wheel
           python3 setup.py build_ext
           python3 setup.py sdist bdist_wheel
 
