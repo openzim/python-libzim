@@ -76,9 +76,9 @@ class Article:
         """ Whether the article's content should be indexed or not """
         raise NotImplementedError("should_index must be implemented.")
 
-    def redirect_url(self) -> str:
+    def get_redirect_url(self) -> str:
         """ Full URL including namespace of another article """
-        raise NotImplementedError("redirect_url must be implemented.")
+        raise NotImplementedError("get_redirect_url must be implemented.")
 
     def _get_data(self) -> Blob:
         """ Internal data-retrieval with a cache to the content's pointer

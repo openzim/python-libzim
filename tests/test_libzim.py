@@ -253,3 +253,24 @@ except Exception:
     py = subprocess.run([sys.executable, "-c", pycode])
     assert py.returncode == 0
     assert not path.exists()
+
+
+def test_redirect_url(tmpdir):
+    url = "A/welcome"
+    redirect_url = "A/home"
+
+    class RedirectArticle(SimpleArticle):
+        def is_redirect(self):
+            return True
+
+        def get_redirect_url(self):
+            return url
+
+    path = tmpdir / "test.zim"
+    with Creator(path, "welcome") as zim_creator:
+        zim_creator.add_article(SimpleArticle(title="Hello", mime_type="text/html", content="", url=url))
+        zim_creator.add_article(RedirectArticle(content="", title="", mime_type="", url=redirect_url))
+
+    with File(path) as reader:
+        assert reader.get_article(redirect_url).is_redirect
+        assert reader.get_article(redirect_url).get_redirect_article().longurl == url
