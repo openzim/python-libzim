@@ -2,7 +2,7 @@ name: test
 on: [push]
 
 env:
-  LIBZIM_VERSION: 6.1.6
+  LIBZIM_VERSION: 6.1.7
   LIBZIM_INCLUDE_PATH: include/zim
   MAX_LINE_LENGTH: 110
 
