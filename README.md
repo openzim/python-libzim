@@ -1,13 +1,13 @@
 # python-libzim
 
-The Python bindings for [`libzim`](https://github.com/openzim/libzim)
-allows you to read/write [ZIM files](https://openzim.org) via
-Python. It provides a shallow Python interface on top of the `libzim`
+The Python-libzim package allows you to read/write [ZIM
+files](https://openzim.org) in Python. It provides a shallow Python
+interface on top of the [`libzim`](https://github.com/openzim/libzim)
 C++ library.
 
 It is primarily used in openZIM scrapers like for example
 [`Sotoki`](https://github.com/openzim/sotoki) or
-[`Youtube2zim`](https://github.com/openzim/youtube2zim).
+[`Youtube2zim`](https://github.com/openzim/youtube).
 
 Read [CONTRIBUTING.md](./CONTRIBUTING.md) to know more about
 Python-libzim development.
@@ -17,19 +17,18 @@ Python-libzim development.
 
 ## Installation
 
-PyPI package is bundled with a recent version of the libzim for macOS
-and GNU/Linux (x86_64 architecture). For other OSes, the libzim
-version 6.x.x has to be compiled manually, See [Setup
-hints](#setup-hints) to know more.
+The [PyPI package](https://pypi.org/project/libzim/) is bundled with a
+recent version of the libzim for macOS and GNU/Linux (x86_64
+architecture). For other OSes, the libzim version 6.x.x has to be
+compiled manually, See [Setup hints](#setup-hints) to know more.
 
 ```bash
-# Install from PyPI: https://pypi.org/project/libzim/
 pip3 install libzim
 ```
 
 ## Quickstart
 
-### Reader API
+### Read a ZIM
 
 ```python3
 from libzim.reader import File
@@ -41,7 +40,7 @@ if not article.is_redirect():
     print(article.content)
 ```
 
-### Write API
+### Write a ZIM
 
 See [example](examples/basic_writer.py) for a basic usage of the
 writer API.
