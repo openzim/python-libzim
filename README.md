@@ -1,18 +1,22 @@
-
 # python-libzim
 
-The Python bindings for [`libzim`](https://github.com/openzim/libzim).
+The Python bindings for [`libzim`](https://github.com/openzim/libzim)
+allows you to read/write [ZIM files](https://openzim.org) via
+Python. It provides a shallow Python interface on top of the `libzim`
+C++ library.
 
-This library allows you to interact with `.zim` files via Python.
-
-It just provides a shallow Python interface on top of the  `libzim` C++ library (maintained by [OpenZIM](https://github.com/openzim)).
-
-It is primarily used by [`sotoki`](https://github.com/openzim/sotoki).
+It is primarily used in openZIM scrapers like for example
+[`Sotoki`](https://github.com/openzim/sotoki) or
+[`Youtube2zim`](https://github.com/openzim/youtube2zim).
 
 [![](https://img.shields.io/pypi/v/libzim.svg)](https://pypi.python.org/pypi/libzim)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 ## Installation
+
+PyPI package is bundled with a recent version of the libzim for macOS
+and GNU/Linux (x86_64 architecture). For other OSes, the libzim
+version 6.x.x has to be compiled manually.
 
 ```bash
 # Install from PyPI: https://pypi.org/project/libzim/
