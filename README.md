@@ -19,7 +19,7 @@ Python-libzim development.
 
 The [PyPI package](https://pypi.org/project/libzim/) is bundled with a
 recent version of the libzim for macOS and GNU/Linux (x86_64
-architecture). For other OSes, the libzim version 6.x.x has to be
+architecture). For other OSes, the latest libzim has to be
 compiled manually, See [Setup hints](#setup-hints) to know more.
 
 ```bash
@@ -50,7 +50,10 @@ writer API.
 ### Installing the `libzim` dylib and headers manually
 
 If you have to install the libzim manually, you will have to [compile
-`libzim` from source](https://github.com/openzim/libzim).
+`libzim` from
+source](https://github.com/openzim/libzim). Python-libzim is conceived
+to work with the latest version of the libzim, we don't recommend to
+use it with older versions.
 
 If you have not installed libzim in standard directory, you will have
 to set `LD_LIBRARY_PATH` to allow python to find the library. Assuming
