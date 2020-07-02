@@ -25,25 +25,6 @@ pipenv install --dev
 pipenv run pip install -e .
 ```
 
-### Setup: Docker
-
-```bash
-docker build . -f Dockerfile.dev --tag openzim:python-libzim-dev
-
-docker run -it openzim:python-libzim-dev ./some_example_script.py
-
-docker run -it openzim:python-libzim-dev
-$ black . && flake8 . && pytest .
-$ pipenv install --dev <newpackagehere>
-$ python setup.py build_ext
-$ python setup.py sdist bdist_wheel
-$ python setup.py install
-$ python -c "import libzim"
-
-```
-
----
-
 ## Common Tasks
 
 ### Run Linters & Tests
