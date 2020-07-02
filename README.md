@@ -19,7 +19,8 @@ Python-libzim development.
 
 PyPI package is bundled with a recent version of the libzim for macOS
 and GNU/Linux (x86_64 architecture). For other OSes, the libzim
-version 6.x.x has to be compiled manually.
+version 6.x.x has to be compiled manually, See [Setup
+hints](#setup-hints) to know more.
 
 ```bash
 # Install from PyPI: https://pypi.org/project/libzim/
@@ -42,51 +43,22 @@ if not article.is_redirect():
 
 ### Write API
 
-See [example](examples/basic_writer.py) for a basic usage of the writer API.
+See [example](examples/basic_writer.py) for a basic usage of the
+writer API.
 
-
----
-
-## User Documentation
-
-### Setup: Ubuntu/Debian and macOS `x86_64` (Recommended)
-
-Install the python `libzim` package from PyPI.
-
-```bash
-pip3 install libzim
-```
-
-The `x86_64` linux and macOS wheels automatically includes the `libzim.(so|dylib)` dylib and headers, but other platforms may need to install `libzim` and its headers manually.
-
+## Setup hints
 
 ### Installing the `libzim` dylib and headers manually
 
-If you are not on a linux or macOS `x86_64` platform, you will have to install libzim manually.
+If you have to install the libzim manually, you will have to [compile
+`libzim` from source](https://github.com/openzim/libzim).
 
-Either by get a prebuilt binary at https://download.openzim.org/release/libzim
-or [compile `libzim` from source](https://github.com/openzim/libzim).
-
-If you have not installed libzim in standard directory, you will have to set `LD_LIBRARY_PATH` to allow python to find the library :
-
-Assuming you have extracted (or installed) the library if LIBZIM_DIR:
-
+If you have not installed libzim in standard directory, you will have
+to set `LD_LIBRARY_PATH` to allow python to find the library. Assuming
+you have extracted (or installed) the library if LIBZIM_DIR:
 
 ```bash
 export LD_LIBRARY_PATH="${LIBZIM_DIR}/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
-```
-
-## Setup: Docker (Optional)
-
-```bash
-docker build . --tag openzim:python-libzim
-
-# Run a custom script inside the container
-docker run -it openzim:python-libzim ./some_example_script.py
-
-# Or use the python repl interactively
-docker run -it openzim:python-libzim
->>> import libzim
 ```
 
 ## License
