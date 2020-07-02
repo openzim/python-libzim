@@ -1,3 +1,7 @@
+## 0.0.3.post0
+
+* fixed access to bundled libzim on macOS (missing rpath)
+
 ## 0.0.3
 
 * [reader] fixed `main_page` retrieval
