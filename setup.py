@@ -34,12 +34,28 @@ from ctypes.util import find_library
 
 from setuptools import setup, Extension
 from Cython.Build import cythonize
+from Cython.Distutils.build_ext import new_build_ext as build_ext
 
 GITHUB_URL = "https://github.com/openzim/python-libzim"
 BASE_DIR = Path(__file__).parent
 LIBZIM_INCLUDE_DIR = 'include'   # the libzim C++ header src dir (containing zim/*.h)
 LIBZIM_LIBRARY_DIR = 'lib'       # the libzim .so binary lib dir (containing libzim.so)
 LIBZIM_DYLIB = 'libzim.{ext}'.format(ext='dylib' if platform.system() == 'Darwin' else 'so')
+
+
+class fixed_build_ext(build_ext):
+    """Workaround for rpath bug in distutils for OSX."""
+
+    def finalize_options(self):
+        super().finalize_options()
+        # Special treatment of rpath in case of OSX, to work around python
+        # distutils bug 36353. This constructs proper rpath arguments for clang.
+        # See https://bugs.python.org/issue36353
+        if platform.system() == 'Darwin':
+            for path in self.rpath:
+                for ext in self.extensions:
+                    ext.extra_link_args.append("-Wl,-rpath," + path)
+            self.rpath[:] = []
 
 
 # Check for the CPP Libzim library headers in expected directory
@@ -96,6 +112,7 @@ setup(
 
     # Content
     packages=["libzim"],
+    cmdclass={'build_ext': fixed_build_ext},
     ext_modules=cythonize([wrapper_extension],
         compiler_directives={"language_level": "3"}
     ),

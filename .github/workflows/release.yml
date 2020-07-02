@@ -38,6 +38,7 @@ jobs:
           echo ::set-env name=LIBZIM_RELEASE::libzim_macos-x86_64-$LIBZIM_VERSION
           echo ::set-env name=LIBZIM_LIBRARY_PATH::lib/libzim.${LIBZIM_VERSION:0:1}.dylib
           echo ::set-env name=PLAFTORM_NAME::macosx_10.9_x86_64
+          echo ::set-env name=RPATH::@loader_path/
 
       - name: set linux environ
         if: matrix.os == 'ubuntu-latest'
@@ -46,6 +47,7 @@ jobs:
           echo ::set-env name=LIBZIM_RELEASE::libzim_linux-x86_64-$LIBZIM_VERSION
           echo ::set-env name=LIBZIM_LIBRARY_PATH::lib/x86_64-linux-gnu/libzim.so.$LIBZIM_VERSION
           echo ::set-env name=PLAFTORM_NAME::manylinux1_x86_64
+          echo ::set-env name=RPATH::\$ORIGIN
 
       - name: Cache libzim dylib & headers
         uses: actions/cache@master
@@ -78,7 +80,7 @@ jobs:
       - name: Build cython, sdist, and bdist_wheels
         run: |
           pip install --upgrade "cython>=0.29.20,<3.0" setuptools pip wheel
-          python3 setup.py build_ext --rpath='$ORIGIN'
+          python3 setup.py build_ext --rpath $RPATH
           if [[  "${{ matrix.python-version }}" == "3.6" ]]
           then
             python3 setup.py sdist
@@ -86,7 +88,9 @@ jobs:
 
       - name: add macOS libzim binary to source for wheel
         if: matrix.os == 'macos-latest'
-        run: cp -p lib/libzim.${LIBZIM_VERSION:0:1}.dylib libzim
+        run: |
+          install_name_tool -change libzim.6.dylib @loader_path/libzim.6.dylib $(find build -name "wrapper*.so")
+          cp -p lib/libzim.${LIBZIM_VERSION:0:1}.dylib libzim
 
       - name: add Linux libzim binary to source for wheel
         if: matrix.os == 'ubuntu-latest'
