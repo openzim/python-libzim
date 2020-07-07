@@ -116,7 +116,6 @@ uint64_t ZimArticleWrapper::callCythonReturnInt(std::string methodName) const
 zim::writer::Url
 ZimArticleWrapper::getUrl() const
 {
-
     std::string url = callCythonReturnString("get_url");
 
     return zim::writer::Url(url.substr(0, 1)[0], url.substr(2, url.length()));
@@ -158,7 +157,6 @@ bool ZimArticleWrapper::shouldIndex() const
 zim::writer::Url
 ZimArticleWrapper::getRedirectUrl() const
 {
-
     std::string redirectUrl = callCythonReturnString("get_redirect_url");
     return zim::writer::Url(redirectUrl.substr(0, 1)[0], redirectUrl.substr(2, redirectUrl.length()));
 }
