@@ -51,9 +51,9 @@ writer API.
 
 If you have to install the libzim manually, you will have to [compile
 `libzim` from
-source](https://github.com/openzim/libzim). Python-libzim is conceived
-to work with the latest version of the libzim, we don't recommend to
-use it with older versions.
+source](https://github.com/openzim/libzim). This binding has been designed
+to work with the latest version of the libzim, we only recommend to
+use it with latest released version.
 
 If you have not installed libzim in standard directory, you will have
 to set `LD_LIBRARY_PATH` to allow python to find the library. Assuming
