@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import re
 import sys
 import subprocess
 import pathlib
@@ -103,6 +104,39 @@ class SimpleArticle(Article):
 
     def get_data(self):
         return Blob(self.content.encode("UTF-8"))
+
+
+class OverridenArticle(Article):
+    def __init__(self, redirect):
+        super().__init__()
+        self.redirect = redirect
+
+    def get_url(self) -> str:
+        return "N/u"
+
+    def get_title(self) -> str:
+        return ""
+
+    def is_redirect(self) -> bool:
+        return self.redirect
+
+    def get_mime_type(self) -> str:
+        return "text/plain"
+
+    def get_filename(self) -> str:
+        return ""
+
+    def should_compress(self) -> bool:
+        return False
+
+    def should_index(self) -> bool:
+        return False
+
+    def get_redirect_url(self) -> str:
+        return "N/u"
+
+    def get_data(self) -> Blob:
+        return Blob("")
 
 
 @pytest.fixture(scope="session")
@@ -274,3 +308,26 @@ def test_redirect_url(tmpdir):
     with File(path) as reader:
         assert reader.get_article(redirect_url).is_redirect
         assert reader.get_article(redirect_url).get_redirect_article().longurl == url
+
+
+@pytest.mark.parametrize(
+    "no_method", [m for m in dir(OverridenArticle) if m.split("_", 1)[0] in ("get", "is", "should")],
+)
+def test_article_overriding_required(tmpdir, monkeypatch, no_method):
+    """ ensure we raise properly on not-implemented methods of Article """
+
+    path, main_page = tmpdir / "test.zim", "welcome"
+    pattern = re.compile(r"NotImplementedError.+must be implemented")
+    monkeypatch.delattr(OverridenArticle, no_method)
+
+    with pytest.raises(RuntimeError, match=pattern):
+        with Creator(path, main_page) as zim_creator:
+            zim_creator.add_article(OverridenArticle(no_method == "get_redirect_url"))
+
+
+def test_repr():
+    title = "Welcome !"
+    url = "A/welcome"
+    article = SimpleArticle("", url, title, "text/plain")
+    assert title in repr(article)
+    assert url in repr(article)
