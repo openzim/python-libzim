@@ -12,8 +12,11 @@ It is primarily used in openZIM scrapers like for example
 Read [CONTRIBUTING.md](./CONTRIBUTING.md) to know more about
 Python-libzim development.
 
-[![](https://img.shields.io/pypi/v/libzim.svg)](https://pypi.python.org/pypi/libzim)
+[![Build Status](https://github.com/openzim/python-libzim/workflows/test/badge.svg?query=branch%3Amaster)](https://github.com/openzim/python-libzim/actions?query=branch%3Amaster)
+[![CodeFactor](https://www.codefactor.io/repository/github/openzim/python-libzim/badge)](https://www.codefactor.io/repository/github/openzim/python-libzim)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![PyPI version shields.io](https://img.shields.io/pypi/v/libzim.svg)](https://pypi.org/project/libzim/)
+[![codecov](https://codecov.io/gh/openzim/python-libzim/branch/master/graph/badge.svg)](https://codecov.io/gh/openzim/python-libzim)
 
 ## Installation
 
