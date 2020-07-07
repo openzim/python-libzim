@@ -5,6 +5,7 @@ env:
   LIBZIM_VERSION: 6.1.7
   LIBZIM_INCLUDE_PATH: include/zim
   MAX_LINE_LENGTH: 110
+  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
 jobs:
   lint:
@@ -103,7 +104,12 @@ jobs:
 
       - name: Test built package with pytest
         run: |
-          pip install pytest
+          pip install pytest pytest-cov
           pip install -e .
           export DYLD_LIBRARY_PATH="$PWD/lib:$DYLD_LIBRARY_PATH"
-          pytest .
+          pytest --cov=libzim --cov-report=term --cov-report term-missing .
+
+      - name: Upload coverage report to codecov
+        run: |
+          pip install codecov
+          codecov

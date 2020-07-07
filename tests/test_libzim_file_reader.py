@@ -85,7 +85,6 @@ def test_content_ref_keep(reader):
 
 
 def test_get_article_by_id(reader, article_data):
-    return
     article = reader.get_article_by_id(article_data["article_id"])
 
     assert article.longurl == article_data["url"]
