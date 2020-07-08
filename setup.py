@@ -104,7 +104,7 @@ setup(
     },
     author="Monadical Inc.",
     author_email="jdc@monadical.com",
-    license="GPLv3+",
+    license="GPL-3.0-or-later",
     description="A python-facing API for creating and interacting with ZIM files",
     long_description=get_long_description(),
     long_description_content_type="text/markdown",
@@ -149,7 +149,7 @@ setup(
         "Programming Language :: Python :: 3.8",
         # "Typing :: Typed",
 
-        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+        "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
         "Natural Language :: English",
         "Operating System :: OS Independent",
     ],
