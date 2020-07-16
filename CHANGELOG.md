@@ -1,3 +1,7 @@
+## 0.0.4
+
+* using libzim 6.1.8
+
 ## 0.0.3.post0
 
 * fixed access to bundled libzim on macOS (missing rpath)
