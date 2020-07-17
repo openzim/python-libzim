@@ -70,7 +70,7 @@ public:
     OverriddenZimCreator *_creator;
     ZimCreatorWrapper(OverriddenZimCreator *creator);
     ~ZimCreatorWrapper();
-    static ZimCreatorWrapper *create(std::string fileName, std::string mainPage, std::string fullTextIndexLanguage, int minChunkSize);
+    static ZimCreatorWrapper *create(std::string fileName, std::string mainPage, std::string fullTextIndexLanguage, zim::CompressionType compression, int minChunkSize);
     void addArticle(std::shared_ptr<ZimArticleWrapper> article);
     void finalize();
     void setMainUrl(std::string newUrl);

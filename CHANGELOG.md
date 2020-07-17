@@ -1,5 +1,7 @@
 ## 0.0.4
 
+* added compression argument to Creator to set compression algorithm (libzim.writer.Compression)
+* Creator positional arguments order changed: min_chunk_size moved after compression
 * using libzim 6.1.8
 
 ## 0.0.3.post0
