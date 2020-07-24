@@ -29,6 +29,13 @@ from libcpp.vector cimport vector
 cdef extern from "zim/zim.h" namespace "zim":
     ctypedef uint64_t size_type
     ctypedef uint64_t offset_type
+    ctypedef enum CompressionType:
+        zimcompDefault
+        zimcompNone
+        zimcompZip
+        zimcompBzip2
+        zimcompLzma
+        zimcompZstd
 
 
 cdef extern from "zim/blob.h" namespace "zim":
@@ -65,7 +72,7 @@ cdef extern from "lib.h":
 
     cdef cppclass ZimCreatorWrapper:
         @staticmethod
-        ZimCreatorWrapper *create(string fileName, string mainPage, string fullTextIndexLanguage, int minChunkSize) nogil except +
+        ZimCreatorWrapper *create(string fileName, string mainPage, string fullTextIndexLanguage, CompressionType compression, int minChunkSize) nogil except +
         void addArticle(shared_ptr[ZimArticleWrapper] article) nogil except +
         void finalize() nogil except +
         Url getMainUrl() except +
@@ -137,5 +144,5 @@ cdef extern from "zim/file.h" namespace "zim":
         string getChecksum() except +
         string getFilename() except +
 
-        unique_ptr[Search] search(const string query, int start, int end); 
+        unique_ptr[Search] search(const string query, int start, int end);
         unique_ptr[Search] suggestions(const string query, int start, int end);

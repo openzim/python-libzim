@@ -23,7 +23,7 @@ import pathlib
 
 import pytest
 
-from libzim.writer import Article, Blob, Creator
+from libzim.writer import Article, Blob, Creator, Compression
 from libzim.reader import File
 
 # test files https://wiki.kiwix.org/wiki/Content_in_all_languages
@@ -186,9 +186,8 @@ def test_creator_params(tmpdir):
 
 def test_segfault_on_realloc(tmpdir):
     """ assert that we are able to delete an unclosed Creator #31 """
-    creator = Creator(tmpdir / "test.zim", "welcome", "eng", 2048)
+    creator = Creator(tmpdir / "test.zim", "welcome", "eng")
     del creator  # used to segfault
-    assert True
 
 
 def test_noleftbehind_empty(tmpdir):
@@ -203,7 +202,7 @@ def test_noleftbehind_empty(tmpdir):
 
 
 def test_double_close(tmpdir):
-    creator = Creator(tmpdir / "test.zim", "welcome", "eng", 2048)
+    creator = Creator(tmpdir / "test.zim", "welcome", "eng")
     creator.close()
     with pytest.raises(RuntimeError):
         creator.close()
@@ -331,3 +330,24 @@ def test_repr():
     article = SimpleArticle("", url, title, "text/plain")
     assert title in repr(article)
     assert url in repr(article)
+
+
+@pytest.mark.parametrize(
+    "compression", Compression.__members__,
+)
+def test_compression_from_enum(tmpdir, compression):
+    with Creator(tmpdir / "test.zim", "home", compression=compression) as zim_creator:
+        zim_creator.add_article(SimpleArticle(title="Hello", mime_type="text/html", content="", url="A/home"))
+
+
+@pytest.mark.parametrize(
+    "compression", Compression.__members__.keys(),
+)
+def test_compression_from_string(tmpdir, compression):
+    with Creator(tmpdir / "test.zim", "home", compression=compression) as zim_creator:
+        zim_creator.add_article(SimpleArticle(title="Hello", mime_type="text/html", content="", url="A/home"))
+
+
+def test_bad_compression(tmpdir):
+    with pytest.raises(AttributeError):
+        Creator(tmpdir / "test.zim", "welcome", compression="toto")

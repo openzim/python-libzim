@@ -20,6 +20,7 @@
 
 cimport libzim.wrapper as wrapper
 
+import enum
 from typing import Generator
 from cython.operator import dereference, preincrement
 from cpython.ref cimport PyObject
@@ -146,6 +147,15 @@ cdef public api:
 
         return 0
 
+
+class Compression(enum.Enum):
+    """ Compression algorithms available to create ZIM files """
+    none = wrapper.CompressionType.zimcompNone
+    zip = wrapper.CompressionType.zimcompZip
+    lzma = wrapper.CompressionType.zimcompLzma
+    zstd = wrapper.CompressionType.zimcompZstd
+
+
 cdef class Creator:
     """ Zim Creator
 
@@ -159,7 +169,7 @@ cdef class Creator:
     cdef wrapper.ZimCreatorWrapper *c_creator
     cdef bool _finalized
 
-    def __cinit__(self, str filename: str, str main_page: str = "", str index_language: str = "eng", min_chunk_size: int = 2048):
+    def __cinit__(self, str filename: str, str main_page: str = "", str index_language: str = "eng", compression = Compression.lzma, int min_chunk_size = 2048):
         """ Constructs a Zim Creator from parameters.
 
             Parameters
@@ -170,10 +180,11 @@ cdef class Creator:
                 Zim file main page (without namespace, must be in A/)
             index_language : str
                 Zim file index language (default eng)
+            compression: Compression
+                Compression algorithm to use
             min_chunk_size : int
                 Minimum chunk size (default 2048) """
-
-        self.c_creator = wrapper.ZimCreatorWrapper.create(filename.encode("UTF-8"), main_page.encode("UTF-8"), index_language.encode("UTF-8"), min_chunk_size)
+        self.c_creator = wrapper.ZimCreatorWrapper.create(filename.encode("UTF-8"), main_page.encode("UTF-8"), index_language.encode("UTF-8"), compression.value, min_chunk_size)
         self._finalized = False
 
     def __dealloc__(self):
