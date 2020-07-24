@@ -33,8 +33,9 @@
 import pathlib
 import datetime
 import collections
+from typing import Union
 
-from .wrapper import Creator as _Creator
+from .wrapper import Creator as _Creator, Compression
 from .wrapper import WritingBlob as Blob
 
 __all__ = ["Article", "Blob", "Creator"]
@@ -148,7 +149,12 @@ class Creator:
             Zim file metadata """
 
     def __init__(
-        self, filename: pathlib.Path, main_page: str, index_language: str = "eng", min_chunk_size: int = 2048,
+        self,
+        filename: pathlib.Path,
+        main_page: str,
+        index_language: str = "eng",
+        compression: Union[Compression, str] = Compression.lzma,
+        min_chunk_size: int = 2048,
     ):
         """ Creates a ZIM Creator
 
@@ -157,9 +163,12 @@ class Creator:
             filename : Path to create the ZIM file at
             main_page: ZIM file main article URL (without namespace, must be in A/)
             index_language: content language to inform indexer with (ISO-639-3)
-            min_chunk_size: minimum size of chunks for compression """
+            min_chunk_size: minimum size of chunks for compression
+            compression: compression algorithm to use """
+        if not isinstance(compression, Compression):
+            compression = getattr(Compression, compression.lower())
 
-        self._creatorWrapper = _Creator(str(filename), main_page, index_language, min_chunk_size)
+        self._creatorWrapper = _Creator(str(filename), main_page, index_language, compression, min_chunk_size)
         self.filename = pathlib.Path(filename)
         self.main_page = main_page
         self.language = index_language

@@ -204,8 +204,8 @@ std::string ZimArticleWrapper::getNextCategory()
 class OverriddenZimCreator : public zim::writer::Creator
 {
 public:
-    OverriddenZimCreator(std::string mainPage)
-        : zim::writer::Creator(true),
+    OverriddenZimCreator(std::string mainPage, zim::CompressionType compression)
+        : zim::writer::Creator(true, compression),
           mainPage(mainPage) {}
 
     virtual zim::writer::Url getMainUrl() const
@@ -232,12 +232,12 @@ ZimCreatorWrapper::~ZimCreatorWrapper()
 
 ZimCreatorWrapper *
 ZimCreatorWrapper::
-    create(std::string fileName, std::string mainPage, std::string fullTextIndexLanguage, int minChunkSize)
+    create(std::string fileName, std::string mainPage, std::string fullTextIndexLanguage, zim::CompressionType compression, int minChunkSize)
 
 {
     bool shouldIndex = !fullTextIndexLanguage.empty();
 
-    OverriddenZimCreator *c = new OverriddenZimCreator(mainPage);
+    OverriddenZimCreator *c = new OverriddenZimCreator(mainPage, compression);
     c->setIndexing(shouldIndex, fullTextIndexLanguage);
     c->setMinChunkSize(minChunkSize);
     c->startZimCreation(fileName);
