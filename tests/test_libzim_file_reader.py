@@ -26,6 +26,8 @@ def zimdata(request):
 
 @pytest.fixture
 def reader(zimdata):
+    if not zimdata["filename"].exists():
+        pytest.skip(f"{zimdata['filename']} doesn't exist")
     return File(zimdata["filename"])
 
 
