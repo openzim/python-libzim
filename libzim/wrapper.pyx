@@ -51,6 +51,9 @@ cdef class WritingBlob:
             self.ref_content = content
         self.c_blob = new wrapper.Blob(<char *> self.ref_content, len(self.ref_content))
 
+    def size(self):
+        return self.c_blob.size()
+
     def __dealloc__(self):
         if self.c_blob != NULL:
             del self.c_blob
