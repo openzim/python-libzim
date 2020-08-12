@@ -2,6 +2,8 @@
 
 * added compression argument to Creator to set compression algorithm (libzim.writer.Compression)
 * Creator positional arguments order changed: min_chunk_size moved after compression
+* Reader `get_suggestions_results_count` renamed `get_estimated_suggestions_results_count` (#71)
+* Reader `get_search_results_count` renamed `get_estimated_search_results_count` (#71)
 * using libzim 6.1.8
 
 ## 0.0.3.post0
