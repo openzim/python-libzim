@@ -177,7 +177,7 @@ ZimArticleWrapper::getData() const
 zim::size_type
 ZimArticleWrapper::getSize() const
 {
-    return this->getData().size();
+    return callCythonReturnInt("get_size");
 }
 
 bool ZimArticleWrapper::isLinktarget() const

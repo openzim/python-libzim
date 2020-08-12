@@ -105,11 +105,14 @@ class SimpleArticle(Article):
     def get_data(self):
         return Blob(self.content.encode("UTF-8"))
 
+    def get_size(self):
+        return self.get_data().size()
+
 
 class OverridenArticle(Article):
-    def __init__(self, redirect):
+    def __init__(self, removed_method):
         super().__init__()
-        self.redirect = redirect
+        self.removed_method = removed_method
 
     def get_url(self) -> str:
         return "N/u"
@@ -118,7 +121,7 @@ class OverridenArticle(Article):
         return ""
 
     def is_redirect(self) -> bool:
-        return self.redirect
+        return self.removed_method == "get_redirect_url"
 
     def get_mime_type(self) -> str:
         return "text/plain"
@@ -137,6 +140,10 @@ class OverridenArticle(Article):
 
     def get_data(self) -> Blob:
         return Blob("")
+
+    def get_size(self):
+        # with 0, there's no call to get_data()
+        return 1 if self.removed_method == "get_data" else 0
 
 
 @pytest.fixture(scope="session")
@@ -321,7 +328,7 @@ def test_article_overriding_required(tmpdir, monkeypatch, no_method):
 
     with pytest.raises(RuntimeError, match=pattern):
         with Creator(path, main_page) as zim_creator:
-            zim_creator.add_article(OverridenArticle(no_method == "get_redirect_url"))
+            zim_creator.add_article(OverridenArticle(no_method))
 
 
 def test_repr():
@@ -351,3 +358,51 @@ def test_compression_from_string(tmpdir, compression):
 def test_bad_compression(tmpdir):
     with pytest.raises(AttributeError):
         Creator(tmpdir / "test.zim", "welcome", compression="toto")
+
+
+def test_filename_article(tmpdir):
+    class FileArticle(Article):
+        def __init__(self, fpath, url):
+            super().__init__()
+            self.fpath = fpath
+            self.url = url
+
+        def is_redirect(self):
+            return False
+
+        def get_url(self):
+            return self.url
+
+        def get_title(self):
+            return ""
+
+        def get_mime_type(self):
+            return "text/plain"
+
+        def get_filename(self):
+            return str(self.fpath)
+
+        def should_compress(self):
+            return True
+
+        def should_index(self):
+            return True
+
+        def get_size(self):
+            return self.fpath.stat().size
+
+    zim_path = tmpdir / "test.zim"
+    article_path = tmpdir / "test.txt"
+    article_url = "A/home"
+    content = b"abc"
+
+    # write content to physical file
+    with open(article_path, "wb") as fh:
+        fh.write(content)
+
+    with Creator(zim_path, "home") as zim_creator:
+        zim_creator.add_article(FileArticle(article_path, article_url))
+
+    # ensure size on reader is correct
+    with File(zim_path) as reader:
+        assert reader.get_article(article_url).content.nbytes == len(content)
