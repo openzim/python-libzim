@@ -546,8 +546,8 @@ cdef class FilePy:
             yield it.get_url().decode('UTF-8')
             preincrement(it)
 
-    def get_search_results_count(self, query: str) -> int:
-        """ Number of search results for a query -> int
+    def get_estimated_search_results_count(self, query: str) -> int:
+        """ Estimated number of search results for a query -> int
 
             Parameters
             ----------
@@ -556,12 +556,12 @@ cdef class FilePy:
             Returns
             -------
             int
-                Number of search results """
+                Estimated number of search results """
         cdef unique_ptr[wrapper.Search] search = self.c_file.search(query.encode('UTF-8'),0, 1)
         return dereference(search).get_matches_estimated()
 
-    def get_suggestions_results_count(self, query: str) -> int:
-        """ Number of suggestions for a query -> int
+    def get_estimated_suggestions_results_count(self, query: str) -> int:
+        """ Estimated number of suggestions for a query -> int
 
             Parameters
             ----------
@@ -570,7 +570,7 @@ cdef class FilePy:
             Returns
             -------
             int
-                Number of article suggestions """
+                Estimated number of article suggestions """
         cdef unique_ptr[wrapper.Search] search = self.c_file.suggestions(query.encode('UTF-8'),0 , 1)
         return dereference(search).get_matches_estimated()
 
