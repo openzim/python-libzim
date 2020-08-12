@@ -93,6 +93,10 @@ class Article:
         """ Blob containing the complete content of the article """
         raise NotImplementedError("get_data must be implemented.")
 
+    def get_size(self) -> int:
+        """ Size of get_data's result in bytes """
+        raise NotImplementedError("get_size must be implemented.")
+
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(url={self.get_url()}, title={self.get_title()})"
 
@@ -128,6 +132,9 @@ class MetadataArticle(Article):
 
     def get_data(self) -> Blob:
         return Blob(self.metadata_content)
+
+    def get_size(self) -> int:
+        return self.get_data().size()
 
 
 class Creator:
