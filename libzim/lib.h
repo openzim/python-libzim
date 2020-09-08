@@ -25,11 +25,63 @@ struct _object;
 typedef _object PyObject;
 
 #include <zim/zim.h>
+#include <zim/archive.h>
+#include <zim/entry.h>
+#include <zim/item.h>
+#include <zim/search.h>
 #include <zim/writer/article.h>
 #include <zim/writer/url.h>
 #include <zim/blob.h>
 
 #include <string>
+
+template<typename T, typename U>
+inline T* to_ptr(const U& obj)
+{
+  return new T(obj);
+}
+
+class ZimItem : public zim::Item
+{
+  public:
+    ZimItem(const zim::Item& item) : zim::Item(item) {}
+};
+
+class ZimEntry : public zim::Entry
+{
+  public:
+    ZimEntry(const zim::Entry& entry) : zim::Entry(entry) {}
+    ZimItem* getItem(bool follow) const
+    { return to_ptr<ZimItem>(zim::Entry::getItem(follow)); }
+    ZimEntry* getRedirectEntry() const
+    { return to_ptr<ZimEntry>(zim::Entry::getRedirectEntry()); }
+};
+
+class ZimSearch : public zim::Search
+{
+  public:
+    ZimSearch() : zim::Search(std::vector<zim::Archive>{}) {};
+    ZimSearch(zim::Archive& archive) : zim::Search(archive) {};
+    ZimSearch(const Search& search) : zim::Search(search) {};
+};
+
+class ZimArchive : public zim::Archive
+{
+  public:
+    ZimArchive(const std::string& filename) : zim::Archive(filename) {};
+    ZimArchive(const zim::Archive& archive) : zim::Archive(archive) {};
+
+    ZimEntry* getEntryByPath(zim::entry_index_type idx) const
+    { return to_ptr<ZimEntry>(zim::Archive::getEntryByPath(idx)); }
+    ZimEntry* getEntryByPath(const std::string& path) const
+    { return to_ptr<ZimEntry>(zim::Archive::getEntryByPath(path)); }
+    ZimEntry* getEntryByTitle(zim::entry_index_type idx) const
+    { return to_ptr<ZimEntry>(zim::Archive::getEntryByTitle(idx)); }
+    ZimEntry* getEntryByTitle(const std::string& title) const
+    { return to_ptr<ZimEntry>(zim::Archive::getEntryByTitle(title)); }
+    ZimEntry* getMainEntry() const
+    { return to_ptr<ZimEntry>(zim::Archive::getMainEntry()); }
+};
 
 class ZimArticleWrapper : public zim::writer::Article
 {
