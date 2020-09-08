@@ -29,6 +29,7 @@ from libcpp.vector cimport vector
 cdef extern from "zim/zim.h" namespace "zim":
     ctypedef uint64_t size_type
     ctypedef uint64_t offset_type
+    ctypedef uint32_t entry_index_type
     ctypedef enum CompressionType:
         zimcompDefault
         zimcompNone
@@ -79,30 +80,29 @@ cdef extern from "lib.h":
         void setMainUrl(string) except +
 
 
-cdef extern from "zim/article.h" namespace "zim":
-    cdef cppclass Article:
-        Article() except +
 
+
+cdef extern from "lib.h":
+    cdef cppclass ZimEntry:
+        string getTitle()
+        string getPath() except +
+
+        bint isRedirect()
+        ZimItem* getItem(bint follow) except +
+        ZimItem* getRedirect() except +
+        ZimEntry* getRedirectEntry() except +
+
+
+cdef extern from "lib.h":
+    cdef cppclass ZimItem:
+        ZimItem __enter__()
         string getTitle() except +
-        string getUrl() except +
-        string getLongUrl() except +
-        string getMimeType() except +
-        char getNamespace() except +
-        bint good() except +
+        string getPath() except +
+        string getMimetype() except +
 
-        const Blob getData(size_type offset) except +
-
-        bint isRedirect() except +
-        bint isLinktarget() except +
-        bint isDeleted() except +
-
-        Article getRedirectArticle() except +
-
-
-cdef extern from "zim/fileheader.h" namespace "zim":
-    cdef cppclass Fileheader:
-        bint hasMainPage() except +
-        size_type getMainPage() except +
+        const Blob getData(offset_type offset) except +
+        const Blob getData(offset_type offset, size_type size) except +
+        size_type  getSize() except +
 
 
 cdef extern from "zim/search_iterator.h" namespace "zim":
@@ -115,34 +115,32 @@ cdef extern from "zim/search_iterator.h" namespace "zim":
         string get_title()
 
 
-cdef extern from "zim/search.h" namespace "zim":
-    cdef cppclass Search:
-        Search(const File* zimfile)
-        Search(vector[const File] zimfiles)
+cdef extern from "lib.h":
+    cdef cppclass ZimSearch:
+        ZimSearch()
+        ZimSearch(const ZimArchive zimfile)
+        ZimSearch(vector[const ZimArchive] zimfiles)
+        void set_suggestion_mode(bint suggestion)
+        void set_query(string query)
+        void set_range(int, int)
         search_iterator begin()
         search_iterator end()
         int get_matches_estimated()
 
 
-cdef extern from "zim/file.h" namespace "zim":
-    cdef cppclass File:
-        File() except +
-        File(string filename) except +
+cdef extern from "lib.h":
+    cdef cppclass ZimArchive:
+        ZimArchive(string filename) except +
 
-        Article getArticle(size_type idx) except +
-        Article getArticle(char ns, string url) except +
-        Article getArticleByUrl(string url) except +
+        ZimEntry* getEntryByPath(string path) except +
+        ZimEntry* getEntryByPath(entry_index_type idx) except +
+        ZimEntry* getEntryByTitle(string title) except +
 
         string getMetadata(string name) except +
+        vector[string] getMetadataKeys() except +
 
-        Fileheader getFileheader() except +
+        ZimEntry* getMainEntry() except +
+        size_type getEntryCount() except +
 
-        size_type getCountArticles() except +
-        size_type getNamespaceCount(char ns) except +
-
-        string getNamespaces() except +
         string getChecksum() except +
         string getFilename() except +
-
-        unique_ptr[Search] search(const string query, int start, int end);
-        unique_ptr[Search] suggestions(const string query, int start, int end);
