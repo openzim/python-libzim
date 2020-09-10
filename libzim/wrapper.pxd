@@ -31,7 +31,6 @@ cdef extern from "zim/zim.h" namespace "zim":
     ctypedef uint64_t offset_type
     ctypedef uint32_t entry_index_type
     ctypedef enum CompressionType:
-        zimcompDefault
         zimcompNone
         zimcompZip
         zimcompBzip2
@@ -48,39 +47,38 @@ cdef extern from "zim/blob.h" namespace "zim":
         uint64_t size() except +
 
 
-cdef extern from "zim/writer/url.h" namespace "zim::writer":
-    cdef cppclass Url:
-        string getLongUrl() except +
-
-
-cdef extern from "zim/writer/article.h" namespace "zim::writer":
-    cdef cppclass WriterArticle:
+cdef extern from "zim/writer/item.h" namespace "zim::writer":
+    cdef cppclass WriterItem "zim::writer::Item":
         pass
 
+cdef extern from "zim/writer/contentProvider.h" namespace "zim::writer":
+    cdef cppclass ContentProvider:
+        pass
+
+
+cdef extern from "zim/writer/creator.h" namespace "zim::writer":
+    cdef cppclass ZimCreator "zim::writer::Creator":
+        void configVerbose(bint verbose)
+        void configCompression(CompressionType comptype)
+        void configMinClusterSize(int size)
+        void configIndexing(bint indexing, string language)
+        void configNbWorkers(int nbWorkers)
+        void startZimCreation(string filepath) nogil except +;
+        void addItem(shared_ptr[WriterItem] item) nogil except +
+        void addMetadata(string name, string content, string mimetype) nogil except +
+        void addRedirection(string path, string title, string targetpath) nogil except +
+        void finishZimCreation() nogil except +
+        void setMainPath(string mainPath)
+        void setFaviconPath(string faviconPath)
+
 cdef extern from "lib.h":
-    cdef cppclass ZimArticleWrapper(WriterArticle):
-        ZimArticleWrapper(PyObject *obj) except +
-        const string getTitle() except +
-        const Url getUrl() except +
-        const string getTitle() except +
-        const bool isRedirect() except +
-        const string getMimeType() except +
-        const string getFilename() except +
-        const bool shouldCompress() except +
-        const bool shouldIndex() except +
-        const Url getRedirectUrl() except +
-        const Blob getData() except +
-
-    cdef cppclass ZimCreatorWrapper:
-        @staticmethod
-        ZimCreatorWrapper *create(string fileName, string mainPage, string fullTextIndexLanguage, CompressionType compression, int minChunkSize) nogil except +
-        void addArticle(shared_ptr[ZimArticleWrapper] article) nogil except +
-        void finalize() nogil except +
-        Url getMainUrl() except +
-        void setMainUrl(string) except +
-
-
-
+    # The only thing we need to know here is how to create the Wrapper.
+    # Other (cpp) methods must exists and they will be called,
+    # but we don't care about them here.
+    cdef cppclass ContentProviderWrapper(ContentProvider):
+        ContentProviderWrapper(PyObject* obj) except +
+    cdef cppclass WriterItemWrapper:
+        WriterItemWrapper(PyObject* obj) except +
 
 cdef extern from "lib.h":
     cdef cppclass ZimEntry:

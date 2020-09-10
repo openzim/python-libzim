@@ -131,6 +131,18 @@ cdef public api:
 
         return Blob()
 
+    wrapper.ContentProvider* contentprovider_cy_call_fct(object obj, string method, string *error) with gil:
+        try:
+            func = getattr(obj, method.decode('UTF-8'))
+            contentProvider = func()
+            if not contentProvider:
+                raise RuntimeError("ContentProvider is None")
+            return new ContentProviderWrapper(<PyObject*>contentProvider)
+        except Exception as e:
+            error[0] = traceback.format_exc().encode('UTF-8')
+
+        return NULL
+
     bool bool_cy_call_fct(object obj, string method, string *error) with gil:
         """Lookup and execute a pure virtual method on ZimArticle returning a bool"""
         try:
@@ -169,31 +181,50 @@ cdef class Creator:
         _finalized : bool
             flag if the creator was finalized """
 
-    cdef wrapper.ZimCreatorWrapper *c_creator
-    cdef bool _finalized
+    cdef wrapper.ZimCreator c_creator
+    cdef object _filename
+    cdef object _started
 
-    def __cinit__(self, str filename: str, str main_page: str = "", str index_language: str = "eng", compression = Compression.lzma, int min_chunk_size = 2048):
-        """ Constructs a Zim Creator from parameters.
+    def __cinit__(self, object filename: pathlib.Path):
+        """ Constructs a File from full zim file path
 
             Parameters
             ----------
-            filename : str
-                Zim file path
-            main_page : str
-                Zim file main page (without namespace, must be in A/)
-            index_language : str
-                Zim file index language (default eng)
-            compression: Compression
-                Compression algorithm to use
-            min_chunk_size : int
-                Minimum chunk size (default 2048) """
-        self.c_creator = wrapper.ZimCreatorWrapper.create(filename.encode("UTF-8"), main_page.encode("UTF-8"), index_language.encode("UTF-8"), compression.value, min_chunk_size)
-        self._finalized = False
+            filename : pathlib.Path
+                Full path to a zim file """
 
-    def __dealloc__(self):
-        del self.c_creator
+        self._filename = pathlib.Path(filename)
 
-    def add_article(self, article not None):
+    def configVerbose(self, bool verbose) -> Creator:
+        self.c_creator.configVerbose(verbose)
+        return self
+
+    def configCompression(self, comptype) -> Creator:
+        self.c_creator.configCompression(comptype.value)
+        return self
+
+    def configMinClusterSize(self, int size) -> Creator:
+        self.c_creator.configMinClusterSize(size)
+        return self
+
+    def configIndexing(self, bool indexing, str language) -> Creator:
+        self.c_creator.configIndexing(indexing, language.encode('utf8'))
+        return self
+
+    def configNbWorkers(self, int nbWorkers) -> Creator:
+        self.c_creator.configNbWorkers(nbWorkers)
+        return self
+
+    def setMainPath(self, str mainPath) -> Creator:
+        self.c_creator.setMainPath(mainPath.encode('utf8'))
+
+    def setFaviconPath(self, str faviconPath) -> Creator:
+        self.c_creator.setFaviconPath(faviconPath.encode('utf8'))
+
+#    def setUuid(self, uuid) -> Creator:
+#        self.c_creator.setUuid(uuid)
+
+    def add_item(self, WriterItem not None):
         """ Add an article to the Creator object.
 
             Parameters
@@ -204,27 +235,51 @@ cdef class Creator:
             ------
                 RuntimeError
                     If the ZimCreator was already finalized """
-        if self._finalized:
-            raise RuntimeError("ZimCreator already finalized")
+        if not self._started:
+            raise RuntimeError("ZimCreator not started")
 
         # Make a shared pointer to ZimArticleWrapper from the ZimArticle object
-        cdef shared_ptr[wrapper.ZimArticleWrapper] art = shared_ptr[wrapper.ZimArticleWrapper](
-            new wrapper.ZimArticleWrapper(<PyObject*>article));
+        cdef shared_ptr[wrapper.WriterItem] item = shared_ptr[wrapper.WriterItem](
+            new wrapper.WriterItemWrapper(<PyObject*>WriterItem));
         with nogil:
-            self.c_creator.addArticle(art)
+            self.c_creator.addItem(item)
 
-    def finalize(self):
-        """ Finalize creation and write added articles to the file.
+    def add_metadata(self, str name, bytes content, str mimetype = "text/plain"):
+        if not self._started:
+            raise RuntimeError("ZimCreator not started")
 
-            Raises
-            ------
-                RuntimeError
-                    If the ZimCreator was already finalized """
-        if  self._finalized:
-            raise RuntimeError("ZimCreator already finalized")
+        cdef string _name = name.encode('utf8')
+        cdef string _content = content
+        cdef string _mimetype = mimetype.encode('utf8')
         with nogil:
-            self.c_creator.finalize()
-        self._finalized = True
+            self.c_creator.addMetadata(_name, _content, _mimetype)
+
+    def add_redirection(self, str path, str title, str targetPath):
+        if not self._started:
+            raise RuntimeError("ZimCreator not started")
+
+        cdef string _path = path.encode('utf8')
+        cdef string _title = title.encode('utf8')
+        cdef string _targetPath = targetPath.encode('utf8')
+        with nogil:
+            self.c_creator.addRedirection(_path, _title, _targetPath)
+
+    def __enter__(self):
+        cdef string _path  = str(self._filename).encode('utf8')
+        with nogil:
+            self.c_creator.startZimCreation(_path)
+        self._started = True
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if True or exc_type is None:
+            with nogil:
+                self.c_creator.finishZimCreation()
+        self._started = False
+
+    @property
+    def filename(self):
+        return self._filename
 
 ########################
 #     ReadArticle      #
@@ -371,7 +426,7 @@ cdef class PyArchive:
                 Full path to a zim file """
 
         self.c_archive = new wrapper.ZimArchive(str(filename).encode('UTF-8'))
-        self._filename = pathlib.Path(self.c_archive.getFilename().decode("UTF-8", "strict"))
+        self._filename = pathlib.Path(self.c_archive.getFilename().decode("UTF-8", "strict")) 
 
     def __dealloc__(self):
         if self.c_archive != NULL:
