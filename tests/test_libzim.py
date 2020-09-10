@@ -23,8 +23,8 @@ import pathlib
 
 import pytest
 
-from libzim.writer import Article, Blob, Creator, Compression
-from libzim.reader import File
+from libzim.writer import Item, Blob, Creator, Compression
+from libzim.reader import Archive
 
 # test files https://wiki.kiwix.org/wiki/Content_in_all_languages
 
@@ -56,285 +56,227 @@ def metadata():
 
 
 @pytest.fixture(scope="session")
-def article_content():
+def item_content():
     content = """<!DOCTYPE html>
         <html class="client-js">
         <head><meta charset="UTF-8">
         <title>Monadical</title>
         </head>
         <h1> ñññ Hello, it works ñññ </h1></html>"""
-    url = "A/Monadical_SAS"
+    path = "A/Monadical_SAS"
     title = "Monadical SAS"
     mime_type = "text/html"
-    return (content, url, title, mime_type)
+    return (content, path, title, mime_type)
 
 
-class SimpleArticle(Article):
-    def __init__(self, content, url, title, mime_type):
-        Article.__init__(self)
+class SimpleItem(Item):
+    def __init__(self, content, path, title, mime_type):
         self.content = content
-        self.url = url
+        self.path = path
         self.title = title
         self.mime_type = mime_type
 
-    def is_redirect(self):
-        return False
-
-    @property
-    def can_write(self):
-        return True
-
-    def get_url(self):
-        return self.url
+    def get_path(self):
+        return self.path
 
     def get_title(self):
         return self.title
 
-    def get_mime_type(self):
+    def get_mimetype(self):
         return self.mime_type
 
-    def get_filename(self):
-        return ""
+    def get_contentProvider(self):
+        return ContentProvider(self.content)
 
-    def should_compress(self):
-        return True
 
-    def should_index(self):
-        return True
+class ContentProvider:
+    def __init__(self, content):
+        self.content = content
+        self.feeded = False
 
-    def get_data(self):
-        return Blob(self.content.encode("UTF-8"))
+    def feed(self):
+        if self.feeded:
+            return Blob("")
+        self.feeded = True
+        return Blob(self.content)
 
     def get_size(self):
-        return self.get_data().size()
+        return len(self.content.encode('utf8'))
 
 
-class OverridenArticle(Article):
-    def __init__(self, removed_method):
-        super().__init__()
-        self.removed_method = removed_method
-
-    def get_url(self) -> str:
+class OverridenItem(Item):
+    def get_path(self) -> str:
         return "N/u"
 
     def get_title(self) -> str:
         return ""
 
-    def is_redirect(self) -> bool:
-        return self.removed_method == "get_redirect_url"
-
-    def get_mime_type(self) -> str:
+    def get_mimetype(self) -> str:
         return "text/plain"
 
-    def get_filename(self) -> str:
-        return ""
-
-    def should_compress(self) -> bool:
-        return False
-
-    def should_index(self) -> bool:
-        return False
-
-    def get_redirect_url(self) -> str:
-        return "N/u"
-
-    def get_data(self) -> Blob:
-        return Blob("")
-
-    def get_size(self):
-        # with 0, there's no call to get_data()
-        return 1 if self.removed_method == "get_data" else 0
-
-
 @pytest.fixture(scope="session")
-def article(article_content):
-    return SimpleArticle(*article_content)
+def item(item_content):
+    return SimpleItem(*item_content)
 
 
-def test_write_article(tmpdir, article):
-    with Creator(
-        tmpdir / "test.zim", main_page="welcome", index_language="eng", min_chunk_size=2048,
-    ) as zim_creator:
-        zim_creator.add_article(article)
-        zim_creator.update_metadata(
-            creator="python-libzim",
-            description="Created in python",
-            name="Hola",
-            publisher="Monadical",
-            title="Test Zim",
-        )
+def test_write_article(tmpdir, item):
+    zim_creator = Creator(tmpdir/"test.zim")
+    with zim_creator:
+        zim_creator.add_item(item)
 
 
-def test_article_metadata(tmpdir, metadata):
-    with Creator(
-        tmpdir / "test.zim", main_page="welcome", index_language="eng", min_chunk_size=2048,
-    ) as zim_creator:
-        zim_creator.update_metadata(**metadata)
-        assert zim_creator._metadata == metadata
+def test_creator_config(tmpdir, item):
+    # Do with intermediate steps
+    zim_creator = Creator(tmpdir/"test.zim")
+    zim_creator.configIndexing(True, "eng")
+    zim_creator.setMainPath("A/welcome")
+    with zim_creator:
+        zim_creator.add_item(item)
+        zim_creator.add_metadata("creator", b"python-libzim")
+    del zim_creator
+
+    # Do it all in once:
+    with Creator(tmpdir/"test.zim").configIndexing(True, "end") as zim_creator:
+        zim_creator.setMainPath("A/welcome")
+        zim_creator.add_item(item)
+        zim_creator.add_metadata("creator", b"python-libzim")
 
 
 def test_creator_params(tmpdir):
     path = tmpdir / "test.zim"
-    main_page = "welcome"
-    main_page_url = f"A/{main_page}"
-    index_language = "eng"
-    with Creator(
-        path, main_page=main_page_url, index_language=index_language, min_chunk_size=2048
-    ) as zim_creator:
-        zim_creator.add_article(
-            SimpleArticle(title="Welcome", mime_type="text/html", content="", url=main_page_url)
+    zim_creator = Creator(path)
+    zim_creator.configIndexing(True, "eng")
+    main_page = "A/welcome"
+    with zim_creator:
+        zim_creator.add_item(
+            SimpleItem(title="Welcome", mime_type="text/html", content="", path=main_page)
         )
+        zim_creator.add_metadata("language", b"eng")
+        zim_creator.setMainPath(main_page)
 
-    zim = File(path)
-    assert zim.filename == path
-    assert zim.main_page_url == main_page_url
-    assert bytes(zim.get_article("/M/Language").content).decode("UTF-8") == index_language
+    archive = Archive(path)
+    assert archive.filename == path
+    assert archive.main_entry.path == "-/mainPage"
+    assert archive.main_entry.get_redirect_entry().path == main_page
+    assert archive.get_metadata("Language") == b"eng"
 
 
 def test_segfault_on_realloc(tmpdir):
     """ assert that we are able to delete an unclosed Creator #31 """
-    creator = Creator(tmpdir / "test.zim", "welcome", "eng")
-    del creator  # used to segfault
+    zim_creator = Creator(tmpdir/"test.zim")
+    del zim_creator  # used to segfault
 
 
 def test_noleftbehind_empty(tmpdir):
     """ assert that ZIM with no articles don't leave files behind #41 """
     fname = "test_empty.zim"
-    with Creator(
-        tmpdir / fname, main_page="welcome", index_language="eng", min_chunk_size=2048,
-    ) as zim_creator:
+    with Creator(tmpdir/fname) as zim_creator:
         print(zim_creator)
 
     assert len([p for p in tmpdir.listdir() if p.basename.startswith(fname)]) == 1
 
 
-def test_double_close(tmpdir):
-    creator = Creator(tmpdir / "test.zim", "welcome", "eng")
-    creator.close()
-    with pytest.raises(RuntimeError):
-        creator.close()
-
-
-def test_default_creator_params(tmpdir):
-    """ ensure we can init a Creator without specifying all params """
-    creator = Creator(tmpdir / "test.zim", "welcome")
-    assert True  # we could init the Creator without specifying other params
-    assert creator.language == "eng"
-    assert creator.main_page == "welcome"
-
-
 def test_filename_param_types(tmpdir):
     path = tmpdir / "test.zim"
-    with Creator(path, "welcome") as creator:
-        assert creator.filename == path
-        assert isinstance(creator.filename, pathlib.Path)
-    with Creator(str(path), "welcome") as creator:
-        assert creator.filename == path
-        assert isinstance(creator.filename, pathlib.Path)
+    with Creator(path) as zim_creator:
+        assert zim_creator.filename == path
+        assert isinstance(zim_creator.filename, pathlib.Path)
+    with Creator(str(path)) as zim_creator:
+        assert zim_creator.filename == path
+        assert isinstance(zim_creator.filename, pathlib.Path)
 
 
 def test_in_article_exceptions(tmpdir):
     """ make sure we raise RuntimeError from article's virtual methods """
 
-    class BoolErrorArticle(SimpleArticle):
-        def is_redirect(self):
-            raise RuntimeError("OUPS Redirect")
-
-    class StringErrorArticle(SimpleArticle):
-        def get_url(self):
+    class StringErrorArticle(SimpleItem):
+        def get_path(self):
             raise IOError
 
-    class BlobErrorArticle(SimpleArticle):
-        def get_data(self):
+    class BlobErrorArticle(SimpleItem):
+        def get_contentProvider(self):
             raise IOError
 
-    path, main_page = tmpdir / "test.zim", "welcome"
-    args = {"title": "Hello", "mime_type": "text/html", "content": "", "url": "welcome"}
+    path = tmpdir / "test.zim"
+    args = {"title": "Hello", "mime_type": "text/html", "content": "", "path": "welcome"}
 
-    with Creator(path, main_page) as zim_creator:
+    with Creator(path) as zim_creator:
         # make sure we can can exception of all types (except int, not used)
-        with pytest.raises(RuntimeError, match="OUPS Redirect"):
-            zim_creator.add_article(BoolErrorArticle(**args))
-        with pytest.raises(RuntimeError, match="in get_url"):
-            zim_creator.add_article(StringErrorArticle(**args))
+        with pytest.raises(RuntimeError, match="in get_path"):
+            zim_creator.add_item(StringErrorArticle(**args))
         with pytest.raises(RuntimeError, match="IOError"):
-            zim_creator.add_article(BlobErrorArticle(**args))
+            zim_creator.add_item(BlobErrorArticle(**args))
         with pytest.raises(RuntimeError, match="NotImplementedError"):
-            zim_creator.add_article(Article())
+            zim_creator.add_item(Item())
 
     # make sure we can catch it from outside creator
     with pytest.raises(RuntimeError):
-        with Creator(path, main_page) as zim_creator:
-            zim_creator.add_article(BlobErrorArticle(**args))
+        with Creator(path) as zim_creator:
+            zim_creator.add_item(BlobErrorArticle(**args))
 
 
-def test_dontcreatezim_onexception(tmpdir):
-    """ make sure we can prevent ZIM file creation (workaround missing cancel())
-
-        A new interpreter is instanciated to get a different memory space.
-        This workaround is not safe and may segfault at GC under some circumstances
-
-        Unless we get a proper cancel() on libzim, that's the only way to not create
-        a ZIM file on error """
-    path, main_page = tmpdir / "test.zim", "welcome"
-    pycode = f"""
-from libzim.writer import Creator
-from libzim.writer import Article
-class BlobErrorArticle(Article):
-    def get_data(self):
-        raise ValueError
-zim_creator = Creator("{path}", "{main_page}")
-try:
-    zim_creator.add_article(BlobErrorArticle(**args))
-except Exception:
-    zim_creator._closed = True
-"""
-
-    py = subprocess.run([sys.executable, "-c", pycode])
-    assert py.returncode == 0
-    assert not path.exists()
-
+#def test_dontcreatezim_onexception(tmpdir):
+#    """ make sure we can prevent ZIM file creation (workaround missing cancel())
+#
+#        A new interpreter is instanciated to get a different memory space.
+#        This workaround is not safe and may segfault at GC under some circumstances
+#
+#        Unless we get a proper cancel() on libzim, that's the only way to not create
+#        a ZIM file on error """
+#    path, main_page = tmpdir / "test.zim", "welcome"
+#    pycode = f"""
+#from libzim.writer import Creator
+##
+#class BlobErrorArticle:
+#    def get_data(self):
+#        raise ValueError
+#
+#with Creator("{path}") as zim_creator:
+#    try:
+#        zim_creator.add_item(BlobErrorArticle())
+#    except:
+#        pass
+#"""
+#
+#    py = subprocess.run([sys.executable, "-c", pycode])
+#    assert py.returncode == 0
+#    assert not path.exists()
+#
 
 def test_redirect_url(tmpdir):
-    url = "A/welcome"
-    redirect_url = "A/home"
-
-    class RedirectArticle(SimpleArticle):
-        def is_redirect(self):
-            return True
-
-        def get_redirect_url(self):
-            return url
+    itemPath = "A/welcome"
+    redirect_path = "A/home"
 
     path = tmpdir / "test.zim"
-    with Creator(path, "welcome") as zim_creator:
-        zim_creator.add_article(SimpleArticle(title="Hello", mime_type="text/html", content="", url=url))
-        zim_creator.add_article(RedirectArticle(content="", title="", mime_type="", url=redirect_url))
+    with Creator(path) as zim_creator:
+        zim_creator.add_item(SimpleItem(title="Hello", mime_type="text/html", content="", path=itemPath))
+        zim_creator.add_redirection(path=redirect_path, title="", targetPath=itemPath)
 
-    with File(path) as reader:
-        assert reader.get_article(redirect_url).is_redirect
-        assert reader.get_article(redirect_url).get_redirect_article().longurl == url
+    archive = Archive(path)
+    redirectEntry = archive.get_entry_by_path(redirect_path)
+    assert redirectEntry.is_redirect
+    assert redirectEntry.get_redirect_entry().path == itemPath
 
 
 @pytest.mark.parametrize(
-    "no_method", [m for m in dir(OverridenArticle) if m.split("_", 1)[0] in ("get", "is", "should")],
+    "no_method", [m for m in dir(SimpleItem) if m.split("_", 1)[0] in ("get", "is", "should")],
 )
 def test_article_overriding_required(tmpdir, monkeypatch, no_method):
     """ ensure we raise properly on not-implemented methods of Article """
 
     path, main_page = tmpdir / "test.zim", "welcome"
     pattern = re.compile(r"NotImplementedError.+must be implemented")
-    monkeypatch.delattr(OverridenArticle, no_method)
+    monkeypatch.delattr(SimpleItem, no_method)
 
     with pytest.raises(RuntimeError, match=pattern):
-        with Creator(path, main_page) as zim_creator:
-            zim_creator.add_article(OverridenArticle(no_method))
+        with Creator(path) as zim_creator:
+            zim_creator.add_item(SimpleItem(content=b"", path="A/foo", title="", mime_type=""))
 
 
 def test_repr():
     title = "Welcome !"
     url = "A/welcome"
-    article = SimpleArticle("", url, title, "text/plain")
+    article = SimpleItem("", url, title, "text/plain")
     assert title in repr(article)
     assert url in repr(article)
 
@@ -343,53 +285,59 @@ def test_repr():
     "compression", Compression.__members__,
 )
 def test_compression_from_enum(tmpdir, compression):
-    with Creator(tmpdir / "test.zim", "home", compression=compression) as zim_creator:
-        zim_creator.add_article(SimpleArticle(title="Hello", mime_type="text/html", content="", url="A/home"))
+    zim_creator = Creator(tmpdir / "test.zim")
+    zim_creator.configCompression(compression)
+    with zim_creator:
+        zim_creator.add_item(SimpleItem(title="Hello", mime_type="text/html", content="", path="A/home"))
 
 
 @pytest.mark.parametrize(
     "compression", Compression.__members__.keys(),
 )
 def test_compression_from_string(tmpdir, compression):
-    with Creator(tmpdir / "test.zim", "home", compression=compression) as zim_creator:
-        zim_creator.add_article(SimpleArticle(title="Hello", mime_type="text/html", content="", url="A/home"))
+    creator = Creator(tmpdir/"test.zim")
+    creator.configCompression(compression)
+    with creator:
+        creator.add_item(SimpleItem(title="Hello", mime_type="text/html", content="", path="A/home"))
 
 
 def test_bad_compression(tmpdir):
+    creator = Creator(tmpdir/"test.zim")
     with pytest.raises(AttributeError):
-        Creator(tmpdir / "test.zim", "welcome", compression="toto")
+        creator.configCompression("toto")
 
 
 def test_filename_article(tmpdir):
-    class FileArticle(Article):
-        def __init__(self, fpath, url):
-            super().__init__()
+    class FileProvider():
+        def __init__(self, fpath):
             self.fpath = fpath
-            self.url = url
+            self.feeded = False
 
-        def is_redirect(self):
-            return False
+        def get_size(self):
+            return self.fpath.stat().size
 
-        def get_url(self):
-            return self.url
+        def feed(self):
+            if self.feeded:
+                return Blob("")
+            self.feeded = True
+            return Blob(self.fpath.read())
+
+    class FileItem:
+        def __init__(self, fpath, path):
+            self.fpath = fpath
+            self.path = path
+
+        def get_path(self):
+            return self.path
 
         def get_title(self):
             return ""
 
-        def get_mime_type(self):
+        def get_mimetype(self):
             return "text/plain"
 
-        def get_filename(self):
-            return str(self.fpath)
-
-        def should_compress(self):
-            return True
-
-        def should_index(self):
-            return True
-
-        def get_size(self):
-            return self.fpath.stat().size
+        def get_contentProvider(self):
+            return FileProvider(self.fpath)
 
     zim_path = tmpdir / "test.zim"
     article_path = tmpdir / "test.txt"
@@ -400,9 +348,9 @@ def test_filename_article(tmpdir):
     with open(article_path, "wb") as fh:
         fh.write(content)
 
-    with Creator(zim_path, "home") as zim_creator:
-        zim_creator.add_article(FileArticle(article_path, article_url))
+    with Creator(zim_path) as zim_creator:
+        zim_creator.add_item(FileItem(article_path, article_url))
 
     # ensure size on reader is correct
-    with File(zim_path) as reader:
-        assert reader.get_article(article_url).content.nbytes == len(content)
+    archive = Archive(zim_path)
+    assert bytes(archive.get_entry_by_path(article_url).get_item().content) == content

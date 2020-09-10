@@ -27,239 +27,128 @@
 
 #include <cstdlib>
 #include <iostream>
-#include <zim/writer/url.h>
 #include <zim/blob.h>
 #include <zim/writer/creator.h>
 
-/*
-#########################
-#       ZimArticle      #
-#########################
-*/
 
-ZimArticleWrapper::ZimArticleWrapper(PyObject *obj) : m_obj(obj)
+ObjWrapper::ObjWrapper(PyObject* obj)
+  : m_obj(obj)
 {
-    if (import_libzim__wrapper())
-    {
-        std::cerr << "Error executing import_libzim!\n";
-        throw std::runtime_error("Error executing import_libzim");
-    }
-    else
-    {
-        Py_XINCREF(this->m_obj);
-    }
+ if (import_libzim__wrapper()) {
+    std::cerr << "Error executing import_libzim!\n";
+    throw std::runtime_error("Error executing import_libzim");
+  } else {
+    Py_XINCREF(this->m_obj);
+  }
 }
 
-ZimArticleWrapper::~ZimArticleWrapper()
+ObjWrapper::~ObjWrapper()
 {
   PyGILState_STATE gstate;
   gstate = PyGILState_Ensure();
-    Py_XDECREF(this->m_obj);
+  Py_XDECREF(this->m_obj);
   PyGILState_Release(gstate);
 }
 
-std::string ZimArticleWrapper::callCythonReturnString(std::string methodName) const
+std::string ObjWrapper::callCythonReturnString(std::string methodName) const
 {
-    if (!this->m_obj)
-        throw std::runtime_error("Python object not set");
+  if (!this->m_obj)
+    throw std::runtime_error("Python object not set");
 
-    std::string error;
+  std::string error;
 
-    std::string ret_val = string_cy_call_fct(this->m_obj, methodName, &error);
-    if (!error.empty())
-        throw std::runtime_error(error);
-
-    return ret_val;
+  std::string ret_val = string_cy_call_fct(this->m_obj, methodName, &error);
+  if (!error.empty())
+    throw std::runtime_error(error);
+  return ret_val;
 }
 
-zim::Blob ZimArticleWrapper::callCythonReturnBlob(std::string methodName) const
+uint64_t ObjWrapper::callCythonReturnInt(std::string methodName) const
 {
-    if (!this->m_obj)
-        throw std::runtime_error("Python object not set");
+  if (!this->m_obj)
+      throw std::runtime_error("Python object not set");
 
-    std::string error;
+  std::string error;
 
-    zim::Blob ret_val = blob_cy_call_fct(this->m_obj, methodName, &error);
-    if (!error.empty())
-        throw std::runtime_error(error);
+  int64_t ret_val = int_cy_call_fct(this->m_obj, methodName, &error);
+  if (!error.empty())
+    throw std::runtime_error(error);
 
-    return ret_val;
+  return ret_val;
 }
 
-bool ZimArticleWrapper::callCythonReturnBool(std::string methodName) const
+
+/*
+################################
+#  Content Provider Wrapper    #
+################################
+*/
+
+zim::size_type ContentProviderWrapper::getSize() const
 {
-    if (!this->m_obj)
-        throw std::runtime_error("Python object not set");
-
-    std::string error;
-
-    bool ret_val = bool_cy_call_fct(this->m_obj, methodName, &error);
-    if (!error.empty())
-        throw std::runtime_error(error);
-
-    return ret_val;
+  return callCythonReturnInt("get_size");
 }
 
-uint64_t ZimArticleWrapper::callCythonReturnInt(std::string methodName) const
+zim::Blob ContentProviderWrapper::feed()
 {
-    if (!this->m_obj)
-        throw std::runtime_error("Python object not set");
-
-    std::string error;
-
-    int64_t ret_val = int_cy_call_fct(this->m_obj, methodName, &error);
-    if (!error.empty())
-        throw std::runtime_error(error);
-
-    return ret_val;
-}
-zim::writer::Url
-ZimArticleWrapper::getUrl() const
-{
-    std::string url = callCythonReturnString("get_url");
-
-    return zim::writer::Url(url.substr(0, 1)[0], url.substr(2, url.length()));
+  return callCythonReturnBlob("feed");
 }
 
-std::string
-ZimArticleWrapper::getTitle() const
+zim::Blob ContentProviderWrapper::callCythonReturnBlob(std::string methodName) const
 {
-    return callCythonReturnString("get_title");
-}
+  if (!this->m_obj)
+    throw std::runtime_error("Python object not set");
 
-bool ZimArticleWrapper::isRedirect() const
-{
-    return callCythonReturnBool("is_redirect");
-}
+  std::string error;
 
-std::string
-ZimArticleWrapper::getMimeType() const
-{
-    return callCythonReturnString("get_mime_type");
-}
+  zim::Blob ret_val = blob_cy_call_fct(this->m_obj, methodName, &error);
+  if (!error.empty())
+    throw std::runtime_error(error);
 
-std::string
-ZimArticleWrapper::getFilename() const
-{
-    return callCythonReturnString("get_filename");
-}
-
-bool ZimArticleWrapper::shouldCompress() const
-{
-    return callCythonReturnBool("should_compress");
-}
-
-bool ZimArticleWrapper::shouldIndex() const
-{
-    return callCythonReturnBool("should_index");
-}
-
-zim::writer::Url
-ZimArticleWrapper::getRedirectUrl() const
-{
-    std::string redirectUrl = callCythonReturnString("get_redirect_url");
-    return zim::writer::Url(redirectUrl.substr(0, 1)[0], redirectUrl.substr(2, redirectUrl.length()));
-}
-
-// zim::Blob
-// ZimArticleWrapper::getData() const
-// {
-//     std::string content = callCythonReturnString("get_data");
-//     return zim::Blob(&content[0], content.size());
-// }
-
-zim::Blob
-ZimArticleWrapper::getData() const
-{
-    return callCythonReturnBlob("_get_data");
-}
-
-zim::size_type
-ZimArticleWrapper::getSize() const
-{
-    return callCythonReturnInt("get_size");
-}
-
-bool ZimArticleWrapper::isLinktarget() const
-{
-    return false;
-}
-
-bool ZimArticleWrapper::isDeleted() const
-{
-    return false;
-}
-
-std::string ZimArticleWrapper::getNextCategory()
-{
-    return std::string();
+  return ret_val;
 }
 
 /*
 #########################
-#       ZimCreator      #
+#       WriterItem      #
 #########################
 */
 
-class OverriddenZimCreator : public zim::writer::Creator
+
+std::unique_ptr<zim::writer::ContentProvider> WriterItemWrapper::callCythonReturnContentProvider(std::string methodName) const
 {
-public:
-    OverriddenZimCreator(std::string mainPage, zim::CompressionType compression)
-        : zim::writer::Creator(true, compression),
-          mainPage(mainPage) {}
+  if (!this->m_obj)
+    throw std::runtime_error("Python object not set");
 
-    virtual zim::writer::Url getMainUrl() const
-    {
-        return zim::writer::Url('A', mainPage);
-    }
+  std::string error;
 
-    void setMainUrl(std::string newUrl)
-    {
-        mainPage = newUrl;
-    }
+  auto ret_val = std::unique_ptr<zim::writer::ContentProvider>(contentprovider_cy_call_fct(this->m_obj, methodName, &error));
+  if (!error.empty())
+    throw std::runtime_error(error);
 
-    std::string mainPage;
-};
-
-ZimCreatorWrapper::ZimCreatorWrapper(OverriddenZimCreator *creator) : _creator(creator)
-{
+  return ret_val;
 }
 
-ZimCreatorWrapper::~ZimCreatorWrapper()
+std::string
+WriterItemWrapper::getPath() const
 {
-    delete _creator;
+  return callCythonReturnString("get_path");
 }
 
-ZimCreatorWrapper *
-ZimCreatorWrapper::
-    create(std::string fileName, std::string mainPage, std::string fullTextIndexLanguage, zim::CompressionType compression, int minChunkSize)
-
+std::string
+WriterItemWrapper::getTitle() const
 {
-    bool shouldIndex = !fullTextIndexLanguage.empty();
-
-    OverriddenZimCreator *c = new OverriddenZimCreator(mainPage, compression);
-    c->setIndexing(shouldIndex, fullTextIndexLanguage);
-    c->setMinChunkSize(minChunkSize);
-    c->startZimCreation(fileName);
-    return (new ZimCreatorWrapper(c));
+  return callCythonReturnString("get_title");
 }
 
-void ZimCreatorWrapper::addArticle(std::shared_ptr<ZimArticleWrapper> article)
+std::string
+WriterItemWrapper::getMimeType() const
 {
-    _creator->addArticle(article);
+  return callCythonReturnString("get_mimetype");
 }
 
-void ZimCreatorWrapper::finalize()
+std::unique_ptr<zim::writer::ContentProvider>
+WriterItemWrapper::getContentProvider() const
 {
-    _creator->finishZimCreation();
-}
-
-void ZimCreatorWrapper::setMainUrl(std::string newUrl)
-{
-    _creator->setMainUrl(newUrl);
-}
-
-zim::writer::Url ZimCreatorWrapper::getMainUrl()
-{
-    return _creator->getMainUrl();
+    return callCythonReturnContentProvider("get_contentProvider");
 }

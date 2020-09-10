@@ -29,9 +29,9 @@ typedef _object PyObject;
 #include <zim/entry.h>
 #include <zim/item.h>
 #include <zim/search.h>
-#include <zim/writer/article.h>
-#include <zim/writer/url.h>
 #include <zim/blob.h>
+#include <zim/writer/item.h>
+#include <zim/writer/contentProvider.h>
 
 #include <string>
 
@@ -83,50 +83,43 @@ class ZimArchive : public zim::Archive
     { return to_ptr<ZimEntry>(zim::Archive::getMainEntry()); }
 };
 
-class ZimArticleWrapper : public zim::writer::Article
+
+
+class ObjWrapper
 {
-public:
-    PyObject *m_obj;
+  public:
+    ObjWrapper(PyObject* obj);
+    virtual ~ObjWrapper();
 
-    ZimArticleWrapper(PyObject *obj);
-    virtual ~ZimArticleWrapper();
+  protected:
+    PyObject* m_obj;
 
-    virtual zim::writer::Url getUrl() const;
-    virtual std::string getTitle() const;
-    virtual bool isRedirect() const;
-    virtual std::string getMimeType() const;
-    virtual std::string getFilename() const;
-    virtual bool shouldCompress() const;
-    virtual bool shouldIndex() const;
-    virtual zim::writer::Url getRedirectUrl() const;
-    virtual zim::Blob getData() const;
-    virtual zim::size_type getSize() const;
-
-    virtual bool isLinktarget() const;
-    virtual bool isDeleted() const;
-    virtual std::string getNextCategory();
-
-
-private:
     std::string callCythonReturnString(std::string) const;
-    zim::Blob callCythonReturnBlob(std::string) const;
-    bool callCythonReturnBool(std::string) const;
     uint64_t callCythonReturnInt(std::string) const;
 };
 
-class OverriddenZimCreator;
-
-class ZimCreatorWrapper
+class WriterItemWrapper : public zim::writer::Item, private ObjWrapper
 {
-public:
-    OverriddenZimCreator *_creator;
-    ZimCreatorWrapper(OverriddenZimCreator *creator);
-    ~ZimCreatorWrapper();
-    static ZimCreatorWrapper *create(std::string fileName, std::string mainPage, std::string fullTextIndexLanguage, zim::CompressionType compression, int minChunkSize);
-    void addArticle(std::shared_ptr<ZimArticleWrapper> article);
-    void finalize();
-    void setMainUrl(std::string newUrl);
-    zim::writer::Url getMainUrl();
+  public:
+    WriterItemWrapper(PyObject *obj) : ObjWrapper(obj) {};
+    virtual std::string getPath() const;
+    virtual std::string getTitle() const;
+    virtual std::string getMimeType() const;
+    virtual std::unique_ptr<zim::writer::ContentProvider> getContentProvider() const;
+
+  private:
+    std::unique_ptr<zim::writer::ContentProvider> callCythonReturnContentProvider(std::string) const;
+};
+
+class ContentProviderWrapper : public zim::writer::ContentProvider, private ObjWrapper
+{
+  public:
+    ContentProviderWrapper(PyObject *obj) : ObjWrapper(obj) {};
+    virtual zim::size_type getSize() const;
+    virtual zim::Blob feed();
+  private:
+    zim::Blob callCythonReturnBlob(std::string) const;
+
 };
 
 #endif // !libzim_LIB_H
