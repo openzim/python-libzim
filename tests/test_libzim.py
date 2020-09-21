@@ -23,7 +23,7 @@ import pathlib
 
 import pytest
 
-from libzim.writer import Item, Blob, Creator, Compression
+from libzim.writer import Item, Blob, Creator, Compression, ContentProvider
 from libzim.reader import Archive
 
 # test files https://wiki.kiwix.org/wiki/Content_in_all_languages
@@ -86,19 +86,16 @@ class SimpleItem(Item):
         return self.mime_type
 
     def get_contentProvider(self):
-        return ContentProvider(self.content)
+        return SimpleContentProvider(self.content)
 
 
-class ContentProvider:
+class SimpleContentProvider(ContentProvider):
     def __init__(self, content):
+        super().__init__()
         self.content = content
-        self.feeded = False
 
-    def feed(self):
-        if self.feeded:
-            return Blob("")
-        self.feeded = True
-        return Blob(self.content)
+    def gen_blob(self):
+        yield Blob(self.content)
 
     def get_size(self):
         return len(self.content.encode('utf8'))
@@ -308,19 +305,16 @@ def test_bad_compression(tmpdir):
 
 
 def test_filename_article(tmpdir):
-    class FileProvider():
+    class FileProvider(ContentProvider):
         def __init__(self, fpath):
+            super().__init__()
             self.fpath = fpath
-            self.feeded = False
 
         def get_size(self):
             return self.fpath.stat().size
 
-        def feed(self):
-            if self.feeded:
-                return Blob("")
-            self.feeded = True
-            return Blob(self.fpath.read())
+        def gen_blob(self):
+            yield Blob(self.fpath.read())
 
     class FileItem:
         def __init__(self, fpath, path):
