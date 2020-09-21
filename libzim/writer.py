@@ -41,13 +41,33 @@ from .wrapper import WritingBlob as Blob
 __all__ = ["Item", "Blob", "Creator", "ContentProvider"]
 
 class ContentProvider:
+    def __init__(self):
+        self.generator = None
+
     def get_size(self) -> int:
         """ Size of get_data's result in bytes """
         raise NotImplementedError("get_size must be implemented.")
 
     def feed(self) -> Blob:
-        """ Blob containing the complete content of the article """
-        raise NotImplementedError("feed must be implemented.")
+        """ Blob(s) containing the complete content of the article.
+            Must return an empty blob to tell writer no more content has to be written.
+            Sum(size(blobs)) must be equals to `self.get_size()`
+        """
+        if self.generator is None:
+            self.generator = self.gen_blob()
+
+        try:
+            # We have to keep a ref to _blob to be sure gc do not del it while cpp is
+            # using it
+            self._blob = next(self.generator)
+        except StopIteration:
+            self._blob = Blob("")
+
+        return self._blob
+
+    def gen_blob(self):
+        """ Generator yielding blobs for the content of the article """
+        raise NotImplementedError("gen_blob (ro feed) must be implemented")
 
 
 class Item:
