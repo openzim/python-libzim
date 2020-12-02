@@ -166,7 +166,6 @@ cdef public api:
 class Compression(enum.Enum):
     """ Compression algorithms available to create ZIM files """
     none = wrapper.CompressionType.zimcompNone
-    zip = wrapper.CompressionType.zimcompZip
     lzma = wrapper.CompressionType.zimcompLzma
     zstd = wrapper.CompressionType.zimcompZstd
 
