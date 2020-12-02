@@ -24,7 +24,7 @@ def zimdata(request):
 
 
 @pytest.fixture
-def reader(zimdata):
+def archive(zimdata):
     if not zimdata["filename"].exists():
         pytest.skip(f"{zimdata['filename']} doesn't exist")
     return Archive(zimdata["filename"])
@@ -41,17 +41,17 @@ def entry_data():
     }
 
 
-def test_zim_filename(reader, zimdata):
+def test_zim_filename(archive, zimdata):
     for k, v in zimdata.items():
         if k == "main_entry":
-            assert getattr(reader, k).path == v
+            assert getattr(archive, k).path == v
             continue
-        assert getattr(reader, k) == v
-    assert isinstance(reader.filename, Path)
+        assert getattr(archive, k) == v
+    assert isinstance(archive.filename, Path)
 
 
-def test_zim_read(reader, entry_data):
-    entry = reader.get_entry_by_path(entry_data["path"])
+def test_zim_read(archive, entry_data):
+    entry = archive.get_entry_by_path(entry_data["path"])
 
     assert entry.path == entry_data["path"]
     assert entry.title == entry_data["title"]
@@ -61,7 +61,7 @@ def test_zim_read(reader, entry_data):
     assert len(item.content) == entry_data["size"]
 
 
-def test_content_ref_keep(reader):
+def test_content_ref_keep(archive):
     """Get the memoryview on a content and loose the reference on the article.
        We try to load a lot of other articles to detect possible use of dandling pointer
     """
@@ -69,7 +69,7 @@ def test_content_ref_keep(reader):
 
     def get_content():
         nonlocal content
-        entry = reader.get_entry_by_path("A/Albert_Einstein")
+        entry = archive.get_entry_by_path("Albert_Einstein")
         item = entry.get_item()
         assert isinstance(item.content, memoryview)
         content = item.content
@@ -77,8 +77,8 @@ def test_content_ref_keep(reader):
     get_content()  # Now we have a content but no reference to the entry/item.
     gc.collect()
     # Load a lot of content
-    for i in range(0, reader.entry_count, 2):
-        entry = reader.get_entry_by_id(i)
+    for i in range(0, archive.entry_count, 2):
+        entry = archive.get_entry_by_id(i)
         if not entry.is_redirect:
             _ = entry.get_item().content
     # Check everything is ok
@@ -89,8 +89,8 @@ def test_content_ref_keep(reader):
     )
 
 
-def test_get_entry_by_id(reader, entry_data):
-    entry = reader.get_entry_by_id(entry_data["entry_id"])
+def test_get_entry_by_id(archive, entry_data):
+    entry = archive.get_entry_by_id(entry_data["entry_id"])
 
     assert entry.path == entry_data["path"]
     assert entry.title == entry_data["title"]
@@ -100,26 +100,26 @@ def test_get_entry_by_id(reader, entry_data):
     assert len(item.content) == entry_data["size"]
 
 
-def test_suggest(reader):
-    results = reader.suggest("Einstein")
+def test_suggest(archive):
+    results = archive.suggest("Einstein")
     assert "A/Albert_Einstein" in list(results)
 
 
-def test_search(reader):
-    results = reader.search("Einstein")
+def test_search(archive):
+    results = archive.search("Einstein")
     assert len(list(results)) == 10
 
 
-def test_get_wrong_entry(reader):
+def test_get_wrong_entry(archive):
     with pytest.raises(IndexError):  # out of range
-        reader.get_entry_by_id(reader.entry_count + 100)
+        archive.get_entry_by_id(archive.entry_count + 100)
     with pytest.raises(KeyError):
-        reader.get_entry_by_path("A/I_do_not_exists")
+        archive.get_entry_by_path("I_do_not_exists")
 
 
-def test_redirects(reader):
+def test_redirects(archive):
     # we can access target entry from a redirect one
-    abundante = reader.get_entry_by_path("A/Abundante")
+    abundante = archive.get_entry_by_path("Abundante")
     assert abundante.is_redirect
     target = abundante.get_redirect_entry()
     assert target.path != abundante.path
