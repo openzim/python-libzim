@@ -63,7 +63,7 @@ def item_content():
         <title>Monadical</title>
         </head>
         <h1> ñññ Hello, it works ñññ </h1></html>"""
-    path = "A/Monadical_SAS"
+    path = "Monadical_SAS"
     title = "Monadical SAS"
     mime_type = "text/html"
     return (content, path, title, mime_type)
@@ -126,7 +126,7 @@ def test_creator_config(tmpdir, item):
     # Do with intermediate steps
     zim_creator = Creator(tmpdir/"test.zim")
     zim_creator.configIndexing(True, "eng")
-    zim_creator.setMainPath("A/welcome")
+    zim_creator.setMainPath("welcome")
     with zim_creator:
         zim_creator.add_item(item)
         zim_creator.add_metadata("creator", b"python-libzim")
@@ -134,7 +134,7 @@ def test_creator_config(tmpdir, item):
 
     # Do it all in once:
     with Creator(tmpdir/"test.zim").configIndexing(True, "end") as zim_creator:
-        zim_creator.setMainPath("A/welcome")
+        zim_creator.setMainPath("welcome")
         zim_creator.add_item(item)
         zim_creator.add_metadata("creator", b"python-libzim")
 
@@ -143,7 +143,7 @@ def test_creator_params(tmpdir):
     path = tmpdir / "test.zim"
     zim_creator = Creator(path)
     zim_creator.configIndexing(True, "eng")
-    main_page = "A/welcome"
+    main_page = "welcome"
     with zim_creator:
         zim_creator.add_item(
             SimpleItem(title="Welcome", mime_type="text/html", content="", path=main_page)
@@ -153,7 +153,7 @@ def test_creator_params(tmpdir):
 
     archive = Archive(path)
     assert archive.filename == path
-    assert archive.main_entry.path == "-/mainPage"
+    assert archive.main_entry.path == "mainPage"
     assert archive.main_entry.get_redirect_entry().path == main_page
     assert archive.get_metadata("Language") == b"eng"
 
@@ -241,8 +241,8 @@ def test_in_article_exceptions(tmpdir):
 #
 
 def test_redirect_url(tmpdir):
-    itemPath = "A/welcome"
-    redirect_path = "A/home"
+    itemPath = "welcome"
+    redirect_path = "home"
 
     path = tmpdir / "test.zim"
     with Creator(path) as zim_creator:
@@ -267,12 +267,12 @@ def test_article_overriding_required(tmpdir, monkeypatch, no_method):
 
     with pytest.raises(RuntimeError, match=pattern):
         with Creator(path) as zim_creator:
-            zim_creator.add_item(SimpleItem(content=b"", path="A/foo", title="", mime_type=""))
+            zim_creator.add_item(SimpleItem(content=b"", path="foo", title="", mime_type=""))
 
 
 def test_repr():
     title = "Welcome !"
-    url = "A/welcome"
+    url = "welcome"
     article = SimpleItem("", url, title, "text/plain")
     assert title in repr(article)
     assert url in repr(article)
@@ -335,7 +335,7 @@ def test_filename_article(tmpdir):
 
     zim_path = tmpdir / "test.zim"
     article_path = tmpdir / "test.txt"
-    article_url = "A/home"
+    article_url = "home"
     content = b"abc"
 
     # write content to physical file
