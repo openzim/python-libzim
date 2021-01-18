@@ -70,8 +70,8 @@ cdef class ReadingBlob:
 
         Parameters
         ----------
-        *art : Article
-            Pointer to a C++ (zim::) article object
+        *blob : Blob
+            Pointer to a C++ (zim::) blob object
         """
         # Set new internal C zim.ZimArticle article
         self.c_blob = blob
@@ -103,11 +103,11 @@ cdef class ReadingBlob:
         self.view_count -= 1
 
 
-#------- ZimArticle pure virtual methods --------
+#------- pure virtual methods --------
 
 cdef public api:
     string string_cy_call_fct(object obj, string method, string *error) with gil:
-        """Lookup and execute a pure virtual method on ZimArticle returning a string"""
+        """Lookup and execute a pure virtual method on object returning a string"""
         try:
             func = getattr(obj, method.decode('UTF-8'))
             ret_str = func()
@@ -117,7 +117,7 @@ cdef public api:
         return b""
 
     wrapper.Blob blob_cy_call_fct(object obj, string method, string *error) with gil:
-        """Lookup and execute a pure virtual method on ZimArticle returning a Blob"""
+        """Lookup and execute a pure virtual method on object returning a Blob"""
         cdef WritingBlob blob
 
         try:
@@ -144,7 +144,7 @@ cdef public api:
         return NULL
 
     bool bool_cy_call_fct(object obj, string method, string *error) with gil:
-        """Lookup and execute a pure virtual method on ZimArticle returning a bool"""
+        """Lookup and execute a pure virtual method on object returning a bool"""
         try:
             func = getattr(obj, method.decode('UTF-8'))
             return func()
@@ -153,7 +153,7 @@ cdef public api:
         return False
 
     uint64_t int_cy_call_fct(object obj, string method, string *error) with gil:
-        """Lookup and execute a pure virtual method on ZimArticle returning an int"""
+        """Lookup and execute a pure virtual method on object returning an int"""
         try:
             func = getattr(obj, method.decode('UTF-8'))
             return <uint64_t>func()
@@ -175,10 +175,12 @@ cdef class Creator:
 
         Attributes
         ----------
-        *c_creator : zim.ZimCreatorWrapper
+        *c_creator : zim.ZimCreator
             a pointer to the C++ Creator object
-        _finalized : bool
-            flag if the creator was finalized """
+        _filename: pathlib.Path
+            path to create the ZIM file at
+        _started : bool
+            flag if the creator has started """
 
     cdef wrapper.ZimCreator c_creator
     cdef object _filename
@@ -198,7 +200,7 @@ cdef class Creator:
         self.c_creator.configVerbose(verbose)
         return self
 
-    def configCompression(self, comptype) -> Creator:
+    def configCompression(self, comptype: Compression) -> Creator:
         self.c_creator.configCompression(comptype.value)
         return self
 
@@ -224,12 +226,12 @@ cdef class Creator:
 #        self.c_creator.setUuid(uuid)
 
     def add_item(self, WriterItem not None):
-        """ Add an article to the Creator object.
+        """ Add an item to the Creator object.
 
             Parameters
             ----------
-            article : ZimArticle
-                The article to add to the file
+            item : WriterItem
+                The item to add to the file
             Raises
             ------
                 RuntimeError
@@ -264,7 +266,7 @@ cdef class Creator:
             self.c_creator.addRedirection(_path, _title, _targetPath)
 
     def __enter__(self):
-        cdef string _path  = str(self._filename).encode('utf8')
+        cdef string _path = str(self._filename).encode('utf8')
         with nogil:
             self.c_creator.startZimCreation(_path)
         self._started = True
@@ -281,11 +283,11 @@ cdef class Creator:
         return self._filename
 
 ########################
-#     ReadArticle      #
+#         Entry        #
 ########################
 
 cdef class Entry:
-    """ Entry in a Zim file
+    """ Entry in a Zim archive
 
         Attributes
         ----------
@@ -296,16 +298,16 @@ cdef class Entry:
     # Factory functions - Currently Cython can't use classmethods
     @staticmethod
     cdef from_entry(wrapper.ZimEntry* ent):
-        """ Creates a python ReadArticle from a C++ Article (zim::) -> ReadArticle
+        """ Creates a python Entry from a C++ Entry (zim::) -> Entry
 
             Parameters
             ----------
-            art : Article
-                A C++ Article read with File
+            ent : Entry
+                A C++ Entry
             Returns
             ------
-            ReadArticle
-                Casted article """
+            Entry
+                Casted entry """
         cdef Entry entry = Entry()
         entry.c_entry = ent
         return entry
@@ -316,17 +318,15 @@ cdef class Entry:
 
     @property
     def title(self) -> str:
-        """ Article's title -> str """
         return self.c_entry.getTitle().decode('UTF-8')
 
     @property
     def path(self) -> str:
-        """ Article's url without namespace -> str """
         return self.c_entry.getPath().decode("UTF-8", "strict")
 
     @property
     def is_redirect(self) -> bool:
-        """ Whether article is a redirect -> bool """
+        """ Whether entry is a redirect -> bool """
         return self.c_entry.isRedirect()
 
     def get_redirect_entry(self) -> Entry:
@@ -337,8 +337,11 @@ cdef class Entry:
         cdef ZimItem* item = self.c_entry.getItem(True)
         return Item.from_item(item)
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}(url={self.path}, title={self.title})"
+
 cdef class Item:
-    """ Item in a Zim file
+    """ Item in a Zim archive
 
         Attributes
         ----------
@@ -355,12 +358,12 @@ cdef class Item:
 
             Parameters
             ----------
-            art : Article
-                A C++ Article read with File
+            _item : Item
+                A C++ Item
             Returns
             ------
-            ReadArticle
-                Casted article """
+            Item
+                Casted item """
         cdef Item item = Item()
         item.c_item = _item
         return item
@@ -371,17 +374,14 @@ cdef class Item:
 
     @property
     def title(self) -> str:
-        """ Article's title -> str """
         return self.c_item.getTitle().decode('UTF-8')
 
     @property
     def path(self) -> str:
-        """ Article's url without namespace -> str """
         return self.c_item.getPath().decode("UTF-8", "strict")
 
     @property
     def content(self) -> memoryview:
-        """ Article's content -> memoryview """
         if not self._haveBlob:
             self._blob = ReadingBlob()
             self._blob.__setup(self.c_item.getData(<int> 0))
@@ -390,34 +390,33 @@ cdef class Item:
 
     @property
     def mimetype(self) -> str:
-        """ Article's mimetype -> str """
         return self.c_item.getMimetype().decode('UTF-8')
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(url={self.longurl}, title={self.title})"
+        return f"{self.__class__.__name__}(url={self.path}, title={self.title})"
 
 
 
 
 #########################
-#        File           #
+#        Archive        #
 #########################
 
 cdef class PyArchive:
-    """ Zim File Reader
+    """ Zim Archive Reader
 
         Attributes
         ----------
         *c_archive : Archive
             a pointer to a C++ Archive object
         _filename : pathlib.Path
-            the file name of the File Reader object """
+            the file name of the Archive Reader object """
 
     cdef wrapper.ZimArchive* c_archive
     cdef object _filename
 
     def __cinit__(self, object filename: pathlib.Path):
-        """ Constructs a File from full zim file path
+        """ Constructs an Archive from full zim file path
 
             Parameters
             ----------
@@ -425,7 +424,7 @@ cdef class PyArchive:
                 Full path to a zim file """
 
         self.c_archive = new wrapper.ZimArchive(str(filename).encode('UTF-8'))
-        self._filename = pathlib.Path(self.c_archive.getFilename().decode("UTF-8", "strict")) 
+        self._filename = pathlib.Path(self.c_archive.getFilename().decode("UTF-8", "strict"))
 
     def __dealloc__(self):
         if self.c_archive != NULL:
@@ -433,25 +432,23 @@ cdef class PyArchive:
 
     @property
     def filename(self) -> pathlib.Path:
-        """ Filename of the File object -> pathlib.Path """
         return self._filename
 
     def get_entry_by_path(self, path: str) -> Entry:
-        """ ReadArticle with a copy of the file article by full url (including namespace) -> ReadArticle
+        """ Entry from a path -> Entry
 
             Parameters
             ----------
-            url : str
-                The full url, including namespace, of the article
+            path : str
+                The path of the article
             Returns
             -------
-            ReadArticle
-                The ReadArticle object
+            Entry
+                The Entry object
             Raises
             ------
                 KeyError
-                    If an article with the provided long url is not found in the file """
-        # Read to a zim::Article
+                    If an article with the provided path is not found in the archive """
         cdef wrapper.ZimEntry* entry
         try:
             entry = self.c_archive.getEntryByPath(<string>path.encode('UTF-8'))
@@ -465,11 +462,11 @@ cdef class PyArchive:
             Parameters
             ----------
             name: str
-                url of the metadata article (without namespace)
+                name/path of the Metadata Entry
             Returns
             -------
             bytes
-                Metadata article's content. Can be of any type. """
+                Metadata entry's content. Can be of any type. """
         return bytes(self.c_archive.getMetadata(name.encode('UTF-8')))
 
     def get_entry_by_id(self, entry_id: int) -> Entry:
@@ -478,36 +475,18 @@ cdef class PyArchive:
 
     @property
     def main_entry(self) -> Entry:
-        """ File's main page full url -> str
-
-            Returns
-            -------
-            str
-                The url of the main page, including namespace """
         return Entry.from_entry(self.c_archive.getMainEntry())
 
     @property
     def checksum(self) -> str:
-        """ File's checksum -> str
-
-            Returns
-            -------
-            str
-                The file's checksum """
         return self.c_archive.getChecksum().decode("UTF-8", "strict")
 
     @property
     def entry_count(self) -> int:
-        """ File's articles count -> int
-
-            Returns
-            -------
-            int
-                The total number of articles in the file """
         return self.c_archive.getEntryCount()
 
     def suggest(self, query: str, start: int = 0, end: int = 10) -> Generator[str, None, None]:
-        """ Full urls of suggested articles in the file from a title query -> Generator[str, None, None]
+        """ Paths of suggested entries in the archive from a title query -> Generator[str, None, None]
 
             Parameters
             ----------
@@ -520,7 +499,7 @@ cdef class PyArchive:
             Returns
             -------
             Generator
-                Url of suggested article """
+                Path of suggested entry """
         cdef wrapper.ZimSearch search = wrapper.ZimSearch(dereference(self.c_archive))
         search.set_suggestion_mode(True)
         search.set_query(query.encode('UTF-8'))
@@ -532,7 +511,7 @@ cdef class PyArchive:
             preincrement(it)
 
     def search(self, query: str, start: int = 0, end: int = 10) -> Generator[str, None, None]:
-        """ Full urls of articles in the file from a search query -> Generator[str, None, None]
+        """ Paths of entries in the archive from a search query -> Generator[str, None, None]
 
             Parameters
             ----------
@@ -545,7 +524,7 @@ cdef class PyArchive:
             Returns
             -------
             Generator
-                Url of article matching the search query """
+                Path of entry matching the search query """
 
         cdef wrapper.ZimSearch search = wrapper.ZimSearch(dereference(self.c_archive))
         search.set_suggestion_mode(False)
@@ -590,7 +569,7 @@ cdef class PyArchive:
         search.set_suggestion_mode(True)
         search.set_query(query.encode('UTF-8'))
         search.set_range(0, 1)
- 
+
         return search.get_matches_estimated()
 
     def __repr__(self) -> str:

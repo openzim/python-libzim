@@ -55,7 +55,7 @@ def test_zim_read(archive, entry_data):
 
     assert entry.path == entry_data["path"]
     assert entry.title == entry_data["title"]
-    item = entry.get_item();
+    item = entry.get_item()
     assert item.mimetype == entry_data["mimetype"]
     assert isinstance(item.content, memoryview)
     assert len(item.content) == entry_data["size"]
@@ -63,7 +63,7 @@ def test_zim_read(archive, entry_data):
 
 def test_content_ref_keep(archive):
     """Get the memoryview on a content and loose the reference on the article.
-       We try to load a lot of other articles to detect possible use of dandling pointer
+    We try to load a lot of other articles to detect possible use of dandling pointer
     """
     content = None
 
@@ -94,7 +94,7 @@ def test_get_entry_by_id(archive, entry_data):
 
     assert entry.path == entry_data["path"]
     assert entry.title == entry_data["title"]
-    item = entry.get_item();
+    item = entry.get_item()
     assert item.mimetype == entry_data["mimetype"]
     assert isinstance(item.content, memoryview)
     assert len(item.content) == entry_data["size"]

@@ -119,7 +119,6 @@ class ContentProviderWrapper : public zim::writer::ContentProvider, private ObjW
     virtual zim::Blob feed();
   private:
     zim::Blob callCythonReturnBlob(std::string) const;
-
 };
 
 #endif // !libzim_LIB_H
