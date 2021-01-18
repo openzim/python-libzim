@@ -2,7 +2,7 @@ name: test
 on: [push]
 
 env:
-  LIBZIM_VERSION: 6.1.8
+  LIBZIM_VERSION: 2021-01-18
   LIBZIM_INCLUDE_PATH: include/zim
   MAX_LINE_LENGTH: 110
   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -56,14 +56,14 @@ jobs:
         run: |
           echo LIBZIM_EXT=dylib >> $GITHUB_ENV
           echo LIBZIM_RELEASE=libzim_macos-x86_64-$LIBZIM_VERSION >> $GITHUB_ENV
-          echo LIBZIM_LIBRARY_PATH=lib/libzim.${LIBZIM_VERSION:0:1}.dylib >> $GITHUB_ENV
+          echo LIBZIM_LIBRARY_PATH=lib/libzim.6.dylib >> $GITHUB_ENV
 
       - name: set linux environ
         if: matrix.os == 'ubuntu-latest'
         run: |
           echo LIBZIM_EXT=so >> $GITHUB_ENV
           echo LIBZIM_RELEASE=libzim_linux-x86_64-$LIBZIM_VERSION >> $GITHUB_ENV
-          echo LIBZIM_LIBRARY_PATH=lib/x86_64-linux-gnu/libzim.so.$LIBZIM_VERSION >> $GITHUB_ENV
+          echo LIBZIM_LIBRARY_PATH=lib/x86_64-linux-gnu/libzim.so.6.3.0 >> $GITHUB_ENV
 
       - name: Cache libzim dylib & headers
         uses: actions/cache@master
@@ -75,7 +75,7 @@ jobs:
       - name: Download libzim dylib & headers from OpenZIM.org releases
         if: steps.cache-libzim.outputs.cache-hit != 'true'
         run: |
-          wget -q https://download.openzim.org/release/libzim/$LIBZIM_RELEASE.tar.gz
+          wget -q https://download.openzim.org/nightly/$LIBZIM_VERSION/$LIBZIM_RELEASE.tar.gz
           tar --gunzip --extract --file=$LIBZIM_RELEASE.tar.gz
           mv $LIBZIM_RELEASE libzim_dist
 
