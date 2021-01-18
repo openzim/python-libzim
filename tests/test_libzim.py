@@ -18,6 +18,7 @@
 
 import re
 import pathlib
+import datetime
 
 import pytest
 
@@ -153,6 +154,20 @@ def test_creator_params(tmpdir):
     assert archive.main_entry.path == "mainPage"
     assert archive.main_entry.get_redirect_entry().path == main_page
     assert archive.get_metadata("Language") == b"eng"
+
+
+def test_creator_metadata(tmpdir, metadata):
+    path = tmpdir / "test.zim"
+    zim_creator = Creator(path)
+    with zim_creator:
+        for name, value in metadata.items():
+            zim_creator.add_metadata(name, value.encode("UTF-8"))
+        mdate = datetime.date(*[int(x) for x in metadata.get("Date").split("-")])
+        zim_creator.add_metadata("Date", mdate)
+
+    archive = Archive(path)
+    for name, value in metadata.items():
+        assert archive.get_metadata(name).decode("UTF-8") == value
 
 
 def test_segfault_on_realloc(tmpdir):
@@ -349,3 +364,76 @@ def test_filename_article(tmpdir):
     # ensure size on reader is correct
     archive = Archive(zim_path)
     assert bytes(archive.get_entry_by_path(article_url).get_item().content) == content
+
+
+def test_notimplementing_contentprovider(tmpdir):
+    class FileItem:
+        def get_path(self):
+            return "-"
+
+        def get_title(self):
+            return ""
+
+        def get_mimetype(self):
+            return "text/plain"
+
+        def get_contentProvider(self):
+            return ContentProvider()
+
+    with Creator(tmpdir / "test.zim") as zim_creator:
+        with pytest.raises(RuntimeError, match="NotImplementedError: get_size"):
+            zim_creator.add_item(FileItem())
+
+
+# disabled as it currently crashs the interpreter (Abort trap 6)
+def ___test_notimplementing_contentprovider_gen_blob(tmpdir):
+    class BadContentProvider(ContentProvider):
+        def get_size(self):
+            return 1
+
+    class FileItem:
+        def get_path(self):
+            return "-"
+
+        def get_title(self):
+            return ""
+
+        def get_mimetype(self):
+            return "text/plain"
+
+        def get_contentProvider(self):
+            return BadContentProvider()
+
+    with Creator(tmpdir / "test.zim") as zim_creator:
+        with pytest.raises(RuntimeError, match="NotImplementedError: gen_blob"):
+            zim_creator.add_item(FileItem())
+
+
+def test_contentprovider_iface(tmpdir):
+    class MyContentProvider(ContentProvider):
+        def get_size(self):
+            return len(b"hello")
+
+        def gen_blob(self):
+            yield Blob(b"hello")
+
+    class FileItem:
+        def get_path(self):
+            return "-"
+
+        def get_title(self):
+            return ""
+
+        def get_mimetype(self):
+            return "text/plain"
+
+        def get_contentProvider(self):
+            return MyContentProvider()
+
+    with Creator(tmpdir / "test.zim") as zim_creator:
+        zim_creator.add_item(FileItem())
+
+    # test feed() as pytest-cov doesn't see it being called above
+    mcp = MyContentProvider()
+    assert Blob(b"hello").size() == mcp.feed().size()
+    assert Blob(b"").size() == mcp.feed().size()
