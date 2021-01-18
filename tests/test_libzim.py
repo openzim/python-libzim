@@ -17,8 +17,6 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import re
-import sys
-import subprocess
 import pathlib
 
 import pytest
@@ -98,7 +96,7 @@ class SimpleContentProvider(ContentProvider):
         yield Blob(self.content)
 
     def get_size(self):
-        return len(self.content.encode('utf8'))
+        return len(self.content.encode("utf8"))
 
 
 class OverridenItem(Item):
@@ -111,20 +109,21 @@ class OverridenItem(Item):
     def get_mimetype(self) -> str:
         return "text/plain"
 
+
 @pytest.fixture(scope="session")
 def item(item_content):
     return SimpleItem(*item_content)
 
 
 def test_write_article(tmpdir, item):
-    zim_creator = Creator(tmpdir/"test.zim")
+    zim_creator = Creator(tmpdir / "test.zim")
     with zim_creator:
         zim_creator.add_item(item)
 
 
 def test_creator_config(tmpdir, item):
     # Do with intermediate steps
-    zim_creator = Creator(tmpdir/"test.zim")
+    zim_creator = Creator(tmpdir / "test.zim")
     zim_creator.configIndexing(True, "eng")
     zim_creator.setMainPath("welcome")
     with zim_creator:
@@ -133,7 +132,7 @@ def test_creator_config(tmpdir, item):
     del zim_creator
 
     # Do it all in once:
-    with Creator(tmpdir/"test.zim").configIndexing(True, "end") as zim_creator:
+    with Creator(tmpdir / "test.zim").configIndexing(True, "end") as zim_creator:
         zim_creator.setMainPath("welcome")
         zim_creator.add_item(item)
         zim_creator.add_metadata("creator", b"python-libzim")
@@ -145,9 +144,7 @@ def test_creator_params(tmpdir):
     zim_creator.configIndexing(True, "eng")
     main_page = "welcome"
     with zim_creator:
-        zim_creator.add_item(
-            SimpleItem(title="Welcome", mime_type="text/html", content="", path=main_page)
-        )
+        zim_creator.add_item(SimpleItem(title="Welcome", mime_type="text/html", content="", path=main_page))
         zim_creator.add_metadata("language", b"eng")
         zim_creator.setMainPath(main_page)
 
@@ -160,14 +157,14 @@ def test_creator_params(tmpdir):
 
 def test_segfault_on_realloc(tmpdir):
     """ assert that we are able to delete an unclosed Creator #31 """
-    zim_creator = Creator(tmpdir/"test.zim")
+    zim_creator = Creator(tmpdir / "test.zim")
     del zim_creator  # used to segfault
 
 
 def test_noleftbehind_empty(tmpdir):
     """ assert that ZIM with no articles don't leave files behind #41 """
     fname = "test_empty.zim"
-    with Creator(tmpdir/fname) as zim_creator:
+    with Creator(tmpdir / fname) as zim_creator:
         print(zim_creator)
 
     assert len([p for p in tmpdir.listdir() if p.basename.startswith(fname)]) == 1
@@ -212,7 +209,7 @@ def test_in_article_exceptions(tmpdir):
             zim_creator.add_item(BlobErrorArticle(**args))
 
 
-#def test_dontcreatezim_onexception(tmpdir):
+# def test_dontcreatezim_onexception(tmpdir):
 #    """ make sure we can prevent ZIM file creation (workaround missing cancel())
 #
 #        A new interpreter is instanciated to get a different memory space.
@@ -222,23 +219,24 @@ def test_in_article_exceptions(tmpdir):
 #        a ZIM file on error """
 #    path, main_page = tmpdir / "test.zim", "welcome"
 #    pycode = f"""
-#from libzim.writer import Creator
+# from libzim.writer import Creator
 ##
-#class BlobErrorArticle:
+# class BlobErrorArticle:
 #    def get_data(self):
 #        raise ValueError
 #
-#with Creator("{path}") as zim_creator:
+# with Creator("{path}") as zim_creator:
 #    try:
 #        zim_creator.add_item(BlobErrorArticle())
 #    except:
 #        pass
-#"""
+# """
 #
 #    py = subprocess.run([sys.executable, "-c", pycode])
 #    assert py.returncode == 0
 #    assert not path.exists()
 #
+
 
 def test_redirect_url(tmpdir):
     itemPath = "welcome"
@@ -256,12 +254,13 @@ def test_redirect_url(tmpdir):
 
 
 @pytest.mark.parametrize(
-    "no_method", [m for m in dir(SimpleItem) if m.split("_", 1)[0] in ("get", "is", "should")],
+    "no_method",
+    [m for m in dir(SimpleItem) if m.split("_", 1)[0] in ("get", "is", "should")],
 )
 def test_article_overriding_required(tmpdir, monkeypatch, no_method):
     """ ensure we raise properly on not-implemented methods of Article """
 
-    path, main_page = tmpdir / "test.zim", "welcome"
+    path = tmpdir / "test.zim"
     pattern = re.compile(r"NotImplementedError.+must be implemented")
     monkeypatch.delattr(SimpleItem, no_method)
 
@@ -279,7 +278,8 @@ def test_repr():
 
 
 @pytest.mark.parametrize(
-    "compression", Compression.__members__,
+    "compression",
+    Compression.__members__,
 )
 def test_compression_from_enum(tmpdir, compression):
     zim_creator = Creator(tmpdir / "test.zim")
@@ -289,17 +289,18 @@ def test_compression_from_enum(tmpdir, compression):
 
 
 @pytest.mark.parametrize(
-    "compression", Compression.__members__.keys(),
+    "compression",
+    Compression.__members__.keys(),
 )
 def test_compression_from_string(tmpdir, compression):
-    creator = Creator(tmpdir/"test.zim")
+    creator = Creator(tmpdir / "test.zim")
     creator.configCompression(compression)
     with creator:
         creator.add_item(SimpleItem(title="Hello", mime_type="text/html", content="", path="A/home"))
 
 
 def test_bad_compression(tmpdir):
-    creator = Creator(tmpdir/"test.zim")
+    creator = Creator(tmpdir / "test.zim")
     with pytest.raises(AttributeError):
         creator.configCompression("toto")
 
