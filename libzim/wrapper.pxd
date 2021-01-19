@@ -130,6 +130,8 @@ cdef extern from "lib.h":
     cdef cppclass ZimArchive:
         ZimArchive(string filename) except +
 
+        int getFilesize() except +
+
         ZimEntry* getEntryByPath(string path) except +
         ZimEntry* getEntryByPath(entry_index_type idx) except +
         ZimEntry* getEntryByTitle(string title) except +
