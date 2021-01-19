@@ -488,6 +488,10 @@ cdef class PyArchive:
         return Entry.from_entry(self.c_archive.getMainEntry())
 
     @property
+    def favicon_entry(self) -> Entry:
+        return Entry.from_entry(self.c_archive.getFaviconEntry())
+
+    @property
     def checksum(self) -> str:
         return self.c_archive.getChecksum().decode("UTF-8", "strict")
 

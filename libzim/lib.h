@@ -81,6 +81,8 @@ class ZimArchive : public zim::Archive
     { return to_ptr<ZimEntry>(zim::Archive::getEntryByTitle(title)); }
     ZimEntry* getMainEntry() const
     { return to_ptr<ZimEntry>(zim::Archive::getMainEntry()); }
+    ZimEntry* getFaviconEntry() const
+    { return to_ptr<ZimEntry>(zim::Archive::getFaviconEntry()); }
 };
 
 

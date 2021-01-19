@@ -138,6 +138,7 @@ cdef extern from "lib.h":
         vector[string] getMetadataKeys() except +
 
         ZimEntry* getMainEntry() except +
+        ZimEntry* getFaviconEntry() except +
         size_type getEntryCount() except +
 
         string getChecksum() except +
