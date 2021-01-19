@@ -21,6 +21,7 @@
 cimport libzim.wrapper as wrapper
 
 import enum
+from uuid import UUID
 from typing import Generator
 from cython.operator import dereference, preincrement
 from cpython.ref cimport PyObject
@@ -490,6 +491,10 @@ cdef class PyArchive:
     @property
     def favicon_entry(self) -> Entry:
         return Entry.from_entry(self.c_archive.getFaviconEntry())
+
+    @property
+    def uuid(self) -> UUID:
+        return UUID(self.c_archive.getUuid().hex())
 
     @property
     def checksum(self) -> str:

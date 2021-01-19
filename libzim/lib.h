@@ -83,6 +83,9 @@ class ZimArchive : public zim::Archive
     { return to_ptr<ZimEntry>(zim::Archive::getMainEntry()); }
     ZimEntry* getFaviconEntry() const
     { return to_ptr<ZimEntry>(zim::Archive::getFaviconEntry()); }
+    std::string getUuid() const
+    { zim::Uuid uuid = zim::Archive::getUuid();
+      std::string uuids(uuid.data, uuid.size()); return uuids; }
 };
 
 
