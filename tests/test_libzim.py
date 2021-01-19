@@ -16,13 +16,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import re
 import pathlib
 import datetime
 
 import pytest
 
-from libzim.writer import Item, Blob, Creator, Compression, ContentProvider
+from libzim.writer import Item, Blob, Creator, Compression, ContentProvider, StringProvider, FileProvider
 from libzim.reader import Archive
 
 # test files https://wiki.kiwix.org/wiki/Content_in_all_languages
@@ -409,6 +410,11 @@ def ___test_notimplementing_contentprovider_gen_blob(tmpdir):
             zim_creator.add_item(FileItem())
 
 
+def test_bare_contentprovider_gen_blob(tmpdir):
+    with pytest.raises(NotImplementedError, match="gen_blob"):
+        ContentProvider().feed()
+
+
 def test_contentprovider_iface(tmpdir):
     class MyContentProvider(ContentProvider):
         def get_size(self):
@@ -437,3 +443,155 @@ def test_contentprovider_iface(tmpdir):
     mcp = MyContentProvider()
     assert Blob(b"hello").size() == mcp.feed().size()
     assert Blob(b"").size() == mcp.feed().size()
+
+
+def test_stringprovider(tmpdir):
+    zim_path = tmpdir / "test.zim"
+    path = "path"
+    path2 = "path2"
+    content = "hello world"
+    bcontent = content.encode("UTF-8")
+
+    class StringItem:
+        def __init__(self, path, content_provider):
+            self.path = path
+            self.cp = content_provider
+
+        def get_path(self):
+            return self.path
+
+        def get_title(self):
+            return ""
+
+        def get_mimetype(self):
+            return "text/plain"
+
+        def get_contentProvider(self):
+            return self.cp
+
+    with Creator(zim_path) as zim_creator:
+        # use StringItem with a string
+        zim_creator.add_item(StringItem(path, StringProvider(content)))
+        # use StringItem with bytes
+        zim_creator.add_item(StringItem(path2, StringProvider(bcontent)))
+
+    archive = Archive(zim_path)
+    # ensure string input wasn't tempered with
+    assert bytes(archive.get_entry_by_path(path).get_item().content).decode("UTF-8") == content
+    assert bytes(archive.get_entry_by_path(path).get_item().content) == bcontent
+    # same for Entry created from bytes
+    assert bytes(archive.get_entry_by_path(path2).get_item().content).decode("UTF-8") == content
+    assert bytes(archive.get_entry_by_path(path2).get_item().content) == bcontent
+
+    # manual StringProvider calls for coverage
+    sp = StringProvider(content)
+    assert Blob(bcontent).size() == sp.feed().size()
+    assert Blob(b"").size() == sp.feed().size()
+
+
+def test_fileprovider(tmpdir):
+    zim_path = tmpdir / "test.zim"
+    path = "path"
+    fpath = "welcome.txt"
+    content = "hello world"
+
+    class FileItem:
+        def __init__(self, path, fpath):
+            self.path = path
+            self.cp = FileProvider(fpath)
+
+        def get_path(self):
+            return self.path
+
+        def get_title(self):
+            return ""
+
+        def get_mimetype(self):
+            return "text/plain"
+
+        def get_contentProvider(self):
+            return self.cp
+
+    with open(fpath, "w", encoding="UTF-8") as fh:
+        fh.write(content)
+
+    with Creator(zim_path) as zim_creator:
+        zim_creator.add_item(FileItem(path, fpath))
+
+    archive = Archive(zim_path)
+    assert bytes(archive.get_entry_by_path(path).get_item().content).decode("UTF-8") == content
+
+    # manual FileProvider calls for coverage
+    fp = FileProvider(fpath)
+    assert Blob(content.encode("UTF-8")).size() == fp.feed().size()
+    # single call exhausts it as under 1MiB
+    assert Blob(b"").size() == fp.feed().size()
+
+
+def test_fileprovider_largefile(tmpdir):
+    zim_path = tmpdir / "test.zim"
+    path = "path"
+    fpath = "somebin"
+    buffsize = 1024 * 1024
+    # create a dummy file twice the size of the buffer
+    with open(fpath, "wb") as fh:
+        for _ in range(0, buffsize // 1024):
+            fh.write(b"ab" * 1024)
+    fsize = os.path.getsize(fpath)
+
+    class FileItem:
+        def __init__(self, path, fpath):
+            self.path = path
+            self.cp = FileProvider(fpath)
+
+        def get_path(self):
+            return self.path
+
+        def get_title(self):
+            return ""
+
+        def get_mimetype(self):
+            return "text/plain"
+
+        def get_contentProvider(self):
+            return self.cp
+
+    with Creator(zim_path) as zim_creator:
+        zim_creator.add_item(FileItem(path, fpath))
+
+    archive = Archive(zim_path)
+    assert archive.get_entry_by_path(path).get_item().content.nbytes == fsize
+
+    # manual FileProvider calls for coverage
+    fp = FileProvider(fpath)
+    # we need two calls to exhaust this (uses 1MiB buffer)
+    assert fp.feed().size() == buffsize
+    assert fp.feed().size() == buffsize
+    assert Blob(b"").size() == fp.feed().size()
+
+
+def test_fileprovider_fails_missingfile(tmpdir):
+    zim_path = tmpdir / "test.zim"
+    path = "path"
+    fpath = "missing-file"
+
+    class FileItem:
+        def __init__(self, path, fpath):
+            self.path = path
+            self.cp = FileProvider(fpath)
+
+        def get_path(self):
+            return self.path
+
+        def get_title(self):
+            return ""
+
+        def get_mimetype(self):
+            return "application/octet-stream"
+
+        def get_contentProvider(self):
+            return self.cp
+
+    with Creator(zim_path) as zim_creator:
+        with pytest.raises(IOError):
+            zim_creator.add_item(FileItem(path, fpath))
