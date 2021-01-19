@@ -472,6 +472,11 @@ cdef class PyArchive:
             raise KeyError(str(e))
         return Entry.from_entry(entry)
 
+    @property
+    def metadata_keys(self):
+        """ List[str] of Metadata present in this archive """
+        return [key.decode("UTF-8", "strict") for key in self.c_archive.getMetadataKeys()]
+
     def get_metadata(self, name: str) -> bytes:
         """ A Metadata's content -> bytes
 
