@@ -108,7 +108,7 @@ class Creator(_Creator):
     def configCompression(self, compression: Compression):
         if not isinstance(compression, Compression):
             compression = getattr(Compression, compression.lower())
-        super().configCompression(compression)
+        return super().configCompression(compression)
 
     def add_metadata(self, name: str, content: Union[bytes, datetime.date, datetime.datetime]):
         name = pascalize(name)

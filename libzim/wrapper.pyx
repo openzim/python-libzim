@@ -197,29 +197,39 @@ cdef class Creator:
         self._filename = pathlib.Path(filename)
 
     def configVerbose(self, bool verbose) -> Creator:
+        if self._started:
+            raise RuntimeError("ZimCreator started")
         self.c_creator.configVerbose(verbose)
         return self
 
     def configCompression(self, comptype: Compression) -> Creator:
+        if self._started:
+            raise RuntimeError("ZimCreator started")
         self.c_creator.configCompression(comptype.value)
         return self
 
     def configMinClusterSize(self, int size) -> Creator:
+        if self._started:
+            raise RuntimeError("ZimCreator started")
         self.c_creator.configMinClusterSize(size)
         return self
 
     def configIndexing(self, bool indexing, str language) -> Creator:
+        if self._started:
+            raise RuntimeError("ZimCreator started")
         self.c_creator.configIndexing(indexing, language.encode('utf8'))
         return self
 
     def configNbWorkers(self, int nbWorkers) -> Creator:
+        if self._started:
+            raise RuntimeError("ZimCreator started")
         self.c_creator.configNbWorkers(nbWorkers)
         return self
 
-    def setMainPath(self, str mainPath) -> Creator:
+    def setMainPath(self, str mainPath):
         self.c_creator.setMainPath(mainPath.encode('utf8'))
 
-    def setFaviconPath(self, str faviconPath) -> Creator:
+    def setFaviconPath(self, str faviconPath):
         self.c_creator.setFaviconPath(faviconPath.encode('utf8'))
 
 #    def setUuid(self, uuid) -> Creator:
