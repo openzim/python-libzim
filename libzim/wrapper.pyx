@@ -411,6 +411,10 @@ cdef class Item:
     def index(self) -> int:
         return self.c_item.getIndex()
 
+    @property
+    def size(self) -> int:
+        return self.c_item.getSize()
+
     def __repr__(self):
         return f"{self.__class__.__name__}(url={self.path}, title={self.title})"
 
