@@ -90,6 +90,8 @@ cdef extern from "lib.h":
         ZimItem* getRedirect() except +
         ZimEntry* getRedirectEntry() except +
 
+        int getIndex() except +
+
 
 cdef extern from "lib.h":
     cdef cppclass ZimItem:
@@ -101,6 +103,8 @@ cdef extern from "lib.h":
         const Blob getData(offset_type offset) except +
         const Blob getData(offset_type offset, size_type size) except +
         size_type  getSize() except +
+
+        int getIndex() except +
 
 
 cdef extern from "zim/search_iterator.h" namespace "zim":
