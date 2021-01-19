@@ -497,6 +497,10 @@ cdef class PyArchive:
         return UUID(self.c_archive.getUuid().hex())
 
     @property
+    def new_namespace_scheme(self) -> bool:
+        return self.c_archive.hasNewNamespaceScheme()
+
+    @property
     def checksum(self) -> str:
         return self.c_archive.getChecksum().decode("UTF-8", "strict")
 
