@@ -501,6 +501,14 @@ cdef class PyArchive:
         return self.c_archive.hasNewNamespaceScheme()
 
     @property
+    def has_fulltext_index(self) -> bool:
+        return self.c_archive.hasFulltextIndex()
+
+    @property
+    def has_title_index(self) -> bool:
+        return self.c_archive.hasTitleIndex()
+
+    @property
     def checksum(self) -> str:
         return self.c_archive.getChecksum().decode("UTF-8", "strict")
 
