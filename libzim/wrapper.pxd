@@ -143,3 +143,4 @@ cdef extern from "lib.h":
 
         string getChecksum() except +
         string getFilename() except +
+        string getUuid() except +
