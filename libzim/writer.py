@@ -145,7 +145,7 @@ class Creator(_Creator):
         name = pascalize(name)
         if name == "Date" and isinstance(content, (datetime.date, datetime.datetime)):
             content = content.strftime("%Y-%m-%d").encode("UTF-8")
-        super().add_metadata(name, content)
+        super().add_metadata(name=name, content=content)
 
     def __repr__(self) -> str:
         return f"Creator(filename={self.filename})"
