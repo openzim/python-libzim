@@ -445,6 +445,11 @@ cdef class PyArchive:
     def filename(self) -> pathlib.Path:
         return self._filename
 
+    @property
+    def filesize(self) -> int:
+        """ total size of ZIM file (or files if split """
+        return self.c_archive.getFilesize()
+
     def get_entry_by_path(self, path: str) -> Entry:
         """ Entry from a path -> Entry
 
