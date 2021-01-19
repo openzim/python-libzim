@@ -31,13 +31,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import datetime
 from typing import Union
 
 from .wrapper import Creator as _Creator, Compression
 from .wrapper import WritingBlob as Blob
 
-__all__ = ["Item", "Blob", "Creator", "ContentProvider"]
+__all__ = ["Item", "Blob", "Creator", "ContentProvider", "FileProvider", "StringProvider"]
 
 
 class ContentProvider:
@@ -68,6 +69,36 @@ class ContentProvider:
     def gen_blob(self):
         """ Generator yielding blobs for the content of the article """
         raise NotImplementedError("gen_blob (ro feed) must be implemented")
+
+
+class StringProvider(ContentProvider):
+    def __init__(self, content):
+        super().__init__()
+        self.content = content.encode("UTF-8") if isinstance(content, str) else content
+
+    def get_size(self):
+        return len(self.content)
+
+    def gen_blob(self):
+        yield Blob(self.content)
+
+
+class FileProvider(ContentProvider):
+    def __init__(self, filepath):
+        super().__init__()
+        self.filepath = filepath
+        self.size = os.path.getsize(self.filepath)
+
+    def get_size(self):
+        return self.size
+
+    def gen_blob(self):
+        bsize = 1048576  # 1MiB chunk
+        with open(self.filepath, "rb") as fh:
+            res = fh.read(bsize)
+            while res:
+                yield Blob(res)
+                res = fh.read(bsize)
 
 
 class Item:
