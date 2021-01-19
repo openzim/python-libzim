@@ -146,3 +146,5 @@ cdef extern from "lib.h":
         string getUuid() except +
 
         bool hasNewNamespaceScheme() except +
+        bool hasFulltextIndex() except +
+        bool hasTitleIndex() except +
