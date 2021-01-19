@@ -336,6 +336,10 @@ cdef class Entry:
         return self.c_entry.getPath().decode("UTF-8", "strict")
 
     @property
+    def index(self) -> int:
+        return self.c_entry.getIndex()
+
+    @property
     def is_redirect(self) -> bool:
         """ Whether entry is a redirect -> bool """
         return self.c_entry.isRedirect()
@@ -402,6 +406,10 @@ cdef class Item:
     @property
     def mimetype(self) -> str:
         return self.c_item.getMimetype().decode('UTF-8')
+
+    @property
+    def index(self) -> int:
+        return self.c_item.getIndex()
 
     def __repr__(self):
         return f"{self.__class__.__name__}(url={self.path}, title={self.title})"
