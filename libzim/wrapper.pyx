@@ -227,11 +227,13 @@ cdef class Creator:
         self.c_creator.configNbWorkers(nbWorkers)
         return self
 
-    def setMainPath(self, str mainPath):
+    def setMainPath(self, str mainPath) -> Creator:
         self.c_creator.setMainPath(mainPath.encode('utf8'))
+        return self
 
-    def setFaviconPath(self, str faviconPath):
+    def setFaviconPath(self, str faviconPath) -> Creator:
         self.c_creator.setFaviconPath(faviconPath.encode('utf8'))
+        return self
 
 #    def setUuid(self, uuid) -> Creator:
 #        self.c_creator.setUuid(uuid)
