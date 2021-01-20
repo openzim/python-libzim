@@ -33,14 +33,14 @@ pip3 install libzim
 
 ### Read a ZIM
 
-```python3
-from libzim.reader import File
+```python
+from libzim.reader import Archive
 
-f = File("test.zim")
-article = f.get_article("article/url.html")
-print(article.url, article.title)
-if not article.is_redirect():
-    print(article.content)
+zim = Archive("test.zim")
+print(f"Main entry is at {zim.main_entry.get_item().path}")
+entry = zim.get_entry_by_path("path/to/my-article")
+print(f"Entry {entry.title} at {entry.path} is {entry.get_item().size}b:")
+print(bytes(entry.get_item().content).decode("UTF-8"))
 ```
 
 ### Write a ZIM
