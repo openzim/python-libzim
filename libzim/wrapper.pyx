@@ -464,6 +464,9 @@ cdef class PyArchive:
         """ total size of ZIM file (or files if split """
         return self.c_archive.getFilesize()
 
+    def has_entry_by_path(self, path: str) -> bool:
+        return self.c_archive.hasEntryByPath(<string>path.encode('UTF-8'))
+
     def get_entry_by_path(self, path: str) -> Entry:
         """ Entry from a path -> Entry
 
@@ -478,10 +481,35 @@ cdef class PyArchive:
             Raises
             ------
                 KeyError
-                    If an article with the provided path is not found in the archive """
+                    If an entry with the provided path is not found in the archive """
         cdef wrapper.ZimEntry* entry
         try:
             entry = self.c_archive.getEntryByPath(<string>path.encode('UTF-8'))
+        except RuntimeError as e:
+            raise KeyError(str(e))
+        return Entry.from_entry(entry)
+
+    def has_entry_by_title(self, title: str) -> bool:
+        return self.c_archive.hasEntryByTitle(<string>title.encode('UTF-8'))
+
+    def get_entry_by_title(self, title: str) -> Entry:
+        """ Entry from a title -> Entry
+
+            Parameters
+            ----------
+            title : str
+                The title of the article
+            Returns
+            -------
+            Entry
+                The first Entry object matching the title
+            Raises
+            ------
+                KeyError
+                    If an entry with the provided title is not found in the archive """
+        cdef wrapper.ZimEntry* entry
+        try:
+            entry = self.c_archive.getEntryByTitle(<string>title.encode('UTF-8'))
         except RuntimeError as e:
             raise KeyError(str(e))
         return Entry.from_entry(entry)
