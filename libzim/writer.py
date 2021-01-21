@@ -141,10 +141,12 @@ class Creator(_Creator):
             compression = getattr(Compression, compression.lower())
         return super().configCompression(compression)
 
-    def add_metadata(self, name: str, content: Union[bytes, datetime.date, datetime.datetime]):
+    def add_metadata(self, name: str, content: Union[str, bytes, datetime.date, datetime.datetime]):
         name = pascalize(name)
         if name == "Date" and isinstance(content, (datetime.date, datetime.datetime)):
             content = content.strftime("%Y-%m-%d").encode("UTF-8")
+        if isinstance(content, str):
+            content = content.encode("UTF-8")
         super().add_metadata(name=name, content=content)
 
     def __repr__(self) -> str:
