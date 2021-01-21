@@ -28,6 +28,7 @@ Either place the `libzim.so` and `zim/*.h` files in `./lib/` and `./include/`,
  $ export LDFLAGS="-L/tmp/libzim_linux-x86_64-6.1.1/lib/x86_64-linux-gnu"
  $ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/tmp/libzim_linux-x86_64-6.1.1/lib/x86_64-linux-gnu"
 """
+import os
 import platform
 from pathlib import Path
 from ctypes.util import find_library
@@ -41,6 +42,8 @@ BASE_DIR = Path(__file__).parent
 LIBZIM_INCLUDE_DIR = 'include'   # the libzim C++ header src dir (containing zim/*.h)
 LIBZIM_LIBRARY_DIR = 'lib'       # the libzim .so binary lib dir (containing libzim.so)
 LIBZIM_DYLIB = 'libzim.{ext}'.format(ext='dylib' if platform.system() == 'Darwin' else 'so')
+# set PROFILE env to `1` to enable profile info on build (used for coverage reporting)
+PROFILE = os.getenv('PROFILE', '') == '1'
 
 
 class fixed_build_ext(build_ext):
@@ -87,8 +90,12 @@ wrapper_extension = Extension(
     library_dirs=[LIBZIM_LIBRARY_DIR],
     extra_compile_args=["-std=c++11", "-Wall", "-Wextra"],
     language="c++",
+    define_macros=[("CYTHON_TRACE", "1"), ("CYTHON_TRACE_NOGIL", "1")] if PROFILE else [],
 )
 
+compiler_directives = {"language_level": "3"}
+if PROFILE:
+    compiler_directives.update({"linetrace": "True"})
 
 setup(
 # Basic information about libzim module
@@ -114,7 +121,7 @@ setup(
     packages=["libzim"],
     cmdclass={'build_ext': fixed_build_ext},
     ext_modules=cythonize([wrapper_extension],
-        compiler_directives={"language_level": "3"}
+        compiler_directives=compiler_directives
     ),
 
 # Packaging
