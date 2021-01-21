@@ -162,7 +162,7 @@ def test_creator_metadata(tmpdir, metadata):
     zim_creator = Creator(path)
     with zim_creator:
         for name, value in metadata.items():
-            zim_creator.add_metadata(name, value.encode("UTF-8"))
+            zim_creator.add_metadata(name, value)
         mdate = datetime.date(*[int(x) for x in metadata.get("Date").split("-")])
         zim_creator.add_metadata("Date", mdate)
 
