@@ -6,6 +6,7 @@ env:
   LIBZIM_INCLUDE_PATH: include/zim
   MAX_LINE_LENGTH: 110
   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  PROFILE: 1
 
 jobs:
   lint:
@@ -99,7 +100,7 @@ jobs:
       - name: Build cython, sdist, and bdist_wheel
         run: |
           pip install --upgrade pip install "cython>=0.29.20,<3.0" setuptools pip wheel
-          python3 setup.py build_ext
+          python3 setup.py build_ext --inplace
           python3 setup.py sdist bdist_wheel
 
       - name: Test built package with pytest
