@@ -151,8 +151,13 @@ cdef extern from "lib.h":
         string getFilename() except +
         string getUuid() except +
 
+        bool hasMainEntry() except +
+        bool hasFaviconEntry() except +
         bool hasEntryByPath(string path) except +
         bool hasEntryByTitle(string title) except +
+        bool is_multiPart() except +
         bool hasNewNamespaceScheme() except +
         bool hasFulltextIndex() except +
         bool hasTitleIndex() except +
+        bool hasChecksum() except +
+        bool check() except +

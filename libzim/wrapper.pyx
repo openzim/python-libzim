@@ -537,8 +537,16 @@ cdef class PyArchive:
         return Entry.from_entry(entry)
 
     @property
+    def has_main_entry(self) -> bool:
+        return self.c_archive.hasMainEntry()
+
+    @property
     def main_entry(self) -> Entry:
         return Entry.from_entry(self.c_archive.getMainEntry())
+
+    @property
+    def has_favicon_entry(self) -> bool:
+        return self.c_archive.hasFaviconEntry()
 
     @property
     def favicon_entry(self) -> Entry:
@@ -549,8 +557,12 @@ cdef class PyArchive:
         return UUID(self.c_archive.getUuid().hex())
 
     @property
-    def new_namespace_scheme(self) -> bool:
+    def has_new_namespace_scheme(self) -> bool:
         return self.c_archive.hasNewNamespaceScheme()
+
+    @property
+    def is_multipart(self) -> bool:
+        return self.c_archive.is_multiPart()
 
     @property
     def has_fulltext_index(self) -> bool:
@@ -561,8 +573,16 @@ cdef class PyArchive:
         return self.c_archive.hasTitleIndex()
 
     @property
+    def has_checksum(self) -> str:
+        return self.c_archive.hasChecksum()
+
+    @property
     def checksum(self) -> str:
         return self.c_archive.getChecksum().decode("UTF-8", "strict")
+
+    def check(self) -> bool:
+        """ whether Archive has a checksum anf file verifies it """
+        return self.c_archive.check()
 
     @property
     def entry_count(self) -> int:
