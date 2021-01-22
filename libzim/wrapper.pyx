@@ -197,45 +197,45 @@ cdef class Creator:
 
         self._filename = pathlib.Path(filename)
 
-    def configVerbose(self, bool verbose) -> Creator:
+    def config_verbose(self, bool verbose) -> Creator:
         if self._started:
             raise RuntimeError("ZimCreator started")
         self.c_creator.configVerbose(verbose)
         return self
 
-    def configCompression(self, comptype: Compression) -> Creator:
+    def config_compression(self, comptype: Compression) -> Creator:
         if self._started:
             raise RuntimeError("ZimCreator started")
         self.c_creator.configCompression(comptype.value)
         return self
 
-    def configMinClusterSize(self, int size) -> Creator:
+    def config_minclustersize(self, int size) -> Creator:
         if self._started:
             raise RuntimeError("ZimCreator started")
         self.c_creator.configMinClusterSize(size)
         return self
 
-    def configIndexing(self, bool indexing, str language) -> Creator:
+    def config_indexing(self, bool indexing, str language) -> Creator:
         if self._started:
             raise RuntimeError("ZimCreator started")
         self.c_creator.configIndexing(indexing, language.encode('utf8'))
         return self
 
-    def configNbWorkers(self, int nbWorkers) -> Creator:
+    def config_nbworkers(self, int nbWorkers) -> Creator:
         if self._started:
             raise RuntimeError("ZimCreator started")
         self.c_creator.configNbWorkers(nbWorkers)
         return self
 
-    def setMainPath(self, str mainPath) -> Creator:
+    def set_mainpath(self, str mainPath) -> Creator:
         self.c_creator.setMainPath(mainPath.encode('utf8'))
         return self
 
-    def setFaviconPath(self, str faviconPath) -> Creator:
+    def set_faviconpath(self, str faviconPath) -> Creator:
         self.c_creator.setFaviconPath(faviconPath.encode('utf8'))
         return self
 
-#    def setUuid(self, uuid) -> Creator:
+#    def set_uuid(self, uuid) -> Creator:
 #        self.c_creator.setUuid(uuid)
 
     def add_item(self, WriterItem not None):
