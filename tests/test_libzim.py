@@ -85,7 +85,7 @@ class SimpleItem(Item):
     def get_mimetype(self):
         return self.mime_type
 
-    def get_contentProvider(self):
+    def get_contentprovider(self):
         return SimpleContentProvider(self.content)
 
 
@@ -126,16 +126,16 @@ def test_write_article(tmpdir, item):
 def test_creator_config(tmpdir, item):
     # Do with intermediate steps
     zim_creator = Creator(tmpdir / "test.zim")
-    zim_creator.configIndexing(True, "eng")
-    zim_creator.setMainPath("welcome")
+    zim_creator.config_indexing(True, "eng")
+    zim_creator.set_mainpath("welcome")
     with zim_creator:
         zim_creator.add_item(item)
         zim_creator.add_metadata("creator", b"python-libzim")
     del zim_creator
 
     # Do it all in once:
-    with Creator(tmpdir / "test.zim").configIndexing(True, "end") as zim_creator:
-        zim_creator.setMainPath("welcome")
+    with Creator(tmpdir / "test.zim").config_indexing(True, "end") as zim_creator:
+        zim_creator.set_mainpath("welcome")
         zim_creator.add_item(item)
         zim_creator.add_metadata("creator", b"python-libzim")
 
@@ -143,12 +143,12 @@ def test_creator_config(tmpdir, item):
 def test_creator_params(tmpdir):
     path = tmpdir / "test.zim"
     zim_creator = Creator(path)
-    zim_creator.configIndexing(True, "eng")
+    zim_creator.config_indexing(True, "eng")
     main_page = "welcome"
     with zim_creator:
         zim_creator.add_item(SimpleItem(title="Welcome", mime_type="text/html", content="", path=main_page))
         zim_creator.add_metadata("language", b"eng")
-        zim_creator.setMainPath(main_page)
+        zim_creator.set_mainpath(main_page)
 
     archive = Archive(path)
     assert archive.filename == path
@@ -204,7 +204,7 @@ def test_in_article_exceptions(tmpdir):
             raise IOError
 
     class BlobErrorArticle(SimpleItem):
-        def get_contentProvider(self):
+        def get_contentprovider(self):
             raise IOError
 
     path = tmpdir / "test.zim"
@@ -274,8 +274,9 @@ def test_redirect_url(tmpdir):
     [m for m in dir(SimpleItem) if m.split("_", 1)[0] in ("get", "is", "should")],
 )
 def test_article_overriding_required(tmpdir, monkeypatch, no_method):
-    """ ensure we raise properly on not-implemented methods of Article """
+    """ ensure we raise properly on not-implemented methods of Item """
 
+    print("NO_METHOD", no_method)
     path = tmpdir / "test.zim"
     pattern = re.compile(r"NotImplementedError.+must be implemented")
     monkeypatch.delattr(SimpleItem, no_method)
@@ -299,7 +300,7 @@ def test_repr():
 )
 def test_compression_from_enum(tmpdir, compression):
     zim_creator = Creator(tmpdir / "test.zim")
-    zim_creator.configCompression(compression)
+    zim_creator.config_compression(compression)
     with zim_creator:
         zim_creator.add_item(SimpleItem(title="Hello", mime_type="text/html", content="", path="A/home"))
 
@@ -310,7 +311,7 @@ def test_compression_from_enum(tmpdir, compression):
 )
 def test_compression_from_string(tmpdir, compression):
     creator = Creator(tmpdir / "test.zim")
-    creator.configCompression(compression)
+    creator.config_compression(compression)
     with creator:
         creator.add_item(SimpleItem(title="Hello", mime_type="text/html", content="", path="A/home"))
 
@@ -318,7 +319,7 @@ def test_compression_from_string(tmpdir, compression):
 def test_bad_compression(tmpdir):
     creator = Creator(tmpdir / "test.zim")
     with pytest.raises(AttributeError):
-        creator.configCompression("toto")
+        creator.config_compression("toto")
 
 
 def test_filename_article(tmpdir):
@@ -347,7 +348,7 @@ def test_filename_article(tmpdir):
         def get_mimetype(self):
             return "text/plain"
 
-        def get_contentProvider(self):
+        def get_contentprovider(self):
             return FileProvider(self.fpath)
 
     zim_path = tmpdir / "test.zim"
@@ -378,7 +379,7 @@ def test_notimplementing_contentprovider(tmpdir):
         def get_mimetype(self):
             return "text/plain"
 
-        def get_contentProvider(self):
+        def get_contentprovider(self):
             return ContentProvider()
 
     with Creator(tmpdir / "test.zim") as zim_creator:
@@ -402,7 +403,7 @@ def ___test_notimplementing_contentprovider_gen_blob(tmpdir):
         def get_mimetype(self):
             return "text/plain"
 
-        def get_contentProvider(self):
+        def get_contentprovider(self):
             return BadContentProvider()
 
     with Creator(tmpdir / "test.zim") as zim_creator:
@@ -433,7 +434,7 @@ def test_contentprovider_iface(tmpdir):
         def get_mimetype(self):
             return "text/plain"
 
-        def get_contentProvider(self):
+        def get_contentprovider(self):
             return MyContentProvider()
 
     with Creator(tmpdir / "test.zim") as zim_creator:
@@ -466,7 +467,7 @@ def test_stringprovider(tmpdir):
         def get_mimetype(self):
             return "text/plain"
 
-        def get_contentProvider(self):
+        def get_contentprovider(self):
             return self.cp
 
     with Creator(zim_path) as zim_creator:
@@ -509,7 +510,7 @@ def test_fileprovider(tmpdir):
         def get_mimetype(self):
             return "text/plain"
 
-        def get_contentProvider(self):
+        def get_contentprovider(self):
             return self.cp
 
     with open(fpath, "w", encoding="UTF-8") as fh:
@@ -553,7 +554,7 @@ def test_fileprovider_largefile(tmpdir):
         def get_mimetype(self):
             return "text/plain"
 
-        def get_contentProvider(self):
+        def get_contentprovider(self):
             return self.cp
 
     with Creator(zim_path) as zim_creator:
@@ -589,7 +590,7 @@ def test_fileprovider_fails_missingfile(tmpdir):
         def get_mimetype(self):
             return "application/octet-stream"
 
-        def get_contentProvider(self):
+        def get_contentprovider(self):
             return self.cp
 
     with Creator(zim_path) as zim_creator:
