@@ -121,9 +121,9 @@ class Item:
         """ MIME-type of the item's content."""
         raise NotImplementedError("get_mimetype must be implemented.")
 
-    def get_contentProvider(self) -> ContentProvider:
+    def get_contentprovider(self) -> ContentProvider:
         """ ContentProvider containing the complete content of the item """
-        raise NotImplementedError("get_contentProvider must be implemented.")
+        raise NotImplementedError("get_contentprovider must be implemented.")
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(path={self.get_path()}, title={self.get_title()})"
@@ -136,10 +136,10 @@ def pascalize(keyword: str):
 
 
 class Creator(_Creator):
-    def configCompression(self, compression: Compression):
+    def config_compression(self, compression: Compression):
         if not isinstance(compression, Compression):
             compression = getattr(Compression, compression.lower())
-        return super().configCompression(compression)
+        return super().config_compression(compression)
 
     def add_metadata(self, name: str, content: Union[str, bytes, datetime.date, datetime.datetime]):
         name = pascalize(name)
