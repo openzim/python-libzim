@@ -150,5 +150,5 @@ WriterItemWrapper::getMimeType() const
 std::unique_ptr<zim::writer::ContentProvider>
 WriterItemWrapper::getContentProvider() const
 {
-    return callCythonReturnContentProvider("get_contentProvider");
+    return callCythonReturnContentProvider("get_contentprovider");
 }
