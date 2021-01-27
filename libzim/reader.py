@@ -13,4 +13,7 @@
     """
 
 # flake8: noqa
-from .wrapper import PyArchive as Archive
+from .wrapper import PyArchive as Archive, Entry, Item
+
+
+__all__ = ["Archive", "Entry", "Item"]
