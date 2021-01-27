@@ -2,7 +2,7 @@ name: test
 on: [push]
 
 env:
-  LIBZIM_VERSION: 2021-01-18
+  LIBZIM_VERSION: 2021-01-27
   LIBZIM_INCLUDE_PATH: include/zim
   MAX_LINE_LENGTH: 110
   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
