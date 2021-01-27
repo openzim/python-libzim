@@ -63,7 +63,9 @@ item2 = TestItem("Monadical_2", "Monadical 2", content2)
 zim_file_path = f"kiwix-test-{uuid.uuid1()}.zim"
 
 print(f"Testing writer for {zim_file_path}")
-with Creator(zim_file_path).config_indexing(True, "eng").config_minclustersize(512) as zc:
+with Creator(zim_file_path).config_indexing(True, "eng").config_minclustersize(
+    512
+) as zc:
     zc.set_mainpath("Monadical")
     zc.add_item(item)
     zc.add_item(item2)

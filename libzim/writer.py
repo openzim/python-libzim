@@ -38,7 +38,14 @@ from typing import Union
 from .wrapper import Creator as _Creator, Compression
 from .wrapper import WritingBlob as Blob
 
-__all__ = ["Item", "Blob", "Creator", "ContentProvider", "FileProvider", "StringProvider"]
+__all__ = [
+    "Item",
+    "Blob",
+    "Creator",
+    "ContentProvider",
+    "FileProvider",
+    "StringProvider",
+]
 
 
 class ContentProvider:
@@ -126,7 +133,10 @@ class Item:
         raise NotImplementedError("get_contentprovider must be implemented.")
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(path={self.get_path()}, title={self.get_title()})"
+        return (
+            f"{self.__class__.__name__}(path={self.get_path()}, "
+            f"title={self.get_title()})"
+        )
 
 
 def pascalize(keyword: str):
@@ -141,7 +151,9 @@ class Creator(_Creator):
             compression = getattr(Compression, compression.lower())
         return super().config_compression(compression)
 
-    def add_metadata(self, name: str, content: Union[str, bytes, datetime.date, datetime.datetime]):
+    def add_metadata(
+        self, name: str, content: Union[str, bytes, datetime.date, datetime.datetime]
+    ):
         name = pascalize(name)
         if name == "Date" and isinstance(content, (datetime.date, datetime.datetime)):
             content = content.strftime("%Y-%m-%d").encode("UTF-8")
