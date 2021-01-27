@@ -144,14 +144,15 @@ cdef public api:
 
         return NULL
 
-    bool bool_cy_call_fct(object obj, string method, string *error) with gil:
-        """Lookup and execute a pure virtual method on object returning a bool"""
-        try:
-            func = getattr(obj, method.decode('UTF-8'))
-            return func()
-        except Exception as e:
-            error[0] = traceback.format_exc().encode('UTF-8')
-        return False
+    # currently have no virtual method returning a bool (was should_index/compress)
+    # bool bool_cy_call_fct(object obj, string method, string *error) with gil:
+    #     """Lookup and execute a pure virtual method on object returning a bool"""
+    #     try:
+    #         func = getattr(obj, method.decode('UTF-8'))
+    #         return func()
+    #     except Exception as e:
+    #         error[0] = traceback.format_exc().encode('UTF-8')
+    #     return False
 
     uint64_t int_cy_call_fct(object obj, string method, string *error) with gil:
         """Lookup and execute a pure virtual method on object returning an int"""
@@ -188,14 +189,17 @@ cdef class Creator:
     cdef object _started
 
     def __cinit__(self, object filename: pathlib.Path):
+        self._filename = pathlib.Path(filename)
+        self._started = False
+
+    def __init__(self, filename: pathlib.Path):
         """ Constructs a File from full zim file path
 
             Parameters
             ----------
             filename : pathlib.Path
                 Full path to a zim file """
-
-        self._filename = pathlib.Path(filename)
+        pass
 
     def config_verbose(self, bool verbose) -> Creator:
         if self._started:
