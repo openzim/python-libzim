@@ -4,8 +4,8 @@ on: [push]
 env:
   LIBZIM_VERSION: 2021-01-27
   LIBZIM_INCLUDE_PATH: include/zim
-  MAX_LINE_LENGTH: 110
   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  MAX_LINE_LENGTH: 88
   PROFILE: 1
 
 jobs:
@@ -23,15 +23,15 @@ jobs:
       - name: Autoformat with black
         run: |
           pip install black
-          black --check --exclude=setup.py .
+          black --check .
 
       - name: Lint with flake8
         run: |
           pip install flake8
           # one pass for show-stopper syntax errors or undefined names
-          flake8 . --count --select=E9,F63,F7,F82 --exclude=setup.py --show-source --statistics
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
           # one pass for small stylistic things
-          flake8 . --count --exclude=setup.py --max-line-length=$MAX_LINE_LENGTH --statistics
+          flake8 . --count --max-line-length=$MAX_LINE_LENGTH --statistics
 
   test:
     runs-on: ${{ matrix.os }}
