@@ -338,7 +338,7 @@ cdef class Entry:
         return self.c_entry.getPath().decode("UTF-8", "strict")
 
     @property
-    def index(self) -> int:
+    def _index(self) -> int:
         return self.c_entry.getIndex()
 
     @property
@@ -410,7 +410,7 @@ cdef class Item:
         return self.c_item.getMimetype().decode('UTF-8')
 
     @property
-    def index(self) -> int:
+    def _index(self) -> int:
         return self.c_item.getIndex()
 
     @property
@@ -532,7 +532,7 @@ cdef class PyArchive:
                 Metadata entry's content. Can be of any type. """
         return bytes(self.c_archive.getMetadata(name.encode('UTF-8')))
 
-    def get_entry_by_id(self, entry_id: int) -> Entry:
+    def _get_entry_by_id(self, entry_id: int) -> Entry:
         cdef wrapper.ZimEntry* entry = self.c_archive.getEntryByPath(<entry_index_type>entry_id)
         return Entry.from_entry(entry)
 
