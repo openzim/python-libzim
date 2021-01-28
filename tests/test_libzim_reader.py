@@ -3,6 +3,7 @@
 import os
 import gc
 import uuid
+import pathlib
 from urllib.request import urlretrieve
 
 import pytest
@@ -212,7 +213,7 @@ def all_zims(tmpdir_factory):
     with creator:
         pass
 
-    return temp_dir
+    return pathlib.Path(temp_dir)
 
 
 def test_open_badfile(tmpdir):
@@ -467,3 +468,27 @@ def test_reader_by_id(all_zims, filename):
     for index in range(0, zim.entry_count - 1):
         assert zim._get_entry_by_id(index)._index == index
         assert zim._get_entry_by_id(index).get_item()._index >= 0
+
+
+def test_archive_equality(all_zims):
+    class Different:
+        def __init__(self, filename):
+            self.filename = filename
+
+    class Sub(Archive):
+        pass
+
+    class Sub2(Archive):
+        @property
+        def filename(self):
+            return 1
+
+    fpath1 = all_zims / "zimfile.zim"
+    fpath2 = all_zims / "example.zim"
+    zim = Archive(fpath1)
+
+    assert zim != Archive(fpath2)
+    assert zim == Archive(fpath1)
+    assert zim != Different(fpath1)
+    assert zim == Sub(fpath1)
+    assert zim != Sub2(fpath1)
