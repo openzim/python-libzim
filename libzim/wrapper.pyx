@@ -459,6 +459,14 @@ cdef class PyArchive:
         if self.c_archive != NULL:
             del self.c_archive
 
+    def __eq__(self, other):
+        if PyArchive not in type(self).mro() or PyArchive not in type(other).mro():
+            return False
+        try:
+            return self.filename.expanduser().resolve() == other.filename.expanduser().resolve()
+        except Exception:
+            return False
+
     @property
     def filename(self) -> pathlib.Path:
         return self._filename
