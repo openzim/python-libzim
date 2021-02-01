@@ -188,7 +188,7 @@ cdef class Creator:
     cdef object _filename
     cdef object _started
 
-    def __cinit__(self, object filename: pathlib.Path):
+    def __cinit__(self, object filename: pathlib.Path, *args, **kwargs):
         self._filename = pathlib.Path(filename)
         self._started = False
 
