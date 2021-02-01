@@ -295,7 +295,7 @@ def test_creator_nocontext(fpath, lipsum_item):
 
 def test_creator_subclass(fpath, lipsum_item):
     class ACreator(Creator):
-        def __init__(self, fpath):
+        def __init__(self, fpath, tata):
             super().__init__(filename=fpath)
             self.ready = False
 
@@ -303,7 +303,7 @@ def test_creator_subclass(fpath, lipsum_item):
             super().__exit__(exc_type, exc_val, exc_tb)
             self.ready = True
 
-    creator = ACreator(fpath)
+    creator = ACreator(fpath, tata=2)
     assert creator.ready is False
     with creator:
         assert creator.ready is False
