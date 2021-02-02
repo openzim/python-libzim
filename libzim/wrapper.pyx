@@ -21,6 +21,7 @@
 cimport libzim.wrapper as wrapper
 
 import enum
+from uuid import UUID
 from typing import Generator
 from cython.operator import dereference, preincrement
 from cpython.ref cimport PyObject
@@ -70,8 +71,8 @@ cdef class ReadingBlob:
 
         Parameters
         ----------
-        *art : Article
-            Pointer to a C++ (zim::) article object
+        *blob : Blob
+            Pointer to a C++ (zim::) blob object
         """
         # Set new internal C zim.ZimArticle article
         self.c_blob = blob
@@ -103,11 +104,11 @@ cdef class ReadingBlob:
         self.view_count -= 1
 
 
-#------- ZimArticle pure virtual methods --------
+#------- pure virtual methods --------
 
 cdef public api:
     string string_cy_call_fct(object obj, string method, string *error) with gil:
-        """Lookup and execute a pure virtual method on ZimArticle returning a string"""
+        """Lookup and execute a pure virtual method on object returning a string"""
         try:
             func = getattr(obj, method.decode('UTF-8'))
             ret_str = func()
@@ -117,7 +118,7 @@ cdef public api:
         return b""
 
     wrapper.Blob blob_cy_call_fct(object obj, string method, string *error) with gil:
-        """Lookup and execute a pure virtual method on ZimArticle returning a Blob"""
+        """Lookup and execute a pure virtual method on object returning a Blob"""
         cdef WritingBlob blob
 
         try:
@@ -131,17 +132,30 @@ cdef public api:
 
         return Blob()
 
-    bool bool_cy_call_fct(object obj, string method, string *error) with gil:
-        """Lookup and execute a pure virtual method on ZimArticle returning a bool"""
+    wrapper.ContentProvider* contentprovider_cy_call_fct(object obj, string method, string *error) with gil:
         try:
             func = getattr(obj, method.decode('UTF-8'))
-            return func()
+            contentProvider = func()
+            if not contentProvider:
+                raise RuntimeError("ContentProvider is None")
+            return new ContentProviderWrapper(<PyObject*>contentProvider)
         except Exception as e:
             error[0] = traceback.format_exc().encode('UTF-8')
-        return False
+
+        return NULL
+
+    # currently have no virtual method returning a bool (was should_index/compress)
+    # bool bool_cy_call_fct(object obj, string method, string *error) with gil:
+    #     """Lookup and execute a pure virtual method on object returning a bool"""
+    #     try:
+    #         func = getattr(obj, method.decode('UTF-8'))
+    #         return func()
+    #     except Exception as e:
+    #         error[0] = traceback.format_exc().encode('UTF-8')
+    #     return False
 
     uint64_t int_cy_call_fct(object obj, string method, string *error) with gil:
-        """Lookup and execute a pure virtual method on ZimArticle returning an int"""
+        """Lookup and execute a pure virtual method on object returning an int"""
         try:
             func = getattr(obj, method.decode('UTF-8'))
             return <uint64_t>func()
@@ -154,7 +168,6 @@ cdef public api:
 class Compression(enum.Enum):
     """ Compression algorithms available to create ZIM files """
     none = wrapper.CompressionType.zimcompNone
-    zip = wrapper.CompressionType.zimcompZip
     lzma = wrapper.CompressionType.zimcompLzma
     zstd = wrapper.CompressionType.zimcompZstd
 
@@ -164,242 +177,359 @@ cdef class Creator:
 
         Attributes
         ----------
-        *c_creator : zim.ZimCreatorWrapper
+        *c_creator : zim.ZimCreator
             a pointer to the C++ Creator object
-        _finalized : bool
-            flag if the creator was finalized """
+        _filename: pathlib.Path
+            path to create the ZIM file at
+        _started : bool
+            flag if the creator has started """
 
-    cdef wrapper.ZimCreatorWrapper *c_creator
-    cdef bool _finalized
-
-    def __cinit__(self, str filename: str, str main_page: str = "", str index_language: str = "eng", compression = Compression.lzma, int min_chunk_size = 2048):
-        """ Constructs a Zim Creator from parameters.
-
-            Parameters
-            ----------
-            filename : str
-                Zim file path
-            main_page : str
-                Zim file main page (without namespace, must be in A/)
-            index_language : str
-                Zim file index language (default eng)
-            compression: Compression
-                Compression algorithm to use
-            min_chunk_size : int
-                Minimum chunk size (default 2048) """
-        self.c_creator = wrapper.ZimCreatorWrapper.create(filename.encode("UTF-8"), main_page.encode("UTF-8"), index_language.encode("UTF-8"), compression.value, min_chunk_size)
-        self._finalized = False
-
-    def __dealloc__(self):
-        del self.c_creator
-
-    def add_article(self, article not None):
-        """ Add an article to the Creator object.
-
-            Parameters
-            ----------
-            article : ZimArticle
-                The article to add to the file
-            Raises
-            ------
-                RuntimeError
-                    If the ZimCreator was already finalized """
-        if self._finalized:
-            raise RuntimeError("ZimCreator already finalized")
-
-        # Make a shared pointer to ZimArticleWrapper from the ZimArticle object
-        cdef shared_ptr[wrapper.ZimArticleWrapper] art = shared_ptr[wrapper.ZimArticleWrapper](
-            new wrapper.ZimArticleWrapper(<PyObject*>article));
-        with nogil:
-            self.c_creator.addArticle(art)
-
-    def finalize(self):
-        """ Finalize creation and write added articles to the file.
-
-            Raises
-            ------
-                RuntimeError
-                    If the ZimCreator was already finalized """
-        if  self._finalized:
-            raise RuntimeError("ZimCreator already finalized")
-        with nogil:
-            self.c_creator.finalize()
-        self._finalized = True
-
-########################
-#     ReadArticle      #
-########################
-
-cdef class ReadArticle:
-    """ Article in a Zim file
-
-        Attributes
-        ----------
-        *c_article : Article (zim::)
-            a pointer to the C++ article object """
-    cdef wrapper.Article c_article
-    cdef ReadingBlob _blob
-    cdef bool _haveBlob
-
-    #def __eq__(self, other):
-    #    if isinstance(other, ZimArticle):
-    #        return (self.longurl == other.longurl) and (self.content == other.content) and (self.is_redirect == other.is_redirect)
-    #    return False
-
-    def __cinit__(self):
-        self._haveBlob = False
-
-    cdef __setup(self, wrapper.Article art):
-        """ Assigns an internal pointer to the wrapped C++ article object.
-
-            Parameters
-            ----------
-            *art : Article
-                Pointer to a C++ (zim::) article object """
-        # Set new internal C zim.ZimArticle article
-        self.c_article = art
-        self._blob = None
-
-    # Factory functions - Currently Cython can't use classmethods
-    @staticmethod
-    cdef from_read_article(wrapper.Article art):
-        """ Creates a python ReadArticle from a C++ Article (zim::) -> ReadArticle
-
-            Parameters
-            ----------
-            art : Article
-                A C++ Article read with File
-            Returns
-            ------
-            ReadArticle
-                Casted article """
-        cdef ReadArticle article = ReadArticle()
-        article.__setup(art)
-        return article
-
-    @property
-    def namespace(self) -> str:
-        """ Article's namespace -> str """
-        ns = self.c_article.getNamespace()
-        return chr(ns)
-
-    @property
-    def title(self) -> str:
-        """ Article's title -> str """
-        return self.c_article.getTitle().decode('UTF-8')
-
-    @property
-    def content(self) -> memoryview:
-        """ Article's content -> memoryview """
-        if not self._haveBlob:
-            self._blob = ReadingBlob()
-            self._blob.__setup(self.c_article.getData(<int> 0))
-            self._haveBlob = True
-        return memoryview(self._blob)
-
-    @property
-    def longurl(self) -> str:
-        """ Article's long url, including namespace -> str"""
-        return self.c_article.getLongUrl().decode("UTF-8", "strict")
-
-    @property
-    def url(self) -> str:
-        """ Article's url without namespace -> str """
-        return self.c_article.getUrl().decode("UTF-8", "strict")
-
-    @property
-    def mimetype(self) -> str:
-        """ Article's mimetype -> str """
-        return self.c_article.getMimeType().decode('UTF-8')
-
-    @property
-    def is_redirect(self) -> bool:
-        """ Whether article is a redirect -> bool """
-        return self.c_article.isRedirect()
-
-    def get_redirect_article(self) -> ReadArticle:
-        """ Target ReadArticle of this one -> ReadArticle """
-        if not self.is_redirect:
-            raise RuntimeError("Article is not a redirect")
-
-        cdef wrapper.Article art = self.c_article.getRedirectArticle()
-        if not art.good():
-            raise RuntimeError("Redirect article not found")
-
-        article = ReadArticle.from_read_article(art)
-        return article
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}(url={self.longurl}, title={self.title})"
-
-
-
-
-#########################
-#        File           #
-#########################
-
-cdef class FilePy:
-    """ Zim File Reader
-
-        Attributes
-        ----------
-        *c_file : File
-            a pointer to a C++ File object
-        _filename : pathlib.Path
-            the file name of the File Reader object """
-
-    cdef wrapper.File *c_file
+    cdef wrapper.ZimCreator c_creator
     cdef object _filename
+    cdef object _started
 
-    def __cinit__(self, object filename: pathlib.Path):
+    def __cinit__(self, object filename: pathlib.Path, *args, **kwargs):
+        self._filename = pathlib.Path(filename)
+        self._started = False
+
+    def __init__(self, filename: pathlib.Path):
         """ Constructs a File from full zim file path
 
             Parameters
             ----------
             filename : pathlib.Path
                 Full path to a zim file """
-
-        self.c_file = new wrapper.File(str(filename).encode('UTF-8'))
-        self._filename = pathlib.Path(self.c_file.getFilename().decode("UTF-8", "strict"))
-
-    def __dealloc__(self):
-        if self.c_file != NULL:
-            del self.c_file
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
         pass
 
-    @property
-    def filename(self) -> pathlib.Path:
-        """ Filename of the File object -> pathlib.Path """
-        return self._filename
+    def config_verbose(self, bool verbose) -> Creator:
+        if self._started:
+            raise RuntimeError("ZimCreator started")
+        self.c_creator.configVerbose(verbose)
+        return self
 
-    def get_article(self, url: str) -> ReadArticle:
-        """ ReadArticle with a copy of the file article by full url (including namespace) -> ReadArticle
+    def config_compression(self, comptype: Compression) -> Creator:
+        if self._started:
+            raise RuntimeError("ZimCreator started")
+        self.c_creator.configCompression(comptype.value)
+        return self
+
+    def config_minclustersize(self, int size) -> Creator:
+        if self._started:
+            raise RuntimeError("ZimCreator started")
+        self.c_creator.configMinClusterSize(size)
+        return self
+
+    def config_indexing(self, bool indexing, str language) -> Creator:
+        if self._started:
+            raise RuntimeError("ZimCreator started")
+        self.c_creator.configIndexing(indexing, language.encode('utf8'))
+        return self
+
+    def config_nbworkers(self, int nbWorkers) -> Creator:
+        if self._started:
+            raise RuntimeError("ZimCreator started")
+        self.c_creator.configNbWorkers(nbWorkers)
+        return self
+
+    def set_mainpath(self, str mainPath) -> Creator:
+        self.c_creator.setMainPath(mainPath.encode('utf8'))
+        return self
+
+    def set_faviconpath(self, str faviconPath) -> Creator:
+        self.c_creator.setFaviconPath(faviconPath.encode('utf8'))
+        return self
+
+#    def set_uuid(self, uuid) -> Creator:
+#        self.c_creator.setUuid(uuid)
+
+    def add_item(self, WriterItem not None):
+        """ Add an item to the Creator object.
 
             Parameters
             ----------
-            url : str
-                The full url, including namespace, of the article
+            item : WriterItem
+                The item to add to the file
+            Raises
+            ------
+                RuntimeError
+                    If the ZimCreator was already finalized """
+        if not self._started:
+            raise RuntimeError("ZimCreator not started")
+
+        # Make a shared pointer to ZimArticleWrapper from the ZimArticle object
+        cdef shared_ptr[wrapper.WriterItem] item = shared_ptr[wrapper.WriterItem](
+            new wrapper.WriterItemWrapper(<PyObject*>WriterItem));
+        with nogil:
+            self.c_creator.addItem(item)
+
+    def add_metadata(self, str name, bytes content, str mimetype = "text/plain"):
+        if not self._started:
+            raise RuntimeError("ZimCreator not started")
+
+        cdef string _name = name.encode('utf8')
+        cdef string _content = content
+        cdef string _mimetype = mimetype.encode('utf8')
+        with nogil:
+            self.c_creator.addMetadata(_name, _content, _mimetype)
+
+    def add_redirection(self, str path, str title, str targetPath):
+        if not self._started:
+            raise RuntimeError("ZimCreator not started")
+
+        cdef string _path = path.encode('utf8')
+        cdef string _title = title.encode('utf8')
+        cdef string _targetPath = targetPath.encode('utf8')
+        with nogil:
+            self.c_creator.addRedirection(_path, _title, _targetPath)
+
+    def __enter__(self):
+        cdef string _path = str(self._filename).encode('utf8')
+        with nogil:
+            self.c_creator.startZimCreation(_path)
+        self._started = True
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if True or exc_type is None:
+            with nogil:
+                self.c_creator.finishZimCreation()
+        self._started = False
+
+    @property
+    def filename(self):
+        return self._filename
+
+########################
+#         Entry        #
+########################
+
+cdef class Entry:
+    """ Entry in a Zim archive
+
+        Attributes
+        ----------
+        *c_entry : Entry (zim::)
+            a pointer to the C++ entry object """
+    cdef wrapper.ZimEntry* c_entry
+
+    # Factory functions - Currently Cython can't use classmethods
+    @staticmethod
+    cdef from_entry(wrapper.ZimEntry* ent):
+        """ Creates a python Entry from a C++ Entry (zim::) -> Entry
+
+            Parameters
+            ----------
+            ent : Entry
+                A C++ Entry
+            Returns
+            ------
+            Entry
+                Casted entry """
+        cdef Entry entry = Entry()
+        entry.c_entry = ent
+        return entry
+
+    def __dealloc__(self):
+        if self.c_entry != NULL:
+            del self.c_entry
+
+    @property
+    def title(self) -> str:
+        return self.c_entry.getTitle().decode('UTF-8')
+
+    @property
+    def path(self) -> str:
+        return self.c_entry.getPath().decode("UTF-8", "strict")
+
+    @property
+    def _index(self) -> int:
+        return self.c_entry.getIndex()
+
+    @property
+    def is_redirect(self) -> bool:
+        """ Whether entry is a redirect -> bool """
+        return self.c_entry.isRedirect()
+
+    def get_redirect_entry(self) -> Entry:
+        cdef ZimEntry* entry = self.c_entry.getRedirectEntry()
+        return Entry.from_entry(entry)
+
+    def get_item(self) -> Item:
+        cdef ZimItem* item = self.c_entry.getItem(True)
+        return Item.from_item(item)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(url={self.path}, title={self.title})"
+
+cdef class Item:
+    """ Item in a Zim archive
+
+        Attributes
+        ----------
+        *c_entry : Entry (zim::)
+            a pointer to the C++ entry object """
+    cdef wrapper.ZimItem* c_item
+    cdef ReadingBlob _blob
+    cdef bool _haveBlob
+
+    # Factory functions - Currently Cython can't use classmethods
+    @staticmethod
+    cdef from_item(wrapper.ZimItem* _item):
+        """ Creates a python ReadArticle from a C++ Article (zim::) -> ReadArticle
+
+            Parameters
+            ----------
+            _item : Item
+                A C++ Item
+            Returns
+            ------
+            Item
+                Casted item """
+        cdef Item item = Item()
+        item.c_item = _item
+        return item
+
+    def __dealloc__(self):
+        if self.c_item != NULL:
+            del self.c_item
+
+    @property
+    def title(self) -> str:
+        return self.c_item.getTitle().decode('UTF-8')
+
+    @property
+    def path(self) -> str:
+        return self.c_item.getPath().decode("UTF-8", "strict")
+
+    @property
+    def content(self) -> memoryview:
+        if not self._haveBlob:
+            self._blob = ReadingBlob()
+            self._blob.__setup(self.c_item.getData(<int> 0))
+            self._haveBlob = True
+        return memoryview(self._blob)
+
+    @property
+    def mimetype(self) -> str:
+        return self.c_item.getMimetype().decode('UTF-8')
+
+    @property
+    def _index(self) -> int:
+        return self.c_item.getIndex()
+
+    @property
+    def size(self) -> int:
+        return self.c_item.getSize()
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(url={self.path}, title={self.title})"
+
+
+
+
+#########################
+#        Archive        #
+#########################
+
+cdef class PyArchive:
+    """ Zim Archive Reader
+
+        Attributes
+        ----------
+        *c_archive : Archive
+            a pointer to a C++ Archive object
+        _filename : pathlib.Path
+            the file name of the Archive Reader object """
+
+    cdef wrapper.ZimArchive* c_archive
+    cdef object _filename
+
+    def __cinit__(self, object filename: pathlib.Path):
+        """ Constructs an Archive from full zim file path
+
+            Parameters
+            ----------
+            filename : pathlib.Path
+                Full path to a zim file """
+
+        self.c_archive = new wrapper.ZimArchive(str(filename).encode('UTF-8'))
+        self._filename = pathlib.Path(self.c_archive.getFilename().decode("UTF-8", "strict"))
+
+    def __dealloc__(self):
+        if self.c_archive != NULL:
+            del self.c_archive
+
+    def __eq__(self, other):
+        if PyArchive not in type(self).mro() or PyArchive not in type(other).mro():
+            return False
+        try:
+            return self.filename.expanduser().resolve() == other.filename.expanduser().resolve()
+        except Exception:
+            return False
+
+    @property
+    def filename(self) -> pathlib.Path:
+        return self._filename
+
+    @property
+    def filesize(self) -> int:
+        """ total size of ZIM file (or files if split """
+        return self.c_archive.getFilesize()
+
+    def has_entry_by_path(self, path: str) -> bool:
+        return self.c_archive.hasEntryByPath(<string>path.encode('UTF-8'))
+
+    def get_entry_by_path(self, path: str) -> Entry:
+        """ Entry from a path -> Entry
+
+            Parameters
+            ----------
+            path : str
+                The path of the article
             Returns
             -------
-            ReadArticle
-                The ReadArticle object
+            Entry
+                The Entry object
             Raises
             ------
                 KeyError
-                    If an article with the provided long url is not found in the file """
-        # Read to a zim::Article
-        cdef wrapper.Article art = self.c_file.getArticleByUrl(url.encode('UTF-8'))
-        if not art.good():
-            raise KeyError("Article not found for url")
+                    If an entry with the provided path is not found in the archive """
+        cdef wrapper.ZimEntry* entry
+        try:
+            entry = self.c_archive.getEntryByPath(<string>path.encode('UTF-8'))
+        except RuntimeError as e:
+            raise KeyError(str(e))
+        return Entry.from_entry(entry)
 
-        article = ReadArticle.from_read_article(art)
-        return article
+    def has_entry_by_title(self, title: str) -> bool:
+        return self.c_archive.hasEntryByTitle(<string>title.encode('UTF-8'))
+
+    def get_entry_by_title(self, title: str) -> Entry:
+        """ Entry from a title -> Entry
+
+            Parameters
+            ----------
+            title : str
+                The title of the article
+            Returns
+            -------
+            Entry
+                The first Entry object matching the title
+            Raises
+            ------
+                KeyError
+                    If an entry with the provided title is not found in the archive """
+        cdef wrapper.ZimEntry* entry
+        try:
+            entry = self.c_archive.getEntryByTitle(<string>title.encode('UTF-8'))
+        except RuntimeError as e:
+            raise KeyError(str(e))
+        return Entry.from_entry(entry)
+
+    @property
+    def metadata_keys(self):
+        """ List[str] of Metadata present in this archive """
+        return [key.decode("UTF-8", "strict") for key in self.c_archive.getMetadataKeys()]
 
     def get_metadata(self, name: str) -> bytes:
         """ A Metadata's content -> bytes
@@ -407,105 +537,71 @@ cdef class FilePy:
             Parameters
             ----------
             name: str
-                url of the metadata article (without namespace)
+                name/path of the Metadata Entry
             Returns
             -------
             bytes
-                Metadata article's content. Can be of any type. """
-        return bytes(self.get_article(f"M/{name}").content)
+                Metadata entry's content. Can be of any type. """
+        return bytes(self.c_archive.getMetadata(name.encode('UTF-8')))
 
-    def get_article_by_id(self, article_id: int) -> ReadArticle:
-        """ ReadArticle with a copy of the file article by article id -> ReadArticle
-
-        Parameters
-        ----------
-        article_id : int
-            The id of the article
-        Returns
-        -------
-        ReadArticle
-            The ReadArticle object
-        Raises
-        ------
-            RuntimeError
-                If there is a problem in retrieving article
-            IndexError
-                If an article with the provided id is not found (id out of bound) """
-
-        # Read to a zim::Article
-        cdef wrapper.Article art
-        try:
-            art = self.c_file.getArticle(<int> article_id)
-        except RuntimeError as exc:
-            raise(IndexError(exc))
-        if not art.good():
-            raise IndexError("Article not found for id")
-
-        article = ReadArticle.from_read_article(art)
-        return article
+    def _get_entry_by_id(self, entry_id: int) -> Entry:
+        cdef wrapper.ZimEntry* entry = self.c_archive.getEntryByPath(<entry_index_type>entry_id)
+        return Entry.from_entry(entry)
 
     @property
-    def main_page_url(self) -> str:
-        """ File's main page full url -> str
+    def has_main_entry(self) -> bool:
+        return self.c_archive.hasMainEntry()
 
-            Returns
-            -------
-            str
-                The url of the main page, including namespace """
-        cdef wrapper.Fileheader header = self.c_file.getFileheader()
-        cdef wrapper.Article article
-        if header.hasMainPage():
-            article = self.c_file.getArticle(header.getMainPage())
-            return article.getLongUrl().decode("UTF-8", "strict");
+    @property
+    def main_entry(self) -> Entry:
+        return Entry.from_entry(self.c_archive.getMainEntry())
 
-        # TODO Ask about the old format, check libzim for tests
-        # Handle old zim where header has no mainPage.
-        # (We need to get first article in the zim)
-        article = self.c_file.getArticle(<int> 0)
-        if article.good():
-            return article.getLongUrl().decode("UTF-8", "strict")
+    @property
+    def has_favicon_entry(self) -> bool:
+        return self.c_archive.hasFaviconEntry()
+
+    @property
+    def favicon_entry(self) -> Entry:
+        return Entry.from_entry(self.c_archive.getFaviconEntry())
+
+    @property
+    def uuid(self) -> UUID:
+        return UUID(self.c_archive.getUuid().hex())
+
+    @property
+    def has_new_namespace_scheme(self) -> bool:
+        return self.c_archive.hasNewNamespaceScheme()
+
+    @property
+    def is_multipart(self) -> bool:
+        return self.c_archive.is_multiPart()
+
+    @property
+    def has_fulltext_index(self) -> bool:
+        return self.c_archive.hasFulltextIndex()
+
+    @property
+    def has_title_index(self) -> bool:
+        return self.c_archive.hasTitleIndex()
+
+    @property
+    def has_checksum(self) -> str:
+        return self.c_archive.hasChecksum()
 
     @property
     def checksum(self) -> str:
-        """ File's checksum -> str
+        return self.c_archive.getChecksum().decode("UTF-8", "strict")
 
-            Returns
-            -------
-            str
-                The file's checksum """
-        return self.c_file.getChecksum().decode("UTF-8", "strict")
+    def check(self) -> bool:
+        """ whether Archive has a checksum anf file verifies it """
+        return self.c_archive.check()
 
     @property
-    def article_count(self) -> int:
-        """ File's articles count -> int
-
-            Returns
-            -------
-            int
-                The total number of articles in the file """
-        return self.c_file.getCountArticles()
-
-    @property
-    def namespaces(self) -> str:
-        """ Namespaces present in the file -> str
-
-        Returns
-        -------
-        str
-            A string containing initials of all namespaces in the file (ex: "-AIMX") """
-        return self.c_file.getNamespaces().decode("UTF-8", "strict")
-
-    def get_namespace_count(self, str ns) -> int:
-        """ Articles count within a namespace -> int
-
-            Returns
-            -------
-            int
-                The total number of articles in the namespace """
-        return self.c_file.getNamespaceCount(ord(ns[0]))
+    def entry_count(self) -> int:
+        return self.c_archive.getEntryCount()
 
     def suggest(self, query: str, start: int = 0, end: int = 10) -> Generator[str, None, None]:
-        """ Full urls of suggested articles in the file from a title query -> Generator[str, None, None]
+        """ Paths of suggested entries in the archive from a title query -> Generator[str, None, None]
 
             Parameters
             ----------
@@ -518,16 +614,19 @@ cdef class FilePy:
             Returns
             -------
             Generator
-                Url of suggested article """
-        cdef unique_ptr[wrapper.Search] search = self.c_file.suggestions(query.encode('UTF-8'),start, end)
-        cdef wrapper.search_iterator it = dereference(search).begin()
+                Path of suggested entry """
+        cdef wrapper.ZimSearch search = wrapper.ZimSearch(dereference(self.c_archive))
+        search.set_suggestion_mode(True)
+        search.set_query(query.encode('UTF-8'))
+        search.set_range(start, end)
 
-        while it != dereference(search).end():
+        cdef wrapper.search_iterator it = search.begin()
+        while it != search.end():
             yield it.get_url().decode('UTF-8')
             preincrement(it)
 
     def search(self, query: str, start: int = 0, end: int = 10) -> Generator[str, None, None]:
-        """ Full urls of articles in the file from a search query -> Generator[str, None, None]
+        """ Paths of entries in the archive from a search query -> Generator[str, None, None]
 
             Parameters
             ----------
@@ -540,12 +639,15 @@ cdef class FilePy:
             Returns
             -------
             Generator
-                Url of article matching the search query """
+                Path of entry matching the search query """
 
-        cdef unique_ptr[wrapper.Search] search = self.c_file.search(query.encode('UTF-8'),start, end)
-        cdef wrapper.search_iterator it = dereference(search).begin()
+        cdef wrapper.ZimSearch search = wrapper.ZimSearch(dereference(self.c_archive))
+        search.set_suggestion_mode(False)
+        search.set_query(query.encode('UTF-8'))
+        search.set_range(start, end)
 
-        while it != dereference(search).end():
+        cdef wrapper.search_iterator it = search.begin()
+        while it != search.end():
             yield it.get_url().decode('UTF-8')
             preincrement(it)
 
@@ -560,8 +662,12 @@ cdef class FilePy:
             -------
             int
                 Estimated number of search results """
-        cdef unique_ptr[wrapper.Search] search = self.c_file.search(query.encode('UTF-8'),0, 1)
-        return dereference(search).get_matches_estimated()
+        cdef wrapper.ZimSearch search = wrapper.ZimSearch(dereference(self.c_archive))
+        search.set_suggestion_mode(False)
+        search.set_query(query.encode('UTF-8'))
+        search.set_range(0, 1)
+
+        return search.get_matches_estimated()
 
     def get_estimated_suggestions_results_count(self, query: str) -> int:
         """ Estimated number of suggestions for a query -> int
@@ -574,8 +680,12 @@ cdef class FilePy:
             -------
             int
                 Estimated number of article suggestions """
-        cdef unique_ptr[wrapper.Search] search = self.c_file.suggestions(query.encode('UTF-8'),0 , 1)
-        return dereference(search).get_matches_estimated()
+        cdef wrapper.ZimSearch search = wrapper.ZimSearch(dereference(self.c_archive))
+        search.set_suggestion_mode(True)
+        search.set_query(query.encode('UTF-8'))
+        search.set_range(0, 1)
+
+        return search.get_matches_estimated()
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(filename={self.filename})"
