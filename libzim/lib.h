@@ -25,56 +25,105 @@ struct _object;
 typedef _object PyObject;
 
 #include <zim/zim.h>
-#include <zim/writer/article.h>
-#include <zim/writer/url.h>
+#include <zim/archive.h>
+#include <zim/entry.h>
+#include <zim/item.h>
+#include <zim/search.h>
 #include <zim/blob.h>
+#include <zim/writer/item.h>
+#include <zim/writer/contentProvider.h>
 
 #include <string>
 
-class ZimArticleWrapper : public zim::writer::Article
+template<typename T, typename U>
+inline T* to_ptr(const U& obj)
 {
-public:
-    PyObject *m_obj;
+  return new T(obj);
+}
 
-    ZimArticleWrapper(PyObject *obj);
-    virtual ~ZimArticleWrapper();
+class ZimItem : public zim::Item
+{
+  public:
+    ZimItem(const zim::Item& item) : zim::Item(item) {}
+};
 
-    virtual zim::writer::Url getUrl() const;
-    virtual std::string getTitle() const;
-    virtual bool isRedirect() const;
-    virtual std::string getMimeType() const;
-    virtual std::string getFilename() const;
-    virtual bool shouldCompress() const;
-    virtual bool shouldIndex() const;
-    virtual zim::writer::Url getRedirectUrl() const;
-    virtual zim::Blob getData() const;
-    virtual zim::size_type getSize() const;
+class ZimEntry : public zim::Entry
+{
+  public:
+    ZimEntry(const zim::Entry& entry) : zim::Entry(entry) {}
+    ZimItem* getItem(bool follow) const
+    { return to_ptr<ZimItem>(zim::Entry::getItem(follow)); }
+    ZimEntry* getRedirectEntry() const
+    { return to_ptr<ZimEntry>(zim::Entry::getRedirectEntry()); }
+};
 
-    virtual bool isLinktarget() const;
-    virtual bool isDeleted() const;
-    virtual std::string getNextCategory();
+class ZimSearch : public zim::Search
+{
+  public:
+    ZimSearch() : zim::Search(std::vector<zim::Archive>{}) {};
+    ZimSearch(zim::Archive& archive) : zim::Search(archive) {};
+    ZimSearch(const Search& search) : zim::Search(search) {};
+};
+
+class ZimArchive : public zim::Archive
+{
+  public:
+    ZimArchive(const std::string& filename) : zim::Archive(filename) {};
+    ZimArchive(const zim::Archive& archive) : zim::Archive(archive) {};
+
+    ZimEntry* getEntryByPath(zim::entry_index_type idx) const
+    { return to_ptr<ZimEntry>(zim::Archive::getEntryByPath(idx)); }
+    ZimEntry* getEntryByPath(const std::string& path) const
+    { return to_ptr<ZimEntry>(zim::Archive::getEntryByPath(path)); }
+    ZimEntry* getEntryByTitle(zim::entry_index_type idx) const
+    { return to_ptr<ZimEntry>(zim::Archive::getEntryByTitle(idx)); }
+    ZimEntry* getEntryByTitle(const std::string& title) const
+    { return to_ptr<ZimEntry>(zim::Archive::getEntryByTitle(title)); }
+    ZimEntry* getMainEntry() const
+    { return to_ptr<ZimEntry>(zim::Archive::getMainEntry()); }
+    ZimEntry* getFaviconEntry() const
+    { return to_ptr<ZimEntry>(zim::Archive::getFaviconEntry()); }
+    std::string getUuid() const
+    { zim::Uuid uuid = zim::Archive::getUuid();
+      std::string uuids(uuid.data, uuid.size()); return uuids; }
+};
 
 
-private:
+
+class ObjWrapper
+{
+  public:
+    ObjWrapper(PyObject* obj);
+    virtual ~ObjWrapper();
+
+  protected:
+    PyObject* m_obj;
+
     std::string callCythonReturnString(std::string) const;
-    zim::Blob callCythonReturnBlob(std::string) const;
-    bool callCythonReturnBool(std::string) const;
     uint64_t callCythonReturnInt(std::string) const;
 };
 
-class OverriddenZimCreator;
-
-class ZimCreatorWrapper
+class WriterItemWrapper : public zim::writer::Item, private ObjWrapper
 {
-public:
-    OverriddenZimCreator *_creator;
-    ZimCreatorWrapper(OverriddenZimCreator *creator);
-    ~ZimCreatorWrapper();
-    static ZimCreatorWrapper *create(std::string fileName, std::string mainPage, std::string fullTextIndexLanguage, zim::CompressionType compression, int minChunkSize);
-    void addArticle(std::shared_ptr<ZimArticleWrapper> article);
-    void finalize();
-    void setMainUrl(std::string newUrl);
-    zim::writer::Url getMainUrl();
+  public:
+    WriterItemWrapper(PyObject *obj) : ObjWrapper(obj) {};
+    virtual std::string getPath() const;
+    virtual std::string getTitle() const;
+    virtual std::string getMimeType() const;
+    virtual std::unique_ptr<zim::writer::ContentProvider> getContentProvider() const;
+
+  private:
+    std::unique_ptr<zim::writer::ContentProvider> callCythonReturnContentProvider(std::string) const;
+};
+
+class ContentProviderWrapper : public zim::writer::ContentProvider, private ObjWrapper
+{
+  public:
+    ContentProviderWrapper(PyObject *obj) : ObjWrapper(obj) {};
+    virtual zim::size_type getSize() const;
+    virtual zim::Blob feed();
+  private:
+    zim::Blob callCythonReturnBlob(std::string) const;
 };
 
 #endif // !libzim_LIB_H
