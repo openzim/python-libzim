@@ -20,6 +20,7 @@
 
 cimport libzim.wrapper as wrapper
 
+import os
 import enum
 from uuid import UUID
 from typing import Generator
@@ -191,6 +192,10 @@ cdef class Creator:
     def __cinit__(self, object filename: pathlib.Path, *args, **kwargs):
         self._filename = pathlib.Path(filename)
         self._started = False
+        # fail early if destination is not writable
+        parent = self._filename.expanduser().resolve().parent
+        if not os.access(parent, mode=os.W_OK, effective_ids=(os.access in os.supports_effective_ids)):
+            raise IOError("Unable to write ZIM file at {}".format(self._filename))
 
     def __init__(self, filename: pathlib.Path):
         """ Constructs a File from full zim file path
