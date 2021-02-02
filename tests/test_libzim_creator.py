@@ -613,3 +613,13 @@ def test_virtualmethods_int_exc(fpath):
     with Creator(fpath) as c:
         with pytest.raises(RuntimeError, match="TypeError: an integer is required"):
             c.add_item(AnItem())
+
+
+def test_creator_badfilename(tmpdir):
+    # lack of perm
+    with pytest.raises(IOError):
+        Creator("/root/test.zim")
+
+    # forward slash points to non-existing folder
+    with pytest.raises(IOError):
+        Creator(tmpdir / "test/test.zim")
