@@ -29,8 +29,8 @@ from libcpp.vector cimport vector
 cdef extern from "zim/zim.h" namespace "zim":
     ctypedef uint64_t size_type
     ctypedef uint64_t offset_type
+    ctypedef uint32_t entry_index_type
     ctypedef enum CompressionType:
-        zimcompDefault
         zimcompNone
         zimcompZip
         zimcompBzip2
@@ -47,62 +47,64 @@ cdef extern from "zim/blob.h" namespace "zim":
         uint64_t size() except +
 
 
-cdef extern from "zim/writer/url.h" namespace "zim::writer":
-    cdef cppclass Url:
-        string getLongUrl() except +
-
-
-cdef extern from "zim/writer/article.h" namespace "zim::writer":
-    cdef cppclass WriterArticle:
+cdef extern from "zim/writer/item.h" namespace "zim::writer":
+    cdef cppclass WriterItem "zim::writer::Item":
         pass
 
+cdef extern from "zim/writer/contentProvider.h" namespace "zim::writer":
+    cdef cppclass ContentProvider:
+        pass
+
+
+cdef extern from "zim/writer/creator.h" namespace "zim::writer":
+    cdef cppclass ZimCreator "zim::writer::Creator":
+        void configVerbose(bint verbose)
+        void configCompression(CompressionType comptype)
+        void configMinClusterSize(int size)
+        void configIndexing(bint indexing, string language)
+        void configNbWorkers(int nbWorkers)
+        void startZimCreation(string filepath) nogil except +;
+        void addItem(shared_ptr[WriterItem] item) nogil except +
+        void addMetadata(string name, string content, string mimetype) nogil except +
+        void addRedirection(string path, string title, string targetpath) nogil except +
+        void finishZimCreation() nogil except +
+        void setMainPath(string mainPath)
+        void setFaviconPath(string faviconPath)
+
 cdef extern from "lib.h":
-    cdef cppclass ZimArticleWrapper(WriterArticle):
-        ZimArticleWrapper(PyObject *obj) except +
-        const string getTitle() except +
-        const Url getUrl() except +
-        const string getTitle() except +
-        const bool isRedirect() except +
-        const string getMimeType() except +
-        const string getFilename() except +
-        const bool shouldCompress() except +
-        const bool shouldIndex() except +
-        const Url getRedirectUrl() except +
-        const Blob getData() except +
+    # The only thing we need to know here is how to create the Wrapper.
+    # Other (cpp) methods must exists and they will be called,
+    # but we don't care about them here.
+    cdef cppclass ContentProviderWrapper(ContentProvider):
+        ContentProviderWrapper(PyObject* obj) except +
+    cdef cppclass WriterItemWrapper:
+        WriterItemWrapper(PyObject* obj) except +
 
-    cdef cppclass ZimCreatorWrapper:
-        @staticmethod
-        ZimCreatorWrapper *create(string fileName, string mainPage, string fullTextIndexLanguage, CompressionType compression, int minChunkSize) nogil except +
-        void addArticle(shared_ptr[ZimArticleWrapper] article) nogil except +
-        void finalize() nogil except +
-        Url getMainUrl() except +
-        void setMainUrl(string) except +
+cdef extern from "lib.h":
+    cdef cppclass ZimEntry:
+        string getTitle()
+        string getPath() except +
+
+        bint isRedirect()
+        ZimItem* getItem(bint follow) except +
+        ZimItem* getRedirect() except +
+        ZimEntry* getRedirectEntry() except +
+
+        int getIndex() except +
 
 
-cdef extern from "zim/article.h" namespace "zim":
-    cdef cppclass Article:
-        Article() except +
-
+cdef extern from "lib.h":
+    cdef cppclass ZimItem:
+        ZimItem __enter__()
         string getTitle() except +
-        string getUrl() except +
-        string getLongUrl() except +
-        string getMimeType() except +
-        char getNamespace() except +
-        bint good() except +
+        string getPath() except +
+        string getMimetype() except +
 
-        const Blob getData(size_type offset) except +
+        const Blob getData(offset_type offset) except +
+        const Blob getData(offset_type offset, size_type size) except +
+        size_type  getSize() except +
 
-        bint isRedirect() except +
-        bint isLinktarget() except +
-        bint isDeleted() except +
-
-        Article getRedirectArticle() except +
-
-
-cdef extern from "zim/fileheader.h" namespace "zim":
-    cdef cppclass Fileheader:
-        bint hasMainPage() except +
-        size_type getMainPage() except +
+        int getIndex() except +
 
 
 cdef extern from "zim/search_iterator.h" namespace "zim":
@@ -115,34 +117,47 @@ cdef extern from "zim/search_iterator.h" namespace "zim":
         string get_title()
 
 
-cdef extern from "zim/search.h" namespace "zim":
-    cdef cppclass Search:
-        Search(const File* zimfile)
-        Search(vector[const File] zimfiles)
+cdef extern from "lib.h":
+    cdef cppclass ZimSearch:
+        ZimSearch()
+        ZimSearch(const ZimArchive zimfile)
+        ZimSearch(vector[const ZimArchive] zimfiles)
+        void set_suggestion_mode(bint suggestion)
+        void set_query(string query)
+        void set_range(int, int)
         search_iterator begin()
         search_iterator end()
         int get_matches_estimated()
 
 
-cdef extern from "zim/file.h" namespace "zim":
-    cdef cppclass File:
-        File() except +
-        File(string filename) except +
+cdef extern from "lib.h":
+    cdef cppclass ZimArchive:
+        ZimArchive(string filename) except +
 
-        Article getArticle(size_type idx) except +
-        Article getArticle(char ns, string url) except +
-        Article getArticleByUrl(string url) except +
+        int getFilesize() except +
+
+        ZimEntry* getEntryByPath(string path) except +
+        ZimEntry* getEntryByPath(entry_index_type idx) except +
+        ZimEntry* getEntryByTitle(string title) except +
 
         string getMetadata(string name) except +
+        vector[string] getMetadataKeys() except +
 
-        Fileheader getFileheader() except +
+        ZimEntry* getMainEntry() except +
+        ZimEntry* getFaviconEntry() except +
+        size_type getEntryCount() except +
 
-        size_type getCountArticles() except +
-        size_type getNamespaceCount(char ns) except +
-
-        string getNamespaces() except +
         string getChecksum() except +
         string getFilename() except +
+        string getUuid() except +
 
-        unique_ptr[Search] search(const string query, int start, int end);
-        unique_ptr[Search] suggestions(const string query, int start, int end);
+        bool hasMainEntry() except +
+        bool hasFaviconEntry() except +
+        bool hasEntryByPath(string path) except +
+        bool hasEntryByTitle(string title) except +
+        bool is_multiPart() except +
+        bool hasNewNamespaceScheme() except +
+        bool hasFulltextIndex() except +
+        bool hasTitleIndex() except +
+        bool hasChecksum() except +
+        bool check() except +
