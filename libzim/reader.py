@@ -1,15 +1,19 @@
 """ libzim reader module
 
-    - File to open and read ZIM files
-    - Article are returned by File on get_article() and get_article_by_id()
+    - Archive to open and read ZIM files
+    - `Archive` gives access to all `Entry`
+    - `Entry` gives access to `Item` (content)
 
     Usage:
 
-    with File(pathlib.Path("myfile.zim")) as zf:
-        article = zf.get_article(zf.main_page_url)
-        print(f"Article {article.title} at {article.url} is {article.content.nbytes}b")
+    with Archive(fpath) as zim:
+        entry = zim.get_entry_by_path(zim.main_entry.path)
+        print(f"Article {entry.title} at {entry.path} is "
+              f"{entry.get_item().content.nbytes}b")
     """
 
 # flake8: noqa
-from .wrapper import FilePy as File
-from .wrapper import ReadArticle as Article
+from .wrapper import PyArchive as Archive, Entry, Item
+
+
+__all__ = ["Archive", "Entry", "Item"]
