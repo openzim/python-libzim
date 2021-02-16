@@ -14,6 +14,7 @@ env:
 
 jobs:
   release:
+    environment: release
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
