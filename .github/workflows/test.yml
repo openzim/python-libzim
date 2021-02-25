@@ -41,7 +41,7 @@ jobs:
         # TODO: expand this once macos and windows libzim releases become available
         # os: [ubuntu-latest, windows-latest, macos-latest]
         # alternatively we can compile libzim in docker and use the container as an action
-        python: [3.6, 3.7, 3.8]
+        python: [3.6, 3.7, 3.8, 3.9]
 
     steps:
       - uses: actions/checkout@v2
@@ -99,7 +99,7 @@ jobs:
 
       - name: Build cython, sdist, and bdist_wheel
         run: |
-          pip install --upgrade pip install "cython>=0.29.20,<3.0" setuptools pip wheel
+          pip install --upgrade pip install "cython>=0.29.22,<3.0" setuptools pip wheel
           python3 setup.py build_ext --inplace
           python3 setup.py sdist bdist_wheel
 
