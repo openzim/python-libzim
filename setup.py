@@ -106,7 +106,7 @@ if PROFILE:
 setup(
     # Basic information about libzim module
     name="libzim",
-    version="0.0.3.post0",
+    version="1.0.0.dev0",
     url=GITHUB_URL,
     project_urls={
         "Source": GITHUB_URL,

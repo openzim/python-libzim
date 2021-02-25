@@ -1,3 +1,16 @@
+## 1.0.dev0
+
+* using libzim 7.x
+* Python 3.9 support
+* [breaking] Using new libzim 7-based API for both reader and writer
+  * No more namespaces
+  * Defaulting to zstd compression
+  * https://github.com/openzim/libzim/blob/master/ChangeLog
+* Rewrote all tests for new API ; using libzim's own test ZIM files to test reader
+* Code-coverage now includes Cython code as well
+* macOS releases are signed and notarized
+* Early-failure on invalid destination ZIM path
+
 ## 0.0.4
 
 * added compression argument to Creator to set compression algorithm (libzim.writer.Compression)
