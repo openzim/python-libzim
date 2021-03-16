@@ -173,7 +173,7 @@ def test_creator_verbose(fpath, verbose):
     lines = output.splitlines()
     if verbose:
         assert "T:" in output
-        assert len(lines) >= 20
+        assert len(lines) >= 5
     else:
         assert len(lines) == 2
 
