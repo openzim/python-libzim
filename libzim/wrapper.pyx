@@ -670,7 +670,7 @@ cdef class PyArchive:
         cdef wrapper.ZimSearch search = wrapper.ZimSearch(dereference(self.c_archive))
         search.set_suggestion_mode(False)
         search.set_query(query.encode('UTF-8'))
-        search.set_range(0, 1)
+        search.set_range(0, self.entry_count)
 
         return search.get_matches_estimated()
 
@@ -688,7 +688,7 @@ cdef class PyArchive:
         cdef wrapper.ZimSearch search = wrapper.ZimSearch(dereference(self.c_archive))
         search.set_suggestion_mode(True)
         search.set_query(query.encode('UTF-8'))
-        search.set_range(0, 1)
+        search.set_range(0, self.entry_count)
 
         return search.get_matches_estimated()
 
