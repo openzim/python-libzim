@@ -3,6 +3,12 @@ include README.md
 include tests/*.py
 include pyproject.toml
 
-recursive-include libzim *
+include libzim/libzim.7.dylib
+include libzim/libzim.so.7
+include libzim/*.cxx
+include libzim/*.h
+include libzim/*.py
+include libzim/*.pxd
+include libzim/*.pyx
 global-exclude __pycache__/*
 exclude *.egg-info/*
