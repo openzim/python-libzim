@@ -16,7 +16,7 @@ from libzim.reader import Archive
 ZIMS_DATA = {
     "blank.zim": {
         "filename": "blank.zim",
-        "filesize": 25675,
+        "filesize": 25789,
         "new_ns": True,
         "mutlipart": False,
         "zim_uuid": None,
@@ -75,7 +75,7 @@ ZIMS_DATA = {
         "is_valid": True,
         "entry_count": 371,
         "suggestion_string": "lucky",
-        "suggestion_count": 2,  # includes redirect?
+        "suggestion_count": 1,
         "suggestion_result": ["A/That_Lucky_Old_Sun"],
         "search_string": "lucky",
         "search_count": 1,
@@ -116,7 +116,7 @@ ZIMS_DATA = {
         "entry_count": 54,
         "suggestion_string": "Nayriri",
         "suggestion_count": 2,
-        "suggestion_result": ["A/index", "A/Nayriri_Uñstawi"],
+        "suggestion_result": ["A/Nayriri_Uñstawi", "A/index"],
         "search_string": "Nayriri",
         "search_count": 1,
         "search_result": ["A/Nayriri_Uñstawi"],

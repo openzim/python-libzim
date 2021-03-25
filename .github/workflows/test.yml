@@ -2,7 +2,7 @@ name: test
 on: [push]
 
 env:
-  LIBZIM_VERSION: 2021-01-27
+  LIBZIM_VERSION: 2021-03-16
   LIBZIM_INCLUDE_PATH: include/zim
   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   MAX_LINE_LENGTH: 88
@@ -57,14 +57,14 @@ jobs:
         run: |
           echo LIBZIM_EXT=dylib >> $GITHUB_ENV
           echo LIBZIM_RELEASE=libzim_macos-x86_64-$LIBZIM_VERSION >> $GITHUB_ENV
-          echo LIBZIM_LIBRARY_PATH=lib/libzim.6.dylib >> $GITHUB_ENV
+          echo LIBZIM_LIBRARY_PATH=lib/libzim.7.dylib >> $GITHUB_ENV
 
       - name: set linux environ
         if: matrix.os == 'ubuntu-latest'
         run: |
           echo LIBZIM_EXT=so >> $GITHUB_ENV
           echo LIBZIM_RELEASE=libzim_linux-x86_64-$LIBZIM_VERSION >> $GITHUB_ENV
-          echo LIBZIM_LIBRARY_PATH=lib/x86_64-linux-gnu/libzim.so.6.3.0 >> $GITHUB_ENV
+          echo LIBZIM_LIBRARY_PATH=lib/x86_64-linux-gnu/libzim.so.7.0.0 >> $GITHUB_ENV
 
       - name: Cache libzim dylib & headers
         uses: actions/cache@master
