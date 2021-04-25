@@ -627,7 +627,7 @@ cdef class PyArchive:
 
         cdef wrapper.search_iterator it = search.begin()
         while it != search.end():
-            yield it.get_url().decode('UTF-8')
+            yield it.get_path().decode('UTF-8')
             preincrement(it)
 
     def search(self, query: str, start: int = 0, end: int = 10) -> Generator[str, None, None]:
@@ -653,7 +653,7 @@ cdef class PyArchive:
 
         cdef wrapper.search_iterator it = search.begin()
         while it != search.end():
-            yield it.get_url().decode('UTF-8')
+            yield it.get_path().decode('UTF-8')
             preincrement(it)
 
     def get_estimated_search_results_count(self, query: str) -> int:

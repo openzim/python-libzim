@@ -113,7 +113,7 @@ cdef extern from "zim/search_iterator.h" namespace "zim":
         search_iterator operator++()
         bint operator==(search_iterator)
         bint operator!=(search_iterator)
-        string get_url()
+        string get_path()
         string get_title()
 
 
