@@ -16,11 +16,11 @@ from libzim.reader import Archive
 ZIMS_DATA = {
     "blank.zim": {
         "filename": "blank.zim",
-        "filesize": 25789,
+        "filesize": 17660,
         "new_ns": True,
         "mutlipart": False,
         "zim_uuid": None,
-        "metadata_keys": [],
+        "metadata_keys": ["Counter"],
         "test_metadata": None,
         "test_metadata_value": None,
         "has_main_entry": False,
