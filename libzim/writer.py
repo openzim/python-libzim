@@ -53,7 +53,7 @@ class ContentProvider:
         self.generator = None
 
     def get_size(self) -> int:
-        """ Size of get_data's result in bytes """
+        """Size of get_data's result in bytes"""
         raise NotImplementedError("get_size must be implemented.")
 
     def feed(self) -> Blob:
@@ -74,7 +74,7 @@ class ContentProvider:
         return self._blob
 
     def gen_blob(self):
-        """ Generator yielding blobs for the content of the article """
+        """Generator yielding blobs for the content of the article"""
         raise NotImplementedError("gen_blob (ro feed) must be implemented")
 
 
@@ -117,19 +117,19 @@ class Item:
         self._blob = None
 
     def get_path(self) -> str:
-        """ Full path of item"""
+        """Full path of item"""
         raise NotImplementedError("get_path must be implemented.")
 
     def get_title(self) -> str:
-        """ Item title. Might be indexed and used in suggestions """
+        """Item title. Might be indexed and used in suggestions"""
         raise NotImplementedError("get_title must be implemented.")
 
     def get_mimetype(self) -> str:
-        """ MIME-type of the item's content."""
+        """MIME-type of the item's content."""
         raise NotImplementedError("get_mimetype must be implemented.")
 
     def get_contentprovider(self) -> ContentProvider:
-        """ ContentProvider containing the complete content of the item """
+        """ContentProvider containing the complete content of the item"""
         raise NotImplementedError("get_contentprovider must be implemented.")
 
     def __repr__(self) -> str:
