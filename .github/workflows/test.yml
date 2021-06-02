@@ -2,7 +2,7 @@ name: test
 on: [push]
 
 env:
-  LIBZIM_VERSION: 2021-04-26
+  LIBZIM_VERSION: 2021-07-08
   LIBZIM_INCLUDE_PATH: include/zim
   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   MAX_LINE_LENGTH: 88
@@ -77,7 +77,7 @@ jobs:
         if: steps.cache-libzim.outputs.cache-hit != 'true'
         run: |
           wget -q https://download.openzim.org/nightly/$LIBZIM_VERSION/$LIBZIM_RELEASE.tar.gz
-          tar --gunzip --extract --file=$LIBZIM_RELEASE.tar.gz
+          tar --extract --file=$LIBZIM_RELEASE.tar.gz
           mv $LIBZIM_RELEASE libzim_dist
 
       - name: Link libzim dylib & headers into workspace lib and include folders
