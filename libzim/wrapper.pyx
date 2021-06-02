@@ -218,10 +218,10 @@ cdef class Creator:
         self.c_creator.configCompression(comptype.value)
         return self
 
-    def config_minclustersize(self, int size) -> Creator:
+    def config_clustersize(self, int size) -> Creator:
         if self._started:
             raise RuntimeError("ZimCreator started")
-        self.c_creator.configMinClusterSize(size)
+        self.c_creator.configClusterSize(size)
         return self
 
     def config_indexing(self, bool indexing, str language) -> Creator:

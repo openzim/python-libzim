@@ -60,7 +60,7 @@ cdef extern from "zim/writer/creator.h" namespace "zim::writer":
     cdef cppclass ZimCreator "zim::writer::Creator":
         void configVerbose(bint verbose)
         void configCompression(CompressionType comptype)
-        void configMinClusterSize(int size)
+        void configClusterSize(int size)
         void configIndexing(bint indexing, string language)
         void configNbWorkers(int nbWorkers)
         void startZimCreation(string filepath) nogil except +;

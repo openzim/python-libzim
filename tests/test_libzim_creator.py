@@ -210,9 +210,9 @@ def test_creator_compression(fpath, lipsum_item):
 
 
 @pytest.mark.parametrize("cluster_size", [0, 128, 512, 8196, 10240])
-def test_creator_minclustersize(fpath, cluster_size, lipsum_item):
+def test_creator_clustersize(fpath, cluster_size, lipsum_item):
     """ensure we can create ZIM with arbitrary min-cluster-size"""
-    with Creator(fpath).config_minclustersize(cluster_size) as c:
+    with Creator(fpath).config_clustersize(cluster_size) as c:
         c.add_item(lipsum_item)
 
 
@@ -248,7 +248,7 @@ def test_creator_nbworkers(fpath, lipsum_item, nb_workers):
 def test_creator_combine_config(fpath, lipsum_item):
     with Creator(fpath).config_verbose(True).config_compression(
         "lzma"
-    ).config_minclustersize(1024).config_indexing(True, "eng").config_nbworkers(2) as c:
+    ).config_clustersize(1024).config_indexing(True, "eng").config_nbworkers(2) as c:
         c.add_item(lipsum_item)
 
 
@@ -257,7 +257,7 @@ def test_creator_combine_config(fpath, lipsum_item):
     [
         ("verbose", (True,)),
         ("compression", ("lzma",)),
-        ("minclustersize", (1024,)),
+        ("clustersize", (1024,)),
         ("indexing", (True, "eng")),
         ("nbworkers", (2,)),
     ],
