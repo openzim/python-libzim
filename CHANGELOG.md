@@ -1,3 +1,8 @@
+## 0.1
+
+* Using libzim 6.3.2 which compresses zstd at level 19 which is required 
+  to keep decompression RAM allocation under control on 32b systems
+
 ## 0.0.3.post0
 
 * fixed access to bundled libzim on macOS (missing rpath)

@@ -2,7 +2,7 @@ name: test
 on: [push]
 
 env:
-  LIBZIM_VERSION: 6.1.7
+  LIBZIM_VERSION: 6.3.2
   LIBZIM_INCLUDE_PATH: include/zim
   MAX_LINE_LENGTH: 110
 
@@ -20,7 +20,7 @@ jobs:
 
       - name: Autoformat with black
         run: |
-          pip install black
+          pip install black==19.10b0
           black --check --exclude=setup.py .
 
       - name: Lint with flake8
@@ -53,16 +53,16 @@ jobs:
       - name: set macOS environ
         if: matrix.os == 'macos-latest'
         run: |
-          echo ::set-env name=LIBZIM_EXT::dylib
-          echo ::set-env name=LIBZIM_RELEASE::libzim_macos-x86_64-$LIBZIM_VERSION
-          echo ::set-env name=LIBZIM_LIBRARY_PATH::lib/libzim.${LIBZIM_VERSION:0:1}.dylib
+          echo LIBZIM_EXT=dylib >> $GITHUB_ENV
+          echo LIBZIM_RELEASE=libzim_macos-x86_64-$LIBZIM_VERSION >> $GITHUB_ENV
+          echo LIBZIM_LIBRARY_PATH=lib/libzim.${LIBZIM_VERSION:0:1}.dylib >> $GITHUB_ENV
 
       - name: set linux environ
         if: matrix.os == 'ubuntu-latest'
         run: |
-          echo ::set-env name=LIBZIM_EXT::so
-          echo ::set-env name=LIBZIM_RELEASE::libzim_linux-x86_64-$LIBZIM_VERSION
-          echo ::set-env name=LIBZIM_LIBRARY_PATH::lib/x86_64-linux-gnu/libzim.so.$LIBZIM_VERSION
+          echo LIBZIM_EXT=so >> $GITHUB_ENV
+          echo LIBZIM_RELEASE=libzim_linux-x86_64-$LIBZIM_VERSION >> $GITHUB_ENV
+          echo LIBZIM_LIBRARY_PATH=lib/x86_64-linux-gnu/libzim.so.$LIBZIM_VERSION >> $GITHUB_ENV
 
       - name: Cache libzim dylib & headers
         uses: actions/cache@master
