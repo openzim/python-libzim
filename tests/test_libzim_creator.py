@@ -331,27 +331,18 @@ def test_creator_mainpath(fpath, lipsum_item):
         assert zim.main_entry
 
 
-def test_creator_faviconpath(fpath, favicon_data):
-    favicon_path = HOME_PATH
-    favicon_item = StaticItem(
-        mimetype="image/png", path=favicon_path, content=favicon_data
-    )
-    with Creator(fpath).set_faviconpath(favicon_path) as c:
-        c.add_item(favicon_item)
-
-    zim = Archive(fpath)
-    assert zim.has_favicon_entry is True
-    assert zim.favicon_entry.path == "favicon"
-    assert zim.favicon_entry.get_item().path == favicon_path
-
-    fpath.unlink()
-
+def test_creator_illustration(fpath, favicon_data):
     with Creator(fpath) as c:
-        c.add_item(favicon_item)
+        c.add_illustration(48, favicon_data)
+        c.add_illustration(96, favicon_data)
+
     zim = Archive(fpath)
-    assert zim.has_favicon_entry is False
-    with pytest.raises(RuntimeError):
-        assert zim.favicon_entry
+    assert zim.has_illustration() is True
+    assert zim.has_illustration(48) is True
+    assert zim.has_illustration(96) is True
+    assert zim.has_illustration(128) is False
+    assert bytes(zim.get_illustration_item().content) == favicon_data
+    assert bytes(zim.get_illustration_item(96).content) == favicon_data
 
 
 def test_creator_additem(fpath, lipsum_item):
