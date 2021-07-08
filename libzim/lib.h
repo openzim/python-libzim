@@ -81,8 +81,12 @@ class ZimArchive : public zim::Archive
     { return to_ptr<ZimEntry>(zim::Archive::getEntryByTitle(title)); }
     ZimEntry* getMainEntry() const
     { return to_ptr<ZimEntry>(zim::Archive::getMainEntry()); }
-    ZimEntry* getFaviconEntry() const
-    { return to_ptr<ZimEntry>(zim::Archive::getFaviconEntry()); }
+    // ZimEntry* getFaviconEntry() const
+    // { return to_ptr<ZimEntry>(zim::Archive::getFaviconEntry()); }
+    ZimItem* getIllustrationItem() const
+    { return to_ptr<ZimItem>(zim::Archive::getIllustrationItem()); }
+    ZimItem* getIllustrationItem(unsigned int size) const
+    { return to_ptr<ZimItem>(zim::Archive::getIllustrationItem(size)); }
     std::string getUuid() const
     { zim::Uuid uuid = zim::Archive::getUuid();
       std::string uuids(uuid.data, uuid.size()); return uuids; }
