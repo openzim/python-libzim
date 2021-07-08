@@ -598,6 +598,14 @@ cdef class PyArchive:
     def entry_count(self) -> int:
         return self.c_archive.getEntryCount()
 
+    @property
+    def all_entry_count(self) -> int:
+        return self.c_archive.getAllEntryCount()
+
+    @property
+    def article_count(self) -> int:
+        return self.c_archive.getArticleCount()
+
     def get_illustration_sizes(self):
         # FIXME: using static shortcut instead of libzim's
         # cdef set[unsigned int] sizes = self.c_archive.getIllustrationSizes()
