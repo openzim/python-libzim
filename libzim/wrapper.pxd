@@ -147,6 +147,8 @@ cdef extern from "lib.h":
         ZimItem* getIllustrationItem() except +
         ZimItem* getIllustrationItem(int size) except +
         size_type getEntryCount() except +
+        size_type getAllEntryCount() except +
+        size_type getArticleCount() except +
 
         string getChecksum() except +
         string getFilename() except +

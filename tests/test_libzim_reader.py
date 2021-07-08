@@ -31,6 +31,8 @@ ZIMS_DATA = {
         "checksum": None,
         "is_valid": True,
         "entry_count": 0,
+        "all_entry_count": 4,
+        "article_count": 0,
         "suggestion_string": "",
         "suggestion_count": 0,
         "suggestion_result": [],
@@ -74,6 +76,8 @@ ZIMS_DATA = {
         "checksum": None,
         "is_valid": True,
         "entry_count": 371,
+        "all_entry_count": 371,
+        "article_count": 284,
         "suggestion_string": "lucky",
         "suggestion_count": 1,
         "suggestion_result": ["A/That_Lucky_Old_Sun"],
@@ -115,6 +119,8 @@ ZIMS_DATA = {
         "checksum": "abcd818c87079cb29282282b47ee46ec",
         "is_valid": True,
         "entry_count": 60,
+        "all_entry_count": 75,
+        "article_count": 0,
         "suggestion_string": "favicon",
         "suggestion_count": 1,
         "suggestion_result": ["favicon.png"],
@@ -160,6 +166,8 @@ ZIMS_DATA = {
         "checksum": None,
         "is_valid": True,
         "entry_count": 19,
+        "all_entry_count": 19,
+        "article_count": 1,
         "suggestion_string": "empty",
         "suggestion_count": 1,
         "suggestion_result": ["A/empty.html"],
@@ -359,6 +367,8 @@ def test_reader_checksum(all_zims, filename, has_checksum, is_valid):
         [
             "filename",
             "entry_count",
+            "all_entry_count",
+            "article_count",
             "suggestion_string",
             "suggestion_count",
             "suggestion_result",
@@ -372,6 +382,8 @@ def test_reader_suggest_search(
     all_zims,
     filename,
     entry_count,
+    all_entry_count,
+    article_count,
     suggestion_string,
     suggestion_count,
     suggestion_result,
@@ -383,6 +395,10 @@ def test_reader_suggest_search(
 
     # suggestion and search results
     assert zim.entry_count == entry_count
+    assert zim.all_entry_count == all_entry_count
+    assert zim.article_count == article_count
+
+
 # TODO: restore [search-api]
 #     assert (
 #         zim.get_estimated_suggestions_results_count(suggestion_string)
