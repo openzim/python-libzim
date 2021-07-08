@@ -318,14 +318,17 @@ def test_reader_main_favicon_entries(
             assert zim.main_entry.path == "mainPage"
 
     # make sure we have no favicon entry
-    assert zim.has_favicon_entry is has_favicon_entry
+    assert zim.has_illustration(48) is has_favicon_entry
+    if has_favicon_entry:
+        assert 48 in zim.get_illustration_sizes()
+
     if has_favicon_entry is False:
-        with pytest.raises(RuntimeError):
-            assert zim.favicon_entry
+        with pytest.raises(KeyError):
+            assert zim.get_illustration_item(48)
     else:
-        assert zim.favicon_entry
+        assert zim.get_illustration_item()
         if new_ns:
-            assert zim.favicon_entry.path == "-/favicon"
+            assert zim.get_illustration_item().path == "Illustration_48x48@1"
 
 
 @pytest.mark.parametrize(
@@ -438,7 +441,7 @@ def test_reader_get_entries(
     with pytest.raises(KeyError):
         zim.get_entry_by_title("___missing")
 
-    # FIXME: unable to re
+    # FIXME: unable to retrieve entry by title on example.zim
     if test_title and filename != "example.zim":
         assert zim.has_entry_by_title(test_title)
         assert zim.get_entry_by_title(test_title).path == entry.path

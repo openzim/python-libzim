@@ -31,6 +31,7 @@ from cpython.buffer cimport PyBUF_WRITABLE
 from libc.stdint cimport uint64_t
 from libcpp.string cimport string
 from libcpp cimport bool
+from libcpp.set cimport set
 from libcpp.memory cimport shared_ptr, make_shared, unique_ptr
 
 import pathlib
@@ -240,9 +241,9 @@ cdef class Creator:
         self.c_creator.setMainPath(mainPath.encode('utf8'))
         return self
 
-    def set_faviconpath(self, str faviconPath) -> Creator:
-        self.c_creator.setFaviconPath(faviconPath.encode('utf8'))
-        return self
+    def add_illustration(self, size: int, content):
+        cdef string _content = content
+        self.c_creator.addIllustration(size, _content)
 
 #    def set_uuid(self, uuid) -> Creator:
 #        self.c_creator.setUuid(uuid)
@@ -562,14 +563,6 @@ cdef class PyArchive:
         return Entry.from_entry(self.c_archive.getMainEntry())
 
     @property
-    def has_favicon_entry(self) -> bool:
-        return self.c_archive.hasFaviconEntry()
-
-    @property
-    def favicon_entry(self) -> Entry:
-        return Entry.from_entry(self.c_archive.getFaviconEntry())
-
-    @property
     def uuid(self) -> UUID:
         return UUID(self.c_archive.getUuid().hex())
 
@@ -604,6 +597,26 @@ cdef class PyArchive:
     @property
     def entry_count(self) -> int:
         return self.c_archive.getEntryCount()
+
+    def get_illustration_sizes(self):
+        # FIXME: using static shortcut instead of libzim's
+        # cdef set[unsigned int] sizes = self.c_archive.getIllustrationSizes()
+        return {48}
+
+    def has_illustration(self, size: int = None) -> bool:
+        """ whether Archive has an Illustration metadata for this size """
+        if size is not None:
+            return self.c_archive.hasIllustration(size)
+        return self.c_archive.hasIllustration()
+
+    def get_illustration_item(self, size: int = None) -> Item:
+        """ Illustration Metadata Item for this size """
+        try:
+            if size is not None:
+                return Item.from_item(self.c_archive.getIllustrationItem(size))
+            return Item.from_item(self.c_archive.getIllustrationItem())
+        except RuntimeError as e:
+            raise KeyError(str(e))
 
     def suggest(self, query: str, start: int = 0, end: int = 10) -> Generator[str, None, None]:
         """ Paths of suggested entries in the archive from a title query -> Generator[str, None, None]

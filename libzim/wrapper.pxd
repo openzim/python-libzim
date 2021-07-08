@@ -69,7 +69,7 @@ cdef extern from "zim/writer/creator.h" namespace "zim::writer":
         void addRedirection(string path, string title, string targetpath) nogil except +
         void finishZimCreation() nogil except +
         void setMainPath(string mainPath)
-        void setFaviconPath(string faviconPath)
+        void addIllustration(unsigned int size, string content)
 
 cdef extern from "lib.h":
     # The only thing we need to know here is how to create the Wrapper.
@@ -144,7 +144,8 @@ cdef extern from "lib.h":
         vector[string] getMetadataKeys() except +
 
         ZimEntry* getMainEntry() except +
-        ZimEntry* getFaviconEntry() except +
+        ZimItem* getIllustrationItem() except +
+        ZimItem* getIllustrationItem(int size) except +
         size_type getEntryCount() except +
 
         string getChecksum() except +
@@ -152,7 +153,9 @@ cdef extern from "lib.h":
         string getUuid() except +
 
         bool hasMainEntry() except +
-        bool hasFaviconEntry() except +
+        bool hasIllustration() except +
+        bool hasIllustration(unsigned int size) except +
+        # set[unsigned int] getIllustrationSizes() except +
         bool hasEntryByPath(string path) except +
         bool hasEntryByTitle(string title) except +
         bool is_multiPart() except +
