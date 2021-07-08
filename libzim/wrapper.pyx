@@ -620,15 +620,15 @@ cdef class PyArchive:
             -------
             Generator
                 Path of suggested entry """
-        cdef wrapper.ZimSearch search = wrapper.ZimSearch(dereference(self.c_archive))
-        search.set_suggestion_mode(True)
-        search.set_query(query.encode('UTF-8'))
-        search.set_range(start, end)
+        # cdef wrapper.ZimSearch search = wrapper.ZimSearch(dereference(self.c_archive))
+        # search.set_suggestion_mode(True)
+        # search.set_query(query.encode('UTF-8'))
+        # search.set_range(start, end)
 
-        cdef wrapper.search_iterator it = search.begin()
-        while it != search.end():
-            yield it.get_path().decode('UTF-8')
-            preincrement(it)
+        # cdef wrapper.search_iterator it = search.begin()
+        # while it != search.end():
+        #     yield it.get_path().decode('UTF-8')
+        #     preincrement(it)
 
     def search(self, query: str, start: int = 0, end: int = 10) -> Generator[str, None, None]:
         """ Paths of entries in the archive from a search query -> Generator[str, None, None]
@@ -646,15 +646,15 @@ cdef class PyArchive:
             Generator
                 Path of entry matching the search query """
 
-        cdef wrapper.ZimSearch search = wrapper.ZimSearch(dereference(self.c_archive))
-        search.set_suggestion_mode(False)
-        search.set_query(query.encode('UTF-8'))
-        search.set_range(start, end)
+        # cdef wrapper.ZimSearch search = wrapper.ZimSearch(dereference(self.c_archive))
+        # search.set_suggestion_mode(False)
+        # search.set_query(query.encode('UTF-8'))
+        # search.set_range(start, end)
 
-        cdef wrapper.search_iterator it = search.begin()
-        while it != search.end():
-            yield it.get_path().decode('UTF-8')
-            preincrement(it)
+        # cdef wrapper.search_iterator it = search.begin()
+        # while it != search.end():
+        #     yield it.get_path().decode('UTF-8')
+        #     preincrement(it)
 
     def get_estimated_search_results_count(self, query: str) -> int:
         """ Estimated number of search results for a query -> int
@@ -667,12 +667,12 @@ cdef class PyArchive:
             -------
             int
                 Estimated number of search results """
-        cdef wrapper.ZimSearch search = wrapper.ZimSearch(dereference(self.c_archive))
-        search.set_suggestion_mode(False)
-        search.set_query(query.encode('UTF-8'))
-        search.set_range(0, self.entry_count)
+        # cdef wrapper.ZimSearch search = wrapper.ZimSearch(dereference(self.c_archive))
+        # search.set_suggestion_mode(False)
+        # search.set_query(query.encode('UTF-8'))
+        # search.set_range(0, self.entry_count)
 
-        return search.get_matches_estimated()
+        # return search.get_matches_estimated()
 
     def get_estimated_suggestions_results_count(self, query: str) -> int:
         """ Estimated number of suggestions for a query -> int
@@ -685,12 +685,12 @@ cdef class PyArchive:
             -------
             int
                 Estimated number of article suggestions """
-        cdef wrapper.ZimSearch search = wrapper.ZimSearch(dereference(self.c_archive))
-        search.set_suggestion_mode(True)
-        search.set_query(query.encode('UTF-8'))
-        search.set_range(0, self.entry_count)
+        # cdef wrapper.ZimSearch search = wrapper.ZimSearch(dereference(self.c_archive))
+        # search.set_suggestion_mode(True)
+        # search.set_query(query.encode('UTF-8'))
+        # search.set_range(0, self.entry_count)
 
-        return search.get_matches_estimated()
+        # return search.get_matches_estimated()
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(filename={self.filename})"

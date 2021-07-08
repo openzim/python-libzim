@@ -57,13 +57,13 @@ class ZimEntry : public zim::Entry
     { return to_ptr<ZimEntry>(zim::Entry::getRedirectEntry()); }
 };
 
-class ZimSearch : public zim::Search
-{
-  public:
-    ZimSearch() : zim::Search(std::vector<zim::Archive>{}) {};
-    ZimSearch(zim::Archive& archive) : zim::Search(archive) {};
-    ZimSearch(const Search& search) : zim::Search(search) {};
-};
+// class ZimSearch : public zim::Search
+// {
+//   public:
+//     ZimSearch() : zim::Search(std::vector<zim::Archive>{}) {};
+//     ZimSearch(zim::Archive& archive) : zim::Search(archive) {};
+//     ZimSearch(const Search& search) : zim::Search(search) {};
+// };
 
 class ZimArchive : public zim::Archive
 {
