@@ -24,6 +24,7 @@ from libcpp cimport bool
 from libcpp.memory cimport shared_ptr, unique_ptr
 from libcpp.string cimport string
 from libcpp.vector cimport vector
+from libcpp.map cimport map
 
 
 cdef extern from "zim/zim.h" namespace "zim":
@@ -50,6 +51,9 @@ cdef extern from "zim/blob.h" namespace "zim":
 cdef extern from "zim/writer/item.h" namespace "zim::writer":
     cdef cppclass WriterItem "zim::writer::Item":
         pass
+    ctypedef enum HintKeys:
+        COMPRESS
+        FRONT_ARTICLE
 
 cdef extern from "zim/writer/contentProvider.h" namespace "zim::writer":
     cdef cppclass ContentProvider:
@@ -66,7 +70,7 @@ cdef extern from "zim/writer/creator.h" namespace "zim::writer":
         void startZimCreation(string filepath) nogil except +;
         void addItem(shared_ptr[WriterItem] item) nogil except +
         void addMetadata(string name, string content, string mimetype) nogil except +
-        void addRedirection(string path, string title, string targetpath) nogil except +
+        void addRedirection(string path, string title, string targetpath, map[HintKeys, uint64_t] hints) nogil except +
         void finishZimCreation() nogil except +
         void setMainPath(string mainPath)
         void addIllustration(unsigned int size, string content)
