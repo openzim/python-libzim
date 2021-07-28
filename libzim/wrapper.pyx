@@ -33,10 +33,13 @@ from libcpp.string cimport string
 from libcpp cimport bool
 from libcpp.set cimport set
 from libcpp.memory cimport shared_ptr, make_shared, unique_ptr
+from libcpp.map cimport map
 
 import pathlib
 import datetime
 import traceback
+
+
 
 
 #########################
@@ -166,12 +169,35 @@ cdef public api:
 
         return 0
 
+    map[HintKeys, uint64_t] convertToCppHints(dict hintsDict):
+        cdef map[HintKeys, uint64_t] ret;
+        for key, value in hintsDict.items():
+            ret[key.value] = <uint64_t>value
+        return ret
+
+    map[HintKeys, uint64_t] hints_cy_call_fct(object obj, string method, string* error) with gil:
+        cdef map[HintKeys, uint64_t] ret;
+        try:
+            func = getattr(obj, method.decode('UTF-8'))
+            hintsDict = func()
+            return convertToCppHints(func())
+        except Exception as e:
+            error[0] = traceback.format_exc().encode('UTF-8')
+
+        return ret
+
 
 class Compression(enum.Enum):
     """ Compression algorithms available to create ZIM files """
     none = wrapper.CompressionType.zimcompNone
     lzma = wrapper.CompressionType.zimcompLzma
     zstd = wrapper.CompressionType.zimcompZstd
+
+
+class Hint(enum.Enum):
+    COMPRESS = wrapper.HintKeys.COMPRESS
+    FRONT_ARTICLE = wrapper.HintKeys.FRONT_ARTICLE
+
 
 
 cdef class Creator:
@@ -278,15 +304,16 @@ cdef class Creator:
         with nogil:
             self.c_creator.addMetadata(_name, _content, _mimetype)
 
-    def add_redirection(self, str path, str title, str targetPath):
+    def add_redirection(self, str path, str title, str targetPath, dict hints):
         if not self._started:
             raise RuntimeError("ZimCreator not started")
 
         cdef string _path = path.encode('utf8')
         cdef string _title = title.encode('utf8')
         cdef string _targetPath = targetPath.encode('utf8')
+        cdef map[HintKeys, uint64_t] _hints = convertToCppHints(hints)
         with nogil:
-            self.c_creator.addRedirection(_path, _title, _targetPath)
+            self.c_creator.addRedirection(_path, _title, _targetPath, _hints)
 
     def __enter__(self):
         cdef string _path = str(self._filename).encode('utf8')
