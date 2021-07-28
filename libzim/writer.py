@@ -33,10 +33,11 @@
 
 import os
 import datetime
-from typing import Union
+from typing import Union, Dict
 
 from .wrapper import Creator as _Creator, Compression
 from .wrapper import WritingBlob as Blob
+from .wrapper import Hint
 
 __all__ = [
     "Item",
@@ -131,6 +132,9 @@ class Item:
     def get_contentprovider(self) -> ContentProvider:
         """ContentProvider containing the complete content of the item"""
         raise NotImplementedError("get_contentprovider must be implemented.")
+
+    def get_hints(self) -> Dict[Hint, int]:
+        raise NotImplementedError("get_hint must be implemenent")
 
     def __repr__(self) -> str:
         return (

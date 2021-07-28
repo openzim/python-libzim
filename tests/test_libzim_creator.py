@@ -6,7 +6,7 @@ import pathlib
 import datetime
 import itertools
 import subprocess
-
+from typing import Dict
 
 import pytest
 
@@ -18,6 +18,7 @@ from libzim.writer import (
     FileProvider,
     StringProvider,
     Blob,
+    Hint,
 )
 from libzim.reader import Archive
 
@@ -44,6 +45,9 @@ class StaticItem(libzim.writer.Item):
         if getattr(self, "filepath", None):
             return FileProvider(filepath=self.filepath)
         return StringProvider(content=getattr(self, "content", ""))
+
+    def get_hints(self) -> Dict[Hint, int]:
+        return {Hint.FRONT_ARTICLE: True}
 
 
 @pytest.fixture(scope="function")
@@ -423,13 +427,13 @@ def test_creator_redirection(fpath, lipsum_item):
     # ensure we can't add if not started
     c = Creator(fpath)
     with pytest.raises(RuntimeError, match="not started"):
-        c.add_redirection("home", "hello", HOME_PATH)
+        c.add_redirection("home", "hello", HOME_PATH, {Hint.FRONT_ARTICLE: True})
     del c
 
     with Creator(fpath) as c:
         c.add_item(lipsum_item)
-        c.add_redirection("home", "hello", HOME_PATH)
-        c.add_redirection("accueil", "bonjour", HOME_PATH)
+        c.add_redirection("home", "hello", HOME_PATH, {Hint.FRONT_ARTICLE: True})
+        c.add_redirection("accueil", "bonjour", HOME_PATH, {Hint.FRONT_ARTICLE: True})
 
     zim = Archive(fpath)
     assert zim.entry_count == 3
@@ -524,6 +528,9 @@ def test_item_contentprovider_none(fpath):
         def get_contentprovider(self):
             return ""
 
+        def get_hints(self):
+            return {}
+
     with Creator(fpath) as c:
         with pytest.raises(RuntimeError, match="ContentProvider is None"):
             c.add_item(AnItem())
@@ -539,6 +546,9 @@ def test_missing_contentprovider(fpath):
 
         def get_mimetype(self):
             return ""
+
+        def get_hints(self):
+            return {}
 
     with Creator(fpath) as c:
         with pytest.raises(RuntimeError, match="has no attribute"):
@@ -569,6 +579,9 @@ def test_reimpfeed(fpath):
         def get_mimetype(self):
             return ""
 
+        def get_hints(self):
+            return {}
+
         def get_contentprovider(self):
             return AContentProvider()
 
@@ -598,6 +611,9 @@ def test_virtualmethods_int_exc(fpath):
 
         def get_mimetype(self):
             return ""
+
+        def get_hints(self):
+            return {}
 
         def get_contentprovider(self):
             return AContentProvider()
