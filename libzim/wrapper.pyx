@@ -40,7 +40,7 @@ import datetime
 import traceback
 
 
-
+pybool = type(True)
 
 #########################
 #         Blob          #
@@ -179,8 +179,8 @@ cdef public api:
         cdef map[HintKeys, uint64_t] ret;
         try:
             func = getattr(obj, method.decode('UTF-8'))
-            hintsDict = func()
-            return convertToCppHints(func())
+            hintsDict = {k: pybool(v) for k, v in func().items() if isinstance(k, Hint)}
+            return convertToCppHints(hintsDict)
         except Exception as e:
             error[0] = traceback.format_exc().encode('UTF-8')
 
