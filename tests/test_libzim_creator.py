@@ -47,7 +47,7 @@ class StaticItem(libzim.writer.Item):
         return StringProvider(content=getattr(self, "content", ""))
 
     def get_hints(self) -> Dict[Hint, int]:
-        return {Hint.FRONT_ARTICLE: True}
+        return getattr(self, "hints", {Hint.FRONT_ARTICLE: True})
 
 
 @pytest.fixture(scope="function")
@@ -553,6 +553,76 @@ def test_missing_contentprovider(fpath):
     with Creator(fpath) as c:
         with pytest.raises(RuntimeError, match="has no attribute"):
             c.add_item(AnItem())
+
+
+def test_missing_hints(fpath):
+    class AnItem:
+        def get_path(self):
+            return ""
+
+        def get_title(self):
+            return ""
+
+        def get_mimetype(self):
+            return ""
+
+    with Creator(fpath) as c:
+        with pytest.raises(RuntimeError, match="has no attribute"):
+            c.add_item(AnItem())
+
+        with pytest.raises(RuntimeError, match="must be implemented"):
+            c.add_item(libzim.writer.Item())
+
+
+def test_nondict_hints(fpath):
+    class AnItem:
+        def get_path(self):
+            return ""
+
+        def get_title(self):
+            return ""
+
+        def get_mimetype(self):
+            return ""
+
+    with Creator(fpath) as c:
+        with pytest.raises(RuntimeError, match="has no attribute 'get_hints'"):
+            c.add_item(AnItem())
+
+        with pytest.raises(RuntimeError, match="has no attribute 'items'"):
+            c.add_item(StaticItem(path="1", title="", hints=1))
+
+        with pytest.raises(TypeError, match="hints"):
+            c.add_redirection("a", "", "b", hints=1)
+
+
+def test_hints_values(fpath):
+    with Creator(fpath) as c:
+        # correct values
+        c.add_item(StaticItem(path="0", title="", hints={}))
+        c.add_item(
+            StaticItem(
+                path="1",
+                title="",
+                hints={Hint.FRONT_ARTICLE: True, Hint.COMPRESS: False},
+            )
+        )
+        # non-expected Hints are ignored
+        c.add_item(StaticItem(path="2", title="", hints={"hello": "world"}))
+        # Hint values are casted to bool
+        c.add_item(StaticItem(path="3", title="", hints={Hint.FRONT_ARTICLE: "world"}))
+        c.add_redirection(
+            path="4", title="", targetPath="0", hints={Hint.COMPRESS: True}
+        )
+
+        # non-existent Hint
+        with pytest.raises(AttributeError, match="YOLO"):
+            c.add_item(StaticItem(path="0", title="", hints={Hint.YOLO: True}))
+
+        with pytest.raises(AttributeError, match="YOLO"):
+            c.add_redirection(
+                path="5", title="", target_path="0", hints={Hint.YOLO: True}
+            )
 
 
 def test_reimpfeed(fpath):

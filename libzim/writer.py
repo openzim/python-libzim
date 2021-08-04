@@ -134,7 +134,7 @@ class Item:
         raise NotImplementedError("get_contentprovider must be implemented.")
 
     def get_hints(self) -> Dict[Hint, int]:
-        raise NotImplementedError("get_hint must be implemenent")
+        raise NotImplementedError("get_hints must be implemented.")
 
     def __repr__(self) -> str:
         return (
