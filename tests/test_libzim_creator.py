@@ -567,7 +567,7 @@ def test_missing_hints(fpath):
             return ""
 
     with Creator(fpath) as c:
-        with pytest.raises(RuntimeError, match="has no attribute"):
+        with pytest.raises(RuntimeError, match="has no attribute 'get_hints'"):
             c.add_item(AnItem())
 
         with pytest.raises(RuntimeError, match="must be implemented"):
@@ -575,20 +575,7 @@ def test_missing_hints(fpath):
 
 
 def test_nondict_hints(fpath):
-    class AnItem:
-        def get_path(self):
-            return ""
-
-        def get_title(self):
-            return ""
-
-        def get_mimetype(self):
-            return ""
-
     with Creator(fpath) as c:
-        with pytest.raises(RuntimeError, match="has no attribute 'get_hints'"):
-            c.add_item(AnItem())
-
         with pytest.raises(RuntimeError, match="has no attribute 'items'"):
             c.add_item(StaticItem(path="1", title="", hints=1))
 
@@ -614,6 +601,11 @@ def test_hints_values(fpath):
         c.add_redirection(
             path="4", title="", targetPath="0", hints={Hint.COMPRESS: True}
         )
+        # filtered-out values
+        c.add_item(StaticItem(path="5", title="", hints={5: True}))
+        c.add_item(StaticItem(path="6", title="", hints={"yolo": True}))
+        c.add_item(StaticItem(path="7", title="", hints={"FRONT_ARTICLE": True}))
+        c.add_item(StaticItem(path="8", title="", hints={0: True}))
 
         # non-existent Hint
         with pytest.raises(AttributeError, match="YOLO"):
