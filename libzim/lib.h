@@ -115,9 +115,11 @@ class WriterItemWrapper : public zim::writer::Item, private ObjWrapper
     virtual std::string getTitle() const;
     virtual std::string getMimeType() const;
     virtual std::unique_ptr<zim::writer::ContentProvider> getContentProvider() const;
+    virtual zim::writer::Hints getHints() const;
 
   private:
     std::unique_ptr<zim::writer::ContentProvider> callCythonReturnContentProvider(std::string) const;
+    zim::writer::Hints callCythonReturnHints(std::string) const;
 };
 
 class ContentProviderWrapper : public zim::writer::ContentProvider, private ObjWrapper
