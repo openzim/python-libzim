@@ -129,6 +129,20 @@ std::unique_ptr<zim::writer::ContentProvider> WriterItemWrapper::callCythonRetur
   return ret_val;
 }
 
+zim::writer::Hints WriterItemWrapper::callCythonReturnHints(std::string methodName) const
+{
+  if (!this->m_obj)
+    throw std::runtime_error("Python object not set");
+
+  std::string error;
+
+  auto ret_val = hints_cy_call_fct(this->m_obj, methodName, &error);
+  if (!error.empty())
+    throw std::runtime_error(error);
+
+  return ret_val;
+}
+
 std::string
 WriterItemWrapper::getPath() const
 {
@@ -151,4 +165,9 @@ std::unique_ptr<zim::writer::ContentProvider>
 WriterItemWrapper::getContentProvider() const
 {
     return callCythonReturnContentProvider("get_contentprovider");
+}
+
+zim::writer::Hints WriterItemWrapper::getHints() const
+{
+	return callCythonReturnHints("get_hints");
 }
