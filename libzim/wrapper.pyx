@@ -114,12 +114,19 @@ cdef class ReadingBlob:
 
 #------- pure virtual methods --------
 
+# This call a python method and return a python object.
+cdef object call_method(object obj, string method):
+    func = getattr(obj, method.decode('UTF-8'))
+    return func()
+
+# Define methods calling a python method and converting the resulting python
+# object to the correct cpp type.
+# Will be used by cpp side to call python method.
 cdef public api:
     string string_cy_call_fct(object obj, string method, string *error) with gil:
         """Lookup and execute a pure virtual method on object returning a string"""
         try:
-            func = getattr(obj, method.decode('UTF-8'))
-            ret_str = func()
+            ret_str = call_method(obj, method)
             return ret_str.encode('UTF-8')
         except Exception as e:
             error[0] = traceback.format_exc().encode('UTF-8')
@@ -130,8 +137,7 @@ cdef public api:
         cdef WritingBlob blob
 
         try:
-            func = getattr(obj, method.decode('UTF-8'))
-            blob = func()
+            blob = call_method(obj, method)
             if blob is None:
                 raise RuntimeError("Blob is none")
             return move(blob.c_blob)
@@ -142,8 +148,7 @@ cdef public api:
 
     wrapper.ContentProvider* contentprovider_cy_call_fct(object obj, string method, string *error) with gil:
         try:
-            func = getattr(obj, method.decode('UTF-8'))
-            contentProvider = func()
+            contentProvider = call_method(obj, method)
             if not contentProvider:
                 raise RuntimeError("ContentProvider is None")
             return new ContentProviderWrapper(<PyObject*>contentProvider)
@@ -165,8 +170,7 @@ cdef public api:
     uint64_t int_cy_call_fct(object obj, string method, string *error) with gil:
         """Lookup and execute a pure virtual method on object returning an int"""
         try:
-            func = getattr(obj, method.decode('UTF-8'))
-            return <uint64_t>func()
+            return <uint64_t> call_method(obj, method)
         except Exception as e:
             error[0] = traceback.format_exc().encode('UTF-8')
 

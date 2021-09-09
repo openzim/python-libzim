@@ -66,10 +66,11 @@ cdef extern from "zim/writer/creator.h" namespace "zim::writer":
         void setMainPath(string mainPath)
         void addIllustration(unsigned int size, string content)
 
-cdef extern from "lib.h":
-    # The only thing we need to know here is how to create the Wrapper.
-    # Other (cpp) methods must exists and they will be called,
-    # but we don't care about them here.
+# Import the python wrappers (ObjWrapper) from libwrapper.
+# The only thing we need to know here is how to create the wrappers.
+# Other (cpp) methods must exists (to be called from cpp side),
+# but we don't care about them as we will not call them in python side.
+cdef extern from "libwrapper.h":
     cdef cppclass ContentProviderWrapper(ContentProvider):
         ContentProviderWrapper(PyObject* obj) except +
     cdef cppclass WriterItemWrapper:
