@@ -4,7 +4,6 @@
  * (see https://github.com/libzim/python-libzim)
  *
  * Copyright (c) 2021 Matthieu Gautier <mgautier@kymeria.fr>.
- * Copyright (c) 2020 Juan Diego Caballero <jdc@monadical.com>.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -168,43 +167,48 @@ class WArchive : public Wrapper<zim::Archive>
 #undef FORWARD
 
 
+// Python wrapper
+//
+// The main issue is to forward the c++ method call (made by `zim::Creator`) to the
+// python method.
+//
+// To do so, we define a helper wrapper (ObjWrapper) which wrap a PyObject and allow us to call
+// different kind of methods (signatures).
+// Then we write specific wrapper to forward the call using helper methods of ObjWrapper.
 
 class ObjWrapper
 {
   public:
     ObjWrapper(PyObject* obj);
-    virtual ~ObjWrapper();
+    ObjWrapper(const ObjWrapper& other) = delete;
+    ObjWrapper(ObjWrapper&& other);
+    ~ObjWrapper();
+    ObjWrapper& operator=(ObjWrapper&& other);
+
 
   protected:
     PyObject* m_obj;
-
-    std::string callCythonReturnString(std::string) const;
-    uint64_t callCythonReturnInt(std::string) const;
 };
 
 class WriterItemWrapper : public zim::writer::Item, private ObjWrapper
 {
   public:
     WriterItemWrapper(PyObject *obj) : ObjWrapper(obj) {};
-    virtual std::string getPath() const;
-    virtual std::string getTitle() const;
-    virtual std::string getMimeType() const;
-    virtual std::unique_ptr<zim::writer::ContentProvider> getContentProvider() const;
-    virtual zim::writer::Hints getHints() const;
-
-  private:
-    std::unique_ptr<zim::writer::ContentProvider> callCythonReturnContentProvider(std::string) const;
-    zim::writer::Hints callCythonReturnHints(std::string) const;
+    ~WriterItemWrapper() = default;
+    std::string getPath() const override;
+    std::string getTitle() const override;
+    std::string getMimeType() const override;
+    std::unique_ptr<zim::writer::ContentProvider> getContentProvider() const override;
+    zim::writer::Hints getHints() const override;
 };
 
 class ContentProviderWrapper : public zim::writer::ContentProvider, private ObjWrapper
 {
   public:
     ContentProviderWrapper(PyObject *obj) : ObjWrapper(obj) {};
-    virtual zim::size_type getSize() const;
-    virtual zim::Blob feed();
-  private:
-    zim::Blob callCythonReturnBlob(std::string) const;
+    ~ContentProviderWrapper() = default;
+    zim::size_type getSize() const override;
+    zim::Blob feed() override;
 };
 
 #endif // LIBZIM_LIBWRAPPER_H
