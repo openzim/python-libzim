@@ -34,47 +34,83 @@
 ObjWrapper::ObjWrapper(PyObject* obj)
   : m_obj(obj)
 {
- if (import_libzim__wrapper()) {
+  if (import_libzim__wrapper()) {
     std::cerr << "Error executing import_libzim!\n";
     throw std::runtime_error("Error executing import_libzim");
-  } else {
-    Py_XINCREF(this->m_obj);
   }
+  Py_XINCREF(m_obj);
+}
+
+ObjWrapper::ObjWrapper(ObjWrapper&& other)
+  : m_obj(other.m_obj)
+{
+  other.m_obj = nullptr;
+}
+
+ObjWrapper& ObjWrapper::operator=(ObjWrapper&& other)
+{
+  m_obj = other.m_obj;
+  other.m_obj = nullptr;
+  return *this;
 }
 
 ObjWrapper::~ObjWrapper()
 {
-  PyGILState_STATE gstate;
-  gstate = PyGILState_Ensure();
-  Py_XDECREF(this->m_obj);
-  PyGILState_Release(gstate);
+  // We must decrement the ref of the python object.
+  if (m_obj != nullptr) {
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+    Py_XDECREF(this->m_obj);
+    PyGILState_Release(gstate);
+  }
 }
 
-std::string ObjWrapper::callCythonReturnString(std::string methodName) const
-{
-  if (!this->m_obj)
+
+// Just call the rigth (regarding the output) method.
+// No check or error handling.
+template<typename Output>
+Output _callMethodOnObj(PyObject *obj, const std::string& methodName, std::string& error);
+
+template<>
+std::string _callMethodOnObj(PyObject *obj, const std::string& methodName, std::string& error) {
+  return string_cy_call_fct(obj, methodName, &error);
+}
+
+template<>
+uint64_t _callMethodOnObj(PyObject *obj, const std::string& methodName, std::string& error) {
+  return int_cy_call_fct(obj, methodName, &error);
+}
+
+template<>
+zim::Blob _callMethodOnObj(PyObject *obj, const std::string& methodName, std::string& error) {
+  return blob_cy_call_fct(obj, methodName, &error);
+}
+
+template<>
+std::unique_ptr<zim::writer::ContentProvider>
+_callMethodOnObj(PyObject *obj, const std::string& methodName, std::string& error) {
+  return std::unique_ptr<zim::writer::ContentProvider>(contentprovider_cy_call_fct(obj, methodName, &error));
+}
+
+template<>
+zim::writer::Hints
+_callMethodOnObj(PyObject *obj, const std::string& methodName, std::string& error) {
+  return hints_cy_call_fct(obj, methodName, &error);
+}
+
+// This cpp function call a python method on a python object.
+// It checks that we are in a valid state and handle any potential error coming from python.
+template<typename Output>
+Output callMethodOnObj(PyObject* obj, const std::string& methodName) {
+  if (!obj) {
     throw std::runtime_error("Python object not set");
-
+  }
   std::string error;
-
-  std::string ret_val = string_cy_call_fct(this->m_obj, methodName, &error);
-  if (!error.empty())
+  Output out = _callMethodOnObj<Output>(obj, methodName, error);
+  if (!error.empty()) {
     throw std::runtime_error(error);
-  return ret_val;
-}
-
-uint64_t ObjWrapper::callCythonReturnInt(std::string methodName) const
-{
-  if (!this->m_obj)
-      throw std::runtime_error("Python object not set");
-
-  std::string error;
-
-  int64_t ret_val = int_cy_call_fct(this->m_obj, methodName, &error);
-  if (!error.empty())
-    throw std::runtime_error(error);
-
-  return ret_val;
+  }
+  return out;
 }
 
 
@@ -86,26 +122,12 @@ uint64_t ObjWrapper::callCythonReturnInt(std::string methodName) const
 
 zim::size_type ContentProviderWrapper::getSize() const
 {
-  return callCythonReturnInt("get_size");
+  return callMethodOnObj<uint64_t>(m_obj, "get_size");
 }
 
 zim::Blob ContentProviderWrapper::feed()
 {
-  return callCythonReturnBlob("feed");
-}
-
-zim::Blob ContentProviderWrapper::callCythonReturnBlob(std::string methodName) const
-{
-  if (!this->m_obj)
-    throw std::runtime_error("Python object not set");
-
-  std::string error;
-
-  zim::Blob ret_val = blob_cy_call_fct(this->m_obj, methodName, &error);
-  if (!error.empty())
-    throw std::runtime_error(error);
-
-  return ret_val;
+  return callMethodOnObj<zim::Blob>(m_obj, "feed");
 }
 
 /*
@@ -115,59 +137,31 @@ zim::Blob ContentProviderWrapper::callCythonReturnBlob(std::string methodName) c
 */
 
 
-std::unique_ptr<zim::writer::ContentProvider> WriterItemWrapper::callCythonReturnContentProvider(std::string methodName) const
-{
-  if (!this->m_obj)
-    throw std::runtime_error("Python object not set");
-
-  std::string error;
-
-  auto ret_val = std::unique_ptr<zim::writer::ContentProvider>(contentprovider_cy_call_fct(this->m_obj, methodName, &error));
-  if (!error.empty())
-    throw std::runtime_error(error);
-
-  return ret_val;
-}
-
-zim::writer::Hints WriterItemWrapper::callCythonReturnHints(std::string methodName) const
-{
-  if (!this->m_obj)
-    throw std::runtime_error("Python object not set");
-
-  std::string error;
-
-  auto ret_val = hints_cy_call_fct(this->m_obj, methodName, &error);
-  if (!error.empty())
-    throw std::runtime_error(error);
-
-  return ret_val;
-}
-
 std::string
 WriterItemWrapper::getPath() const
 {
-  return callCythonReturnString("get_path");
+  return callMethodOnObj<std::string>(m_obj, "get_path");
 }
 
 std::string
 WriterItemWrapper::getTitle() const
 {
-  return callCythonReturnString("get_title");
+  return callMethodOnObj<std::string>(m_obj, "get_title");
 }
 
 std::string
 WriterItemWrapper::getMimeType() const
 {
-  return callCythonReturnString("get_mimetype");
+  return callMethodOnObj<std::string>(m_obj, "get_mimetype");
 }
 
 std::unique_ptr<zim::writer::ContentProvider>
 WriterItemWrapper::getContentProvider() const
 {
-    return callCythonReturnContentProvider("get_contentprovider");
+  return callMethodOnObj<std::unique_ptr<zim::writer::ContentProvider>>(m_obj, "get_contentprovider");
 }
 
 zim::writer::Hints WriterItemWrapper::getHints() const
 {
-	return callCythonReturnHints("get_hints");
+  return callMethodOnObj<zim::writer::Hints>(m_obj, "get_hints");
 }
