@@ -3,6 +3,7 @@
  * This file is part of python-libzim
  * (see https://github.com/libzim/python-libzim)
  *
+ * Copyright (c) 2021 Matthieu Gautier <mgautier@kymeria.fr>.
  * Copyright (c) 2020 Juan Diego Caballero <jdc@monadical.com>.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,9 +19,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef libzim_LIB_H
-#define libzim_LIB_H 1
 
+#ifndef LIBZIM_LIBWRAPPER_H
+#define LIBZIM_LIBWRAPPER_H
 struct _object;
 typedef _object PyObject;
 
@@ -132,4 +133,4 @@ class ContentProviderWrapper : public zim::writer::ContentProvider, private ObjW
     zim::Blob callCythonReturnBlob(std::string) const;
 };
 
-#endif // !libzim_LIB_H
+#endif // LIBZIM_LIBWRAPPER_H
