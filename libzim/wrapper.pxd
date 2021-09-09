@@ -84,22 +84,21 @@ cdef extern from "lib.h":
     cdef cppclass WriterItemWrapper:
         WriterItemWrapper(PyObject* obj) except +
 
-cdef extern from "lib.h":
-    cdef cppclass ZimEntry:
+
+# Import the cpp wrappers.
+cdef extern from "libwrapper.h":
+    cdef cppclass WEntry:
         string getTitle()
         string getPath() except +
 
         bint isRedirect()
-        ZimItem* getItem(bint follow) except +
-        ZimItem* getRedirect() except +
-        ZimEntry* getRedirectEntry() except +
+        WItem getItem(bint follow) except +
+        WItem getRedirect() except +
+        WEntry getRedirectEntry() except +
 
         int getIndex() except +
 
-
-cdef extern from "lib.h":
-    cdef cppclass ZimItem:
-        ZimItem __enter__()
+    cdef cppclass WItem:
         string getTitle() except +
         string getPath() except +
         string getMimetype() except +
@@ -110,46 +109,22 @@ cdef extern from "lib.h":
 
         int getIndex() except +
 
-
-cdef extern from "zim/search_iterator.h" namespace "zim":
-    cdef cppclass search_iterator:
-        search_iterator()
-        search_iterator operator++()
-        bint operator==(search_iterator)
-        bint operator!=(search_iterator)
-        string get_path()
-        string get_title()
-
-
-cdef extern from "lib.h":
-    cdef cppclass ZimSearch:
-        ZimSearch()
-        ZimSearch(const ZimArchive zimfile)
-        ZimSearch(vector[const ZimArchive] zimfiles)
-        void set_suggestion_mode(bint suggestion)
-        void set_query(string query)
-        void set_range(int, int)
-        search_iterator begin()
-        search_iterator end()
-        int get_matches_estimated()
-
-
-cdef extern from "lib.h":
-    cdef cppclass ZimArchive:
-        ZimArchive(string filename) except +
+    cdef cppclass WArchive:
+        WArchive() except +
+        WArchive(string filename) except +
 
         int getFilesize() except +
 
-        ZimEntry* getEntryByPath(string path) except +
-        ZimEntry* getEntryByPath(entry_index_type idx) except +
-        ZimEntry* getEntryByTitle(string title) except +
+        WEntry getEntryByPath(string path) except +
+        WEntry getEntryByPath(entry_index_type idx) except +
+        WEntry getEntryByTitle(string title) except +
 
         string getMetadata(string name) except +
         vector[string] getMetadataKeys() except +
 
-        ZimEntry* getMainEntry() except +
-        ZimItem* getIllustrationItem() except +
-        ZimItem* getIllustrationItem(int size) except +
+        WEntry getMainEntry() except +
+        WItem getIllustrationItem() except +
+        WItem getIllustrationItem(int size) except +
         size_type getEntryCount() except +
         size_type getAllEntryCount() except +
         size_type getArticleCount() except +
@@ -170,3 +145,12 @@ cdef extern from "lib.h":
         bool hasTitleIndex() except +
         bool hasChecksum() except +
         bool check() except +
+
+cdef extern from "zim/search_iterator.h" namespace "zim":
+    cdef cppclass SearchIterator:
+        SearchIterator()
+        SearchIterator operator++()
+        bint operator==(search_iterator)
+        bint operator!=(search_iterator)
+        string getPath()
+        string getTitle()
