@@ -39,15 +39,6 @@ cdef extern from "zim/zim.h" namespace "zim":
         zimcompZstd
 
 
-cdef extern from "zim/blob.h" namespace "zim":
-    cdef cppclass Blob:
-        Blob() except +
-        Blob(const char* data, uint64_t size) except +
-        const char* data() except +
-        const char* end() except +
-        uint64_t size() except +
-
-
 cdef extern from "zim/writer/item.h" namespace "zim::writer":
     cdef cppclass WriterItem "zim::writer::Item":
         pass
@@ -87,6 +78,13 @@ cdef extern from "lib.h":
 
 # Import the cpp wrappers.
 cdef extern from "libwrapper.h":
+    cdef cppclass WBlob:
+        WBlob() except +
+        WBlob(const char* data, uint64_t size) except +
+        const char* data() except +
+        const char* end() except +
+        uint64_t size() except +
+
     cdef cppclass WEntry:
         string getTitle()
         string getPath() except +
@@ -103,8 +101,8 @@ cdef extern from "libwrapper.h":
         string getPath() except +
         string getMimetype() except +
 
-        const Blob getData(offset_type offset) except +
-        const Blob getData(offset_type offset, size_type size) except +
+        WBlob getData(offset_type offset) except +
+        WBlob getData(offset_type offset, size_type size) except +
         size_type  getSize() except +
 
         int getIndex() except +
