@@ -48,7 +48,7 @@ pybool = type(True)
 #########################
 
 cdef class WritingBlob:
-    cdef wrapper.Blob* c_blob
+    cdef wrapper.WBlob c_blob
     cdef bytes ref_content
 
     def __cinit__(self, content):
@@ -56,34 +56,36 @@ cdef class WritingBlob:
             self.ref_content = content.encode('UTF-8')
         else:
             self.ref_content = content
-        self.c_blob = new wrapper.Blob(<char *> self.ref_content, len(self.ref_content))
+        self.c_blob = move(wrapper.WBlob(<char *> self.ref_content, len(self.ref_content)))
 
     def size(self):
         return self.c_blob.size()
 
-    def __dealloc__(self):
-        if self.c_blob != NULL:
-            del self.c_blob
-
 cdef Py_ssize_t itemsize = 1
 
 cdef class ReadingBlob:
-    cdef wrapper.Blob c_blob
+    cdef wrapper.WBlob c_blob
     cdef Py_ssize_t size
     cdef int view_count
 
-    cdef __setup(self, wrapper.Blob blob):
-        """Assigns an internal pointer to the wrapped C++ article object.
+    # Factory functions - Currently Cython can't use classmethods
+    @staticmethod
+    cdef from_blob(wrapper.WBlob blob):
+        """ Creates a python Blob from a C++ Blob (zim::) -> Blob
 
-        Parameters
-        ----------
-        *blob : Blob
-            Pointer to a C++ (zim::) blob object
-        """
-        # Set new internal C zim.ZimArticle article
-        self.c_blob = blob
-        self.size = blob.size()
-        self.view_count = 0
+            Parameters
+            ----------
+            blob : WBlob
+                A C++ Entry
+            Returns
+            ------
+            Blob
+                Casted blob """
+        cdef ReadingBlob rblob = ReadingBlob()
+        rblob.c_blob = move(blob)
+        rblob.size = rblob.c_blob.size()
+        rblob.view_count = 0
+        return rblob
 
     def __dealloc__(self):
         if self.view_count:
@@ -123,7 +125,7 @@ cdef public api:
             error[0] = traceback.format_exc().encode('UTF-8')
         return b""
 
-    wrapper.Blob blob_cy_call_fct(object obj, string method, string *error) with gil:
+    wrapper.WBlob blob_cy_call_fct(object obj, string method, string *error) with gil:
         """Lookup and execute a pure virtual method on object returning a Blob"""
         cdef WritingBlob blob
 
@@ -132,11 +134,11 @@ cdef public api:
             blob = func()
             if blob is None:
                 raise RuntimeError("Blob is none")
-            return dereference(blob.c_blob)
+            return move(blob.c_blob)
         except Exception as e:
             error[0] = traceback.format_exc().encode('UTF-8')
 
-        return Blob()
+        return move(WBlob())
 
     wrapper.ContentProvider* contentprovider_cy_call_fct(object obj, string method, string *error) with gil:
         try:
@@ -430,8 +432,7 @@ cdef class Item:
     @property
     def content(self) -> memoryview:
         if not self._haveBlob:
-            self._blob = ReadingBlob()
-            self._blob.__setup(self.c_item.getData(<int> 0))
+            self._blob = ReadingBlob.from_blob(move(self.c_item.getData(<int> 0)))
             self._haveBlob = True
         return memoryview(self._blob)
 

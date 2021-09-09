@@ -88,6 +88,19 @@ class Wrapper {
 #define FORWARD(OUT, NAME) template<class... ARGS> OUT NAME(ARGS&&... args) const { return mp_base->NAME(std::forward<ARGS>(args)...); }
 
 
+// Wrapping blob is not necessary as we can default construct a zim::Blob.
+// But it is nice to have for consistancy.
+class WBlob : public Wrapper<zim::Blob>
+{
+  public:
+    WBlob() = default;
+    WBlob(const zim::Blob& o) : Wrapper(o) {}
+    WBlob(const char* data, zim::size_type size) : Wrapper(zim::Blob(data, size)) {};
+    operator zim::Blob() { return *mp_base; }
+    FORWARD(const char*, data)
+    FORWARD(const char*, end)
+    FORWARD(zim::size_type, size)
+};
 
 class WItem : public Wrapper<zim::Item>
 {
@@ -97,7 +110,7 @@ class WItem : public Wrapper<zim::Item>
     FORWARD(std::string, getTitle)
     FORWARD(std::string, getPath)
     FORWARD(std::string, getMimetype)
-    FORWARD(zim::Blob, getData)
+    FORWARD(WBlob, getData)
     FORWARD(zim::size_type, getSize)
     FORWARD(zim::entry_index_type, getIndex)
 };
