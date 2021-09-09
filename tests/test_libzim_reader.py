@@ -16,7 +16,7 @@ from libzim.reader import Archive
 ZIMS_DATA = {
     "blank.zim": {
         "filename": "blank.zim",
-        "filesize": 17660,
+        "filesize": 1173,
         "new_ns": True,
         "mutlipart": False,
         "zim_uuid": None,
@@ -26,12 +26,12 @@ ZIMS_DATA = {
         "has_main_entry": False,
         "has_favicon_entry": False,
         "has_fulltext_index": False,
-        "has_title_index": True,
+        "has_title_index": False,
         "has_checksum": True,
         "checksum": None,
         "is_valid": True,
         "entry_count": 0,
-        "all_entry_count": 4,
+        "all_entry_count": 2,
         "article_count": 0,
         "suggestion_string": "",
         "suggestion_count": 0,
