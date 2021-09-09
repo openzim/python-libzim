@@ -34,6 +34,7 @@ from libcpp cimport bool
 from libcpp.set cimport set
 from libcpp.memory cimport shared_ptr, make_shared, unique_ptr
 from libcpp.map cimport map
+from libcpp.utility cimport move
 
 import pathlib
 import datetime
@@ -343,11 +344,11 @@ cdef class Entry:
         ----------
         *c_entry : Entry (zim::)
             a pointer to the C++ entry object """
-    cdef wrapper.ZimEntry* c_entry
+    cdef wrapper.WEntry c_entry
 
     # Factory functions - Currently Cython can't use classmethods
     @staticmethod
-    cdef from_entry(wrapper.ZimEntry* ent):
+    cdef from_entry(wrapper.WEntry ent):
         """ Creates a python Entry from a C++ Entry (zim::) -> Entry
 
             Parameters
@@ -359,12 +360,8 @@ cdef class Entry:
             Entry
                 Casted entry """
         cdef Entry entry = Entry()
-        entry.c_entry = ent
+        entry.c_entry = move(ent)
         return entry
-
-    def __dealloc__(self):
-        if self.c_entry != NULL:
-            del self.c_entry
 
     @property
     def title(self) -> str:
@@ -384,12 +381,12 @@ cdef class Entry:
         return self.c_entry.isRedirect()
 
     def get_redirect_entry(self) -> Entry:
-        cdef ZimEntry* entry = self.c_entry.getRedirectEntry()
-        return Entry.from_entry(entry)
+        cdef WEntry entry = move(self.c_entry.getRedirectEntry())
+        return Entry.from_entry(move(entry))
 
     def get_item(self) -> Item:
-        cdef ZimItem* item = self.c_entry.getItem(True)
-        return Item.from_item(item)
+        cdef WItem item = move(self.c_entry.getItem(True))
+        return Item.from_item(move(item))
 
     def __repr__(self):
         return f"{self.__class__.__name__}(url={self.path}, title={self.title})"
@@ -401,13 +398,13 @@ cdef class Item:
         ----------
         *c_entry : Entry (zim::)
             a pointer to the C++ entry object """
-    cdef wrapper.ZimItem* c_item
+    cdef wrapper.WItem c_item
     cdef ReadingBlob _blob
     cdef bool _haveBlob
 
     # Factory functions - Currently Cython can't use classmethods
     @staticmethod
-    cdef from_item(wrapper.ZimItem* _item):
+    cdef from_item(wrapper.WItem _item):
         """ Creates a python ReadArticle from a C++ Article (zim::) -> ReadArticle
 
             Parameters
@@ -419,12 +416,8 @@ cdef class Item:
             Item
                 Casted item """
         cdef Item item = Item()
-        item.c_item = _item
+        item.c_item = move(_item)
         return item
-
-    def __dealloc__(self):
-        if self.c_item != NULL:
-            del self.c_item
 
     @property
     def title(self) -> str:
@@ -474,7 +467,7 @@ cdef class PyArchive:
         _filename : pathlib.Path
             the file name of the Archive Reader object """
 
-    cdef wrapper.ZimArchive* c_archive
+    cdef wrapper.WArchive c_archive
     cdef object _filename
 
     def __cinit__(self, object filename: pathlib.Path):
@@ -485,12 +478,8 @@ cdef class PyArchive:
             filename : pathlib.Path
                 Full path to a zim file """
 
-        self.c_archive = new wrapper.ZimArchive(str(filename).encode('UTF-8'))
+        self.c_archive = move(wrapper.WArchive(str(filename).encode('UTF-8')))
         self._filename = pathlib.Path(self.c_archive.getFilename().decode("UTF-8", "strict"))
-
-    def __dealloc__(self):
-        if self.c_archive != NULL:
-            del self.c_archive
 
     def __eq__(self, other):
         if PyArchive not in type(self).mro() or PyArchive not in type(other).mro():
@@ -527,12 +516,12 @@ cdef class PyArchive:
             ------
                 KeyError
                     If an entry with the provided path is not found in the archive """
-        cdef wrapper.ZimEntry* entry
+        cdef wrapper.WEntry entry
         try:
-            entry = self.c_archive.getEntryByPath(<string>path.encode('UTF-8'))
+            entry = move(self.c_archive.getEntryByPath(<string>path.encode('UTF-8')))
         except RuntimeError as e:
             raise KeyError(str(e))
-        return Entry.from_entry(entry)
+        return Entry.from_entry(move(entry))
 
     def has_entry_by_title(self, title: str) -> bool:
         return self.c_archive.hasEntryByTitle(<string>title.encode('UTF-8'))
@@ -552,12 +541,12 @@ cdef class PyArchive:
             ------
                 KeyError
                     If an entry with the provided title is not found in the archive """
-        cdef wrapper.ZimEntry* entry
+        cdef wrapper.WEntry entry
         try:
-            entry = self.c_archive.getEntryByTitle(<string>title.encode('UTF-8'))
+            entry = move(self.c_archive.getEntryByTitle(<string>title.encode('UTF-8')))
         except RuntimeError as e:
             raise KeyError(str(e))
-        return Entry.from_entry(entry)
+        return Entry.from_entry(move(entry))
 
     @property
     def metadata_keys(self):
@@ -578,8 +567,8 @@ cdef class PyArchive:
         return bytes(self.c_archive.getMetadata(name.encode('UTF-8')))
 
     def _get_entry_by_id(self, entry_id: int) -> Entry:
-        cdef wrapper.ZimEntry* entry = self.c_archive.getEntryByPath(<entry_index_type>entry_id)
-        return Entry.from_entry(entry)
+        cdef wrapper.WEntry entry = move(self.c_archive.getEntryByPath(<entry_index_type>entry_id))
+        return Entry.from_entry(move(entry))
 
     @property
     def has_main_entry(self) -> bool:
@@ -587,7 +576,7 @@ cdef class PyArchive:
 
     @property
     def main_entry(self) -> Entry:
-        return Entry.from_entry(self.c_archive.getMainEntry())
+        return Entry.from_entry(move(self.c_archive.getMainEntry()))
 
     @property
     def uuid(self) -> UUID:
@@ -648,8 +637,8 @@ cdef class PyArchive:
         """ Illustration Metadata Item for this size """
         try:
             if size is not None:
-                return Item.from_item(self.c_archive.getIllustrationItem(size))
-            return Item.from_item(self.c_archive.getIllustrationItem())
+                return Item.from_item(move(self.c_archive.getIllustrationItem(size)))
+            return Item.from_item(move(self.c_archive.getIllustrationItem()))
         except RuntimeError as e:
             raise KeyError(str(e))
 

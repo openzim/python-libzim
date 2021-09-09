@@ -22,76 +22,137 @@
 
 #ifndef LIBZIM_LIBWRAPPER_H
 #define LIBZIM_LIBWRAPPER_H
-struct _object;
-typedef _object PyObject;
 
-#include <zim/zim.h>
+#include <memory>
 #include <zim/archive.h>
 #include <zim/entry.h>
 #include <zim/item.h>
-#include <zim/search.h>
-#include <zim/blob.h>
 #include <zim/writer/item.h>
 #include <zim/writer/contentProvider.h>
 
-#include <string>
+struct _object;
+typedef _object PyObject;
 
-template<typename T, typename U>
-inline T* to_ptr(const U& obj)
-{
-  return new T(obj);
-}
+// There is two kind of wrapping :
+//  - Wrapping C++ object to pass it in the Python world.
+//  - Wrapping Python objects to pass it to the C++ world (mainly used by the creator).
+//
 
-class ZimItem : public zim::Item
-{
+
+// C++ wrapper side.
+// The main issue here is that libzim classes cannot be "default constructed".
+// libzim object are build by the libzim itself and are always "valid".
+// But cython generate code using two instructions :
+// The cython code `cdef Item item = archive.getItem(...)` is translated to :
+// ```
+// Item item;
+// item = archive.getItem(...);
+// ```
+// Which is not possible because the Item has not default constructor.
+// The solution is to manipulate all libzim object throw pointer
+// (pointer can be defaul constructed to nullptr).
+// As the libzim functions/methods return directly the instance, we have to wrap all
+// of them (in pure C++) to make them return a pointer.
+// (Hopefully, copy constructor is available on libzim classes)
+//
+// To help us, we define a Wrapper class which wrap a libzim instance by storing
+// a internel pointer to a heap allocated instance.
+// This wrapper provide all constructors/helpers to build it and use the wrapped instance.
+// (Especially, a default constructor)
+//
+// On top of that, we are writing specific wrapper to overwrite some method to return a
+// Wrapper<Foo> instead of Foo.
+// As Wrapper<Foo> do not inherit from Foo, we must define all the methods we want to wrap in python.
+// Thoses methods just have to forward the call from the wrapper to the wrapped instance.
+// As Wrapper<Foo> can be implicitly construct from Foo, we can also simply forward the call and the
+// conversion will be made for us.
+// The macro FORWARD help us a lot here.
+
+/**
+ * A base wrapper for our structures
+ */
+template<typename Base>
+class Wrapper {
   public:
-    ZimItem(const zim::Item& item) : zim::Item(item) {}
+    Wrapper() {}
+    ~Wrapper() = default;
+    Wrapper(const Base& base)
+      : mp_base(new Base(base))
+    {}
+    Wrapper(Wrapper&& other) = default;
+    Wrapper& operator=(Wrapper&& other) = default;
+  protected:
+    std::unique_ptr<Base> mp_base;
 };
 
-class ZimEntry : public zim::Entry
+#define FORWARD(OUT, NAME) template<class... ARGS> OUT NAME(ARGS&&... args) const { return mp_base->NAME(std::forward<ARGS>(args)...); }
+
+
+
+class WItem : public Wrapper<zim::Item>
 {
   public:
-    ZimEntry(const zim::Entry& entry) : zim::Entry(entry) {}
-    ZimItem* getItem(bool follow) const
-    { return to_ptr<ZimItem>(zim::Entry::getItem(follow)); }
-    ZimEntry* getRedirectEntry() const
-    { return to_ptr<ZimEntry>(zim::Entry::getRedirectEntry()); }
+    WItem() = default;
+    WItem(const zim::Item& o) : Wrapper(o) {}
+    FORWARD(std::string, getTitle)
+    FORWARD(std::string, getPath)
+    FORWARD(std::string, getMimetype)
+    FORWARD(zim::Blob, getData)
+    FORWARD(zim::size_type, getSize)
+    FORWARD(zim::entry_index_type, getIndex)
 };
 
-// class ZimSearch : public zim::Search
-// {
-//   public:
-//     ZimSearch() : zim::Search(std::vector<zim::Archive>{}) {};
-//     ZimSearch(zim::Archive& archive) : zim::Search(archive) {};
-//     ZimSearch(const Search& search) : zim::Search(search) {};
-// };
-
-class ZimArchive : public zim::Archive
+class WEntry : public Wrapper<zim::Entry>
 {
   public:
-    ZimArchive(const std::string& filename) : zim::Archive(filename) {};
-    ZimArchive(const zim::Archive& archive) : zim::Archive(archive) {};
+    WEntry() = default;
+    WEntry(const zim::Entry& o) : Wrapper(o) {}
+    FORWARD(std::string, getTitle)
+    FORWARD(std::string, getPath)
+    FORWARD(bool, isRedirect)
+    FORWARD(WItem, getItem)
+    FORWARD(WItem, getRedirect)
+    FORWARD(WEntry, getRedirectEntry)
+    FORWARD(zim::entry_index_type, getIndex)
+};
 
-    ZimEntry* getEntryByPath(zim::entry_index_type idx) const
-    { return to_ptr<ZimEntry>(zim::Archive::getEntryByPath(idx)); }
-    ZimEntry* getEntryByPath(const std::string& path) const
-    { return to_ptr<ZimEntry>(zim::Archive::getEntryByPath(path)); }
-    ZimEntry* getEntryByTitle(zim::entry_index_type idx) const
-    { return to_ptr<ZimEntry>(zim::Archive::getEntryByTitle(idx)); }
-    ZimEntry* getEntryByTitle(const std::string& title) const
-    { return to_ptr<ZimEntry>(zim::Archive::getEntryByTitle(title)); }
-    ZimEntry* getMainEntry() const
-    { return to_ptr<ZimEntry>(zim::Archive::getMainEntry()); }
-    // ZimEntry* getFaviconEntry() const
-    // { return to_ptr<ZimEntry>(zim::Archive::getFaviconEntry()); }
-    ZimItem* getIllustrationItem() const
-    { return to_ptr<ZimItem>(zim::Archive::getIllustrationItem()); }
-    ZimItem* getIllustrationItem(unsigned int size) const
-    { return to_ptr<ZimItem>(zim::Archive::getIllustrationItem(size)); }
+class WArchive : public Wrapper<zim::Archive>
+{
+  public:
+    WArchive() = default;
+    WArchive(const std::string& filename) : Wrapper(zim::Archive(filename)) {};
+    WArchive(const zim::Archive& o) : Wrapper(o) {};
+
+    FORWARD(WEntry, getEntryByPath)
+    FORWARD(WEntry, getEntryByTitle)
+    FORWARD(WEntry, getMainEntry)
+    FORWARD(WItem, getIllustrationItem)
     std::string getUuid() const
-    { zim::Uuid uuid = zim::Archive::getUuid();
-      std::string uuids(uuid.data, uuid.size()); return uuids; }
+    { auto u = mp_base->getUuid();
+      std::string uuids(u.data, u.size());
+      return uuids;
+    }
+    FORWARD(zim::size_type, getFilesize)
+    FORWARD(std::string, getMetadata)
+    FORWARD(std::vector<std::string>, getMetadataKeys)
+    FORWARD(zim::size_type, getEntryCount)
+    FORWARD(zim::size_type, getAllEntryCount)
+    FORWARD(zim::size_type, getArticleCount)
+    FORWARD(std::string, getChecksum)
+    FORWARD(std::string, getFilename)
+    FORWARD(bool, hasMainEntry)
+    FORWARD(bool, hasIllustration)
+    FORWARD(bool, hasEntryByPath)
+    FORWARD(bool, hasEntryByTitle)
+    FORWARD(bool, is_multiPart)
+    FORWARD(bool, hasNewNamespaceScheme)
+    FORWARD(bool, hasFulltextIndex)
+    FORWARD(bool, hasTitleIndex)
+    FORWARD(bool, hasChecksum)
+    FORWARD(bool, check)
 };
+
+#undef FORWARD
 
 
 
