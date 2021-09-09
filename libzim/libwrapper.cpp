@@ -21,7 +21,7 @@
 
 
 #include <Python.h>
-#include "lib.h"
+#include "libwrapper.h"
 
 #include "wrapper_api.h"
 

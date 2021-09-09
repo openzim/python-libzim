@@ -88,7 +88,7 @@ def get_long_description():
 
 wrapper_extension = Extension(
     name="libzim.wrapper",
-    sources=["libzim/wrapper.pyx", "libzim/lib.cxx"],
+    sources=["libzim/wrapper.pyx", "libzim/libwrapper.cpp"],
     include_dirs=["libzim", LIBZIM_INCLUDE_DIR],
     libraries=["zim"],
     library_dirs=[LIBZIM_LIBRARY_DIR],
