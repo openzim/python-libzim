@@ -21,7 +21,7 @@ from cpython.ref cimport PyObject
 
 from libc.stdint cimport uint32_t, uint64_t
 from libcpp cimport bool
-from libcpp.memory cimport shared_ptr, unique_ptr
+from libcpp.memory cimport shared_ptr
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libcpp.map cimport map
@@ -66,16 +66,6 @@ cdef extern from "zim/writer/creator.h" namespace "zim::writer":
         void setMainPath(string mainPath)
         void addIllustration(unsigned int size, string content)
 
-# Import the python wrappers (ObjWrapper) from libwrapper.
-# The only thing we need to know here is how to create the wrappers.
-# Other (cpp) methods must exists (to be called from cpp side),
-# but we don't care about them as we will not call them in python side.
-cdef extern from "libwrapper.h":
-    cdef cppclass ContentProviderWrapper(ContentProvider):
-        ContentProviderWrapper(PyObject* obj) except +
-    cdef cppclass WriterItemWrapper:
-        WriterItemWrapper(PyObject* obj) except +
-
 cdef extern from "zim/search.h" namespace "zim":
     cdef cppclass Query:
         Query()
@@ -92,53 +82,65 @@ cdef extern from "zim/search_iterator.h" namespace "zim":
         string getPath()
         string getTitle()
 
-# Import the cpp wrappers.
+
+# Import the python wrappers (ObjWrapper) from libwrapper.
+# The only thing we need to know here is how to create the wrappers.
+# Other (cpp) methods must exists (to be called from cpp side),
+# but we don't care about them as we will not call them in python side.
 cdef extern from "libwrapper.h":
-    cdef cppclass WBlob:
-        WBlob() except +
-        WBlob(const char* data, uint64_t size) except +
+    cdef cppclass ContentProviderWrapper(ContentProvider):
+        ContentProviderWrapper(PyObject* obj) except +
+    cdef cppclass WriterItemWrapper:
+        WriterItemWrapper(PyObject* obj) except +
+
+
+# Import the cpp wrappers.
+cdef extern from "libwrapper.h" namespace "wrapper":
+    cdef cppclass Blob:
+        Blob() except +
+        Blob(const char* data, uint64_t size) except +
         const char* data() except +
         const char* end() except +
         uint64_t size() except +
 
-    cdef cppclass WEntry:
+    cdef cppclass Entry:
         string getTitle()
         string getPath() except +
 
         bint isRedirect()
-        WItem getItem(bint follow) except +
-        WItem getRedirect() except +
-        WEntry getRedirectEntry() except +
+        Item getItem(bint follow) except +
+        Item getRedirect() except +
+        Entry getRedirectEntry() except +
 
         int getIndex() except +
 
-    cdef cppclass WItem:
+    cdef cppclass Item:
         string getTitle() except +
         string getPath() except +
         string getMimetype() except +
 
-        WBlob getData(offset_type offset) except +
-        WBlob getData(offset_type offset, size_type size) except +
+        Blob getData(offset_type offset) except +
+        Blob getData(offset_type offset, size_type size) except +
         size_type  getSize() except +
 
         int getIndex() except +
 
-    cdef cppclass WArchive:
-        WArchive() except +
-        WArchive(string filename) except +
+    cdef cppclass Archive:
+        Archive() except +
+        Archive(string filename) except +
 
         int getFilesize() except +
 
-        WEntry getEntryByPath(string path) except +
-        WEntry getEntryByPath(entry_index_type idx) except +
-        WEntry getEntryByTitle(string title) except +
+        Entry getEntryByPath(string path) except +
+        Entry getEntryByPath(entry_index_type idx) except +
+        Entry getEntryByTitle(string title) except +
 
         string getMetadata(string name) except +
         vector[string] getMetadataKeys() except +
 
-        WEntry getMainEntry() except +
-        WItem getIllustrationItem() except +
-        WItem getIllustrationItem(int size) except +
+        Entry getMainEntry() except +
+        Item getIllustrationItem() except +
+        Item getIllustrationItem(int size) except +
         size_type getEntryCount() except +
         size_type getAllEntryCount() except +
         size_type getArticleCount() except +
@@ -160,17 +162,17 @@ cdef extern from "libwrapper.h":
         bool hasChecksum() except +
         bool check() except +
 
-    cdef cppclass WSearcher:
-        WSearcher()
-        WSearcher(const WArchive& archive) except +
+    cdef cppclass Searcher:
+        Searcher()
+        Searcher(const Archive& archive) except +
         setVerbose(bool verbose)
-        WSearch search(Query query) except +
+        Search search(Query query) except +
 
-    cdef cppclass WSearch:
+    cdef cppclass Search:
         int getEstimatedMatches() except +
-        WSearchResultSet getResults(int start, int count) except +
+        SearchResultSet getResults(int start, int count) except +
 
-    cdef cppclass WSearchResultSet:
+    cdef cppclass SearchResultSet:
         SearchIterator begin()
         SearchIterator end()
         int size()
