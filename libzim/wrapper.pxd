@@ -76,6 +76,21 @@ cdef extern from "libwrapper.h":
     cdef cppclass WriterItemWrapper:
         WriterItemWrapper(PyObject* obj) except +
 
+cdef extern from "zim/search.h" namespace "zim":
+    cdef cppclass Query:
+        Query()
+        Query& setQuery(string query)
+        Query& setGeorange(float latitude, float longitude, float distance)
+
+
+cdef extern from "zim/search_iterator.h" namespace "zim":
+    cdef cppclass SearchIterator:
+        SearchIterator()
+        SearchIterator operator++()
+        bint operator==(SearchIterator)
+        bint operator!=(SearchIterator)
+        string getPath()
+        string getTitle()
 
 # Import the cpp wrappers.
 cdef extern from "libwrapper.h":
@@ -145,11 +160,17 @@ cdef extern from "libwrapper.h":
         bool hasChecksum() except +
         bool check() except +
 
-cdef extern from "zim/search_iterator.h" namespace "zim":
-    cdef cppclass SearchIterator:
-        SearchIterator()
-        SearchIterator operator++()
-        bint operator==(search_iterator)
-        bint operator!=(search_iterator)
-        string getPath()
-        string getTitle()
+    cdef cppclass WSearcher:
+        WSearcher()
+        WSearcher(const WArchive& archive) except +
+        setVerbose(bool verbose)
+        WSearch search(Query query) except +
+
+    cdef cppclass WSearch:
+        int getEstimatedMatches() except +
+        WSearchResultSet getResults(int start, int count) except +
+
+    cdef cppclass WSearchResultSet:
+        SearchIterator begin()
+        SearchIterator end()
+        int size()
