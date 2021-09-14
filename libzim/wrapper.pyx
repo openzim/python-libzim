@@ -18,27 +18,22 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
-cimport libzim.wrapper as wrapper
+cimport libzim.zim as zim
 
 import os
 import enum
 from uuid import UUID
-from typing import Generator
-from cython.operator import dereference, preincrement
 from cpython.ref cimport PyObject
 from cpython.buffer cimport PyBUF_WRITABLE
 from cython.operator import preincrement
-
 from libc.stdint cimport uint64_t
 from libcpp.string cimport string
 from libcpp cimport bool
-from libcpp.set cimport set
-from libcpp.memory cimport shared_ptr, make_shared, unique_ptr
+from libcpp.memory cimport shared_ptr
 from libcpp.map cimport map
 from libcpp.utility cimport move
 
 import pathlib
-import datetime
 import traceback
 
 
@@ -49,7 +44,7 @@ pybool = type(True)
 #########################
 
 cdef class WritingBlob:
-    cdef wrapper.WBlob c_blob
+    cdef zim.Blob c_blob
     cdef bytes ref_content
 
     def __cinit__(self, content):
@@ -57,7 +52,7 @@ cdef class WritingBlob:
             self.ref_content = content.encode('UTF-8')
         else:
             self.ref_content = content
-        self.c_blob = move(wrapper.WBlob(<char *> self.ref_content, len(self.ref_content)))
+        self.c_blob = move(zim.Blob(<char *> self.ref_content, len(self.ref_content)))
 
     def size(self):
         return self.c_blob.size()
@@ -65,18 +60,18 @@ cdef class WritingBlob:
 cdef Py_ssize_t itemsize = 1
 
 cdef class ReadingBlob:
-    cdef wrapper.WBlob c_blob
+    cdef zim.Blob c_blob
     cdef Py_ssize_t size
     cdef int view_count
 
     # Factory functions - Currently Cython can't use classmethods
     @staticmethod
-    cdef from_blob(wrapper.WBlob blob):
+    cdef from_blob(zim.Blob blob):
         """ Creates a python Blob from a C++ Blob (zim::) -> Blob
 
             Parameters
             ----------
-            blob : WBlob
+            blob : Blob
                 A C++ Entry
             Returns
             ------
@@ -115,6 +110,7 @@ cdef class ReadingBlob:
 
 #------- pure virtual methods --------
 
+
 # This call a python method and return a python object.
 cdef object call_method(object obj, string method):
     func = getattr(obj, method.decode('UTF-8'))
@@ -133,7 +129,7 @@ cdef public api:
             error[0] = traceback.format_exc().encode('UTF-8')
         return b""
 
-    wrapper.WBlob blob_cy_call_fct(object obj, string method, string *error) with gil:
+    zim.Blob blob_cy_call_fct(object obj, string method, string *error) with gil:
         """Lookup and execute a pure virtual method on object returning a Blob"""
         cdef WritingBlob blob
 
@@ -145,14 +141,14 @@ cdef public api:
         except Exception as e:
             error[0] = traceback.format_exc().encode('UTF-8')
 
-        return move(WBlob())
+        return move(zim.Blob())
 
-    wrapper.ContentProvider* contentprovider_cy_call_fct(object obj, string method, string *error) with gil:
+    zim.ContentProvider* contentprovider_cy_call_fct(object obj, string method, string *error) with gil:
         try:
             contentProvider = call_method(obj, method)
             if not contentProvider:
                 raise RuntimeError("ContentProvider is None")
-            return new ContentProviderWrapper(<PyObject*>contentProvider)
+            return new zim.ContentProviderWrapper(<PyObject*>contentProvider)
         except Exception as e:
             error[0] = traceback.format_exc().encode('UTF-8')
 
@@ -177,14 +173,14 @@ cdef public api:
 
         return 0
 
-    map[HintKeys, uint64_t] convertToCppHints(dict hintsDict):
-        cdef map[HintKeys, uint64_t] ret;
+    map[zim.HintKeys, uint64_t] convertToCppHints(dict hintsDict):
+        cdef map[zim.HintKeys, uint64_t] ret;
         for key, value in hintsDict.items():
             ret[key.value] = <uint64_t>value
         return ret
 
-    map[HintKeys, uint64_t] hints_cy_call_fct(object obj, string method, string* error) with gil:
-        cdef map[HintKeys, uint64_t] ret;
+    map[zim.HintKeys, uint64_t] hints_cy_call_fct(object obj, string method, string* error) with gil:
+        cdef map[zim.HintKeys, uint64_t] ret;
         try:
             func = getattr(obj, method.decode('UTF-8'))
             hintsDict = {k: pybool(v) for k, v in func().items() if isinstance(k, Hint)}
@@ -197,14 +193,14 @@ cdef public api:
 
 class Compression(enum.Enum):
     """ Compression algorithms available to create ZIM files """
-    none = wrapper.CompressionType.zimcompNone
-    lzma = wrapper.CompressionType.zimcompLzma
-    zstd = wrapper.CompressionType.zimcompZstd
+    none = zim.CompressionType.zimcompNone
+    lzma = zim.CompressionType.zimcompLzma
+    zstd = zim.CompressionType.zimcompZstd
 
 
 class Hint(enum.Enum):
-    COMPRESS = wrapper.HintKeys.COMPRESS
-    FRONT_ARTICLE = wrapper.HintKeys.FRONT_ARTICLE
+    COMPRESS = zim.HintKeys.COMPRESS
+    FRONT_ARTICLE = zim.HintKeys.FRONT_ARTICLE
 
 
 
@@ -220,7 +216,7 @@ cdef class Creator:
         _started : bool
             flag if the creator has started """
 
-    cdef wrapper.ZimCreator c_creator
+    cdef zim.ZimCreator c_creator
     cdef object _filename
     cdef object _started
 
@@ -297,8 +293,8 @@ cdef class Creator:
             raise RuntimeError("ZimCreator not started")
 
         # Make a shared pointer to ZimArticleWrapper from the ZimArticle object
-        cdef shared_ptr[wrapper.WriterItem] item = shared_ptr[wrapper.WriterItem](
-            new wrapper.WriterItemWrapper(<PyObject*>WriterItem));
+        cdef shared_ptr[zim.WriterItem] item = shared_ptr[zim.WriterItem](
+            new zim.WriterItemWrapper(<PyObject*>WriterItem));
         with nogil:
             self.c_creator.addItem(item)
 
@@ -319,7 +315,7 @@ cdef class Creator:
         cdef string _path = path.encode('utf8')
         cdef string _title = title.encode('utf8')
         cdef string _targetPath = targetPath.encode('utf8')
-        cdef map[HintKeys, uint64_t] _hints = convertToCppHints(hints)
+        cdef map[zim.HintKeys, uint64_t] _hints = convertToCppHints(hints)
         with nogil:
             self.c_creator.addRedirection(_path, _title, _targetPath, _hints)
 
@@ -351,11 +347,11 @@ cdef class Entry:
         ----------
         *c_entry : Entry (zim::)
             a pointer to the C++ entry object """
-    cdef wrapper.WEntry c_entry
+    cdef zim.Entry c_entry
 
     # Factory functions - Currently Cython can't use classmethods
     @staticmethod
-    cdef from_entry(wrapper.WEntry ent):
+    cdef from_entry(zim.Entry ent):
         """ Creates a python Entry from a C++ Entry (zim::) -> Entry
 
             Parameters
@@ -388,11 +384,11 @@ cdef class Entry:
         return self.c_entry.isRedirect()
 
     def get_redirect_entry(self) -> Entry:
-        cdef WEntry entry = move(self.c_entry.getRedirectEntry())
+        cdef zim.Entry entry = move(self.c_entry.getRedirectEntry())
         return Entry.from_entry(move(entry))
 
     def get_item(self) -> Item:
-        cdef WItem item = move(self.c_entry.getItem(True))
+        cdef zim.Item item = move(self.c_entry.getItem(True))
         return Item.from_item(move(item))
 
     def __repr__(self):
@@ -405,13 +401,13 @@ cdef class Item:
         ----------
         *c_entry : Entry (zim::)
             a pointer to the C++ entry object """
-    cdef wrapper.WItem c_item
+    cdef zim.Item c_item
     cdef ReadingBlob _blob
     cdef bool _haveBlob
 
     # Factory functions - Currently Cython can't use classmethods
     @staticmethod
-    cdef from_item(wrapper.WItem _item):
+    cdef from_item(zim.Item _item):
         """ Creates a python ReadArticle from a C++ Article (zim::) -> ReadArticle
 
             Parameters
@@ -463,7 +459,7 @@ cdef class Item:
 #        Archive        #
 #########################
 
-cdef class PyArchive:
+cdef class Archive:
     """ Zim Archive Reader
 
         Attributes
@@ -473,7 +469,7 @@ cdef class PyArchive:
         _filename : pathlib.Path
             the file name of the Archive Reader object """
 
-    cdef wrapper.WArchive c_archive
+    cdef zim.Archive c_archive
     cdef object _filename
 
     def __cinit__(self, object filename: pathlib.Path):
@@ -484,11 +480,11 @@ cdef class PyArchive:
             filename : pathlib.Path
                 Full path to a zim file """
 
-        self.c_archive = move(wrapper.WArchive(str(filename).encode('UTF-8')))
+        self.c_archive = move(zim.Archive(str(filename).encode('UTF-8')))
         self._filename = pathlib.Path(self.c_archive.getFilename().decode("UTF-8", "strict"))
 
     def __eq__(self, other):
-        if PyArchive not in type(self).mro() or PyArchive not in type(other).mro():
+        if Archive not in type(self).mro() or Archive not in type(other).mro():
             return False
         try:
             return self.filename.expanduser().resolve() == other.filename.expanduser().resolve()
@@ -522,7 +518,7 @@ cdef class PyArchive:
             ------
                 KeyError
                     If an entry with the provided path is not found in the archive """
-        cdef wrapper.WEntry entry
+        cdef zim.Entry entry
         try:
             entry = move(self.c_archive.getEntryByPath(<string>path.encode('UTF-8')))
         except RuntimeError as e:
@@ -547,7 +543,7 @@ cdef class PyArchive:
             ------
                 KeyError
                     If an entry with the provided title is not found in the archive """
-        cdef wrapper.WEntry entry
+        cdef zim.Entry entry
         try:
             entry = move(self.c_archive.getEntryByTitle(<string>title.encode('UTF-8')))
         except RuntimeError as e:
@@ -573,7 +569,7 @@ cdef class PyArchive:
         return bytes(self.c_archive.getMetadata(name.encode('UTF-8')))
 
     def _get_entry_by_id(self, entry_id: int) -> Entry:
-        cdef wrapper.WEntry entry = move(self.c_archive.getEntryByPath(<entry_index_type>entry_id))
+        cdef zim.Entry entry = move(self.c_archive.getEntryByPath(<zim.entry_index_type>entry_id))
         return Entry.from_entry(move(entry))
 
     @property
@@ -656,35 +652,35 @@ cdef class PyArchive:
 #      Searcher         #
 #########################
 
-cdef class PyQuery:
-    cdef wrapper.Query c_query
+cdef class Query:
+    cdef zim.Query c_query
 
     def set_query(self, query: str):
         self.c_query.setQuery(query.encode('utf8'))
 
 
 cdef class SearchResultSet:
-    cdef wrapper.WSearchResultSet c_resultset
+    cdef zim.SearchResultSet c_resultset
 
     @staticmethod
-    cdef from_resultset(wrapper.WSearchResultSet _resultset):
+    cdef from_resultset(zim.SearchResultSet _resultset):
         cdef SearchResultSet resultset = SearchResultSet()
         resultset.c_resultset = move(_resultset)
         return resultset
 
     def __iter__(self):
-        cdef wrapper.SearchIterator current = self.c_resultset.begin()
-        cdef wrapper.SearchIterator end = self.c_resultset.end()
+        cdef zim.SearchIterator current = self.c_resultset.begin()
+        cdef zim.SearchIterator end = self.c_resultset.end()
         while current != end:
             yield current.getPath().decode('UTF-8')
             preincrement(current)
 
 cdef class Search:
-    cdef wrapper.WSearch c_search
+    cdef zim.Search c_search
 
     # Factory functions - Currently Cython can't use classmethods
     @staticmethod
-    cdef from_search(wrapper.WSearch _search):
+    cdef from_search(zim.Search _search):
         """ Creates a python ReadArticle from a C++ Article (zim::) -> ReadArticle
 
             Parameters
@@ -715,9 +711,9 @@ cdef class Searcher:
             a pointer to a C++ Searcher object
     """
 
-    cdef wrapper.WSearcher c_searcher
+    cdef zim.Searcher c_searcher
 
-    def __cinit__(self, object archive: PyArchive):
+    def __cinit__(self, object archive: Archive):
         """ Constructs an Archive from full zim file path
 
             Parameters
@@ -725,8 +721,8 @@ cdef class Searcher:
             filename : pathlib.Path
                 Full path to a zim file """
 
-        self.c_searcher = move(wrapper.WSearcher(archive.c_archive))
+        self.c_searcher = move(zim.Searcher(archive.c_archive))
 
-    def search(self, object query: PyQuery):
+    def search(self, object query: Query):
         return Search.from_search(move(self.c_searcher.search(query.c_query)))
 
