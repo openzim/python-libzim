@@ -78,6 +78,9 @@ class Wrapper {
     Wrapper(const Base& base)
       : mp_base(new Base(base))
     {}
+    Wrapper(Base&& base)
+      : mp_base(new Base(std::move(base)))
+    {}
     Wrapper(Wrapper&& other) = default;
     Wrapper& operator=(Wrapper&& other) = default;
   protected:
