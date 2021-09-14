@@ -10,6 +10,7 @@ import pytest
 
 import libzim.writer
 from libzim.reader import Archive
+from libzim.searcher import Searcher, Query
 
 
 # expected data for tests ZIMs (see `all_zims`)
@@ -33,10 +34,10 @@ ZIMS_DATA = {
         "entry_count": 0,
         "all_entry_count": 2,
         "article_count": 0,
-        "suggestion_string": "",
+        "suggestion_string": None,
         "suggestion_count": 0,
         "suggestion_result": [],
-        "search_string": "",
+        "search_string": None,
         "search_count": 0,
         "search_result": [],
         "test_path": None,
@@ -124,9 +125,13 @@ ZIMS_DATA = {
         "suggestion_string": "favicon",
         "suggestion_count": 1,
         "suggestion_result": ["favicon.png"],
-        "search_string": "favicon",
-        "search_count": 1,
-        "search_result": ["favicon.png"],
+        "search_string": "main",
+        "search_count": 2,
+        "search_result": [
+            "Wikibooks.html",
+            "FreedomBox for Communities_Offline Wikipedia "
+            + "- Wikibooks, open books for an open world.html",
+        ],
         "test_path": "FreedomBox for Communities_Offline Wikipedia - Wikibooks, "
         "open books for an open world.html",
         "test_title": "FreedomBox for Communities/Offline Wikipedia - Wikibooks, "
@@ -398,15 +403,20 @@ def test_reader_suggest_search(
     assert zim.all_entry_count == all_entry_count
     assert zim.article_count == article_count
 
+    if search_string is not None:
+        query = Query()
+        query.set_query(search_string)
+        searcher = Searcher(zim)
+        search = searcher.search(query)
+        assert search.getEstimatedMatches() == search_count
+        assert list(search.getResults(0, search_count)) == search_result
 
-# TODO: restore [search-api]
+#TODO: restore suggestion search
 #     assert (
 #         zim.get_estimated_suggestions_results_count(suggestion_string)
 #         == suggestion_count
 #     )
 #     assert list(zim.suggest(suggestion_string)) == suggestion_result
-#     assert zim.get_estimated_search_results_count(search_string) == search_count
-#     assert list(zim.search(search_string)) == search_result
 
 
 @pytest.mark.parametrize(
