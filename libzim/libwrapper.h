@@ -28,6 +28,7 @@
 #include <zim/item.h>
 #include <zim/writer/item.h>
 #include <zim/writer/contentProvider.h>
+#include <zim/search.h>
 
 struct _object;
 typedef _object PyObject;
@@ -137,6 +138,7 @@ class WArchive : public Wrapper<zim::Archive>
     WArchive() = default;
     WArchive(const std::string& filename) : Wrapper(zim::Archive(filename)) {};
     WArchive(const zim::Archive& o) : Wrapper(o) {};
+    zim::Archive& operator*() const { return *mp_base; }
 
     FORWARD(WEntry, getEntryByPath)
     FORWARD(WEntry, getEntryByTitle)
@@ -165,6 +167,39 @@ class WArchive : public Wrapper<zim::Archive>
     FORWARD(bool, hasTitleIndex)
     FORWARD(bool, hasChecksum)
     FORWARD(bool, check)
+};
+
+class WSearchResultSet : public Wrapper<zim::SearchResultSet>
+{
+  public:
+    WSearchResultSet() = default;
+    WSearchResultSet(const zim::SearchResultSet& o) : Wrapper(o) {};
+
+
+    FORWARD(zim::SearchIterator, begin)
+    FORWARD(zim::SearchIterator, end)
+    FORWARD(int, size)
+};
+
+class WSearch : public Wrapper<zim::Search>
+{
+  public:
+    WSearch() = default;
+    WSearch(zim::Search&& s) : Wrapper(std::move(s)) {};
+
+    FORWARD(int, getEstimatedMatches)
+    FORWARD(WSearchResultSet, getResults)
+};
+
+class WSearcher : public Wrapper<zim::Searcher>
+{
+  public:
+    WSearcher() = default;
+    WSearcher(const WArchive& a) : Wrapper(zim::Searcher(*a)) {};
+    WSearcher(const zim::Searcher& o) : Wrapper(o) {};
+
+    FORWARD(void, setVerbose)
+    FORWARD(WSearch, search)
 };
 
 #undef FORWARD

@@ -27,6 +27,7 @@ from typing import Generator
 from cython.operator import dereference, preincrement
 from cpython.ref cimport PyObject
 from cpython.buffer cimport PyBUF_WRITABLE
+from cython.operator import preincrement
 
 from libc.stdint cimport uint64_t
 from libcpp.string cimport string
@@ -647,92 +648,85 @@ cdef class PyArchive:
         except RuntimeError as e:
             raise KeyError(str(e))
 
-    def suggest(self, query: str, start: int = 0, end: int = 10) -> Generator[str, None, None]:
-        """ Paths of suggested entries in the archive from a title query -> Generator[str, None, None]
-
-            Parameters
-            ----------
-            query : str
-                Title query string
-            start : int
-                Iterator start (default 0)
-            end : end
-                Iterator end (default 10)
-            Returns
-            -------
-            Generator
-                Path of suggested entry """
-        # cdef wrapper.ZimSearch search = wrapper.ZimSearch(dereference(self.c_archive))
-        # search.set_suggestion_mode(True)
-        # search.set_query(query.encode('UTF-8'))
-        # search.set_range(start, end)
-
-        # cdef wrapper.search_iterator it = search.begin()
-        # while it != search.end():
-        #     yield it.get_path().decode('UTF-8')
-        #     preincrement(it)
-
-    def search(self, query: str, start: int = 0, end: int = 10) -> Generator[str, None, None]:
-        """ Paths of entries in the archive from a search query -> Generator[str, None, None]
-
-            Parameters
-            ----------
-            query : str
-                Query string
-            start : int
-                Iterator start (default 0)
-            end : end
-                Iterator end (default 10)
-            Returns
-            -------
-            Generator
-                Path of entry matching the search query """
-
-        # cdef wrapper.ZimSearch search = wrapper.ZimSearch(dereference(self.c_archive))
-        # search.set_suggestion_mode(False)
-        # search.set_query(query.encode('UTF-8'))
-        # search.set_range(start, end)
-
-        # cdef wrapper.search_iterator it = search.begin()
-        # while it != search.end():
-        #     yield it.get_path().decode('UTF-8')
-        #     preincrement(it)
-
-    def get_estimated_search_results_count(self, query: str) -> int:
-        """ Estimated number of search results for a query -> int
-
-            Parameters
-            ----------
-            query : str
-                Query string
-            Returns
-            -------
-            int
-                Estimated number of search results """
-        # cdef wrapper.ZimSearch search = wrapper.ZimSearch(dereference(self.c_archive))
-        # search.set_suggestion_mode(False)
-        # search.set_query(query.encode('UTF-8'))
-        # search.set_range(0, self.entry_count)
-
-        # return search.get_matches_estimated()
-
-    def get_estimated_suggestions_results_count(self, query: str) -> int:
-        """ Estimated number of suggestions for a query -> int
-
-            Parameters
-            ----------
-            query : str
-                Query string
-            Returns
-            -------
-            int
-                Estimated number of article suggestions """
-        # cdef wrapper.ZimSearch search = wrapper.ZimSearch(dereference(self.c_archive))
-        # search.set_suggestion_mode(True)
-        # search.set_query(query.encode('UTF-8'))
-        # search.set_range(0, self.entry_count)
-
-        # return search.get_matches_estimated()
-
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(filename={self.filename})"
+
+
+#########################
+#      Searcher         #
+#########################
+
+cdef class PyQuery:
+    cdef wrapper.Query c_query
+
+    def set_query(self, query: str):
+        self.c_query.setQuery(query.encode('utf8'))
+
+
+cdef class SearchResultSet:
+    cdef wrapper.WSearchResultSet c_resultset
+
+    @staticmethod
+    cdef from_resultset(wrapper.WSearchResultSet _resultset):
+        cdef SearchResultSet resultset = SearchResultSet()
+        resultset.c_resultset = move(_resultset)
+        return resultset
+
+    def __iter__(self):
+        cdef wrapper.SearchIterator current = self.c_resultset.begin()
+        cdef wrapper.SearchIterator end = self.c_resultset.end()
+        while current != end:
+            yield current.getPath().decode('UTF-8')
+            preincrement(current)
+
+cdef class Search:
+    cdef wrapper.WSearch c_search
+
+    # Factory functions - Currently Cython can't use classmethods
+    @staticmethod
+    cdef from_search(wrapper.WSearch _search):
+        """ Creates a python ReadArticle from a C++ Article (zim::) -> ReadArticle
+
+            Parameters
+            ----------
+            _item : Item
+                A C++ Item
+            Returns
+            ------
+            Item
+                Casted item """
+        cdef Search search = Search()
+        search.c_search = move(_search)
+        return search
+
+    def getEstimatedMatches(self):
+        return self.c_search.getEstimatedMatches()
+
+    def getResults(self, start, count):
+        return SearchResultSet.from_resultset(move(self.c_search.getResults(start, count)))
+
+
+cdef class Searcher:
+    """ Zim Archive Searcher
+
+        Attributes
+        ----------
+        *c_archive : Searcher
+            a pointer to a C++ Searcher object
+    """
+
+    cdef wrapper.WSearcher c_searcher
+
+    def __cinit__(self, object archive: PyArchive):
+        """ Constructs an Archive from full zim file path
+
+            Parameters
+            ----------
+            filename : pathlib.Path
+                Full path to a zim file """
+
+        self.c_searcher = move(wrapper.WSearcher(archive.c_archive))
+
+    def search(self, object query: PyQuery):
+        return Search.from_search(move(self.c_searcher.search(query.c_query)))
+
