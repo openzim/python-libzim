@@ -13,7 +13,7 @@
     """
 
 # flake8: noqa
-from .wrapper import Searcher, PyQuery as Query
+from .wrapper import Searcher, Query
 
 
 __all__ = ["Searcher", "Query"]

@@ -90,60 +90,60 @@ class Wrapper {
 
 #define FORWARD(OUT, NAME) template<class... ARGS> OUT NAME(ARGS&&... args) const { return mp_base->NAME(std::forward<ARGS>(args)...); }
 
-
+namespace wrapper {
 // Wrapping blob is not necessary as we can default construct a zim::Blob.
 // But it is nice to have for consistancy.
-class WBlob : public Wrapper<zim::Blob>
+class Blob : public Wrapper<zim::Blob>
 {
   public:
-    WBlob() = default;
-    WBlob(const zim::Blob& o) : Wrapper(o) {}
-    WBlob(const char* data, zim::size_type size) : Wrapper(zim::Blob(data, size)) {};
+    Blob() = default;
+    Blob(const zim::Blob& o) : Wrapper(o) {}
+    Blob(const char* data, zim::size_type size) : Wrapper(zim::Blob(data, size)) {};
     operator zim::Blob() { return *mp_base; }
     FORWARD(const char*, data)
     FORWARD(const char*, end)
     FORWARD(zim::size_type, size)
 };
 
-class WItem : public Wrapper<zim::Item>
+class Item : public Wrapper<zim::Item>
 {
   public:
-    WItem() = default;
-    WItem(const zim::Item& o) : Wrapper(o) {}
+    Item() = default;
+    Item(const zim::Item& o) : Wrapper(o) {}
     FORWARD(std::string, getTitle)
     FORWARD(std::string, getPath)
     FORWARD(std::string, getMimetype)
-    FORWARD(WBlob, getData)
+    FORWARD(wrapper::Blob, getData)
     FORWARD(zim::size_type, getSize)
     FORWARD(zim::entry_index_type, getIndex)
 };
 
-class WEntry : public Wrapper<zim::Entry>
+class Entry : public Wrapper<zim::Entry>
 {
   public:
-    WEntry() = default;
-    WEntry(const zim::Entry& o) : Wrapper(o) {}
+    Entry() = default;
+    Entry(const zim::Entry& o) : Wrapper(o) {}
     FORWARD(std::string, getTitle)
     FORWARD(std::string, getPath)
     FORWARD(bool, isRedirect)
-    FORWARD(WItem, getItem)
-    FORWARD(WItem, getRedirect)
-    FORWARD(WEntry, getRedirectEntry)
+    FORWARD(wrapper::Item, getItem)
+    FORWARD(wrapper::Item, getRedirect)
+    FORWARD(wrapper::Entry, getRedirectEntry)
     FORWARD(zim::entry_index_type, getIndex)
 };
 
-class WArchive : public Wrapper<zim::Archive>
+class Archive : public Wrapper<zim::Archive>
 {
   public:
-    WArchive() = default;
-    WArchive(const std::string& filename) : Wrapper(zim::Archive(filename)) {};
-    WArchive(const zim::Archive& o) : Wrapper(o) {};
+    Archive() = default;
+    Archive(const std::string& filename) : Wrapper(zim::Archive(filename)) {};
+    Archive(const zim::Archive& o) : Wrapper(o) {};
     zim::Archive& operator*() const { return *mp_base; }
 
-    FORWARD(WEntry, getEntryByPath)
-    FORWARD(WEntry, getEntryByTitle)
-    FORWARD(WEntry, getMainEntry)
-    FORWARD(WItem, getIllustrationItem)
+    FORWARD(wrapper::Entry, getEntryByPath)
+    FORWARD(wrapper::Entry, getEntryByTitle)
+    FORWARD(wrapper::Entry, getMainEntry)
+    FORWARD(wrapper::Item, getIllustrationItem)
     std::string getUuid() const
     { auto u = mp_base->getUuid();
       std::string uuids(u.data, u.size());
@@ -169,11 +169,11 @@ class WArchive : public Wrapper<zim::Archive>
     FORWARD(bool, check)
 };
 
-class WSearchResultSet : public Wrapper<zim::SearchResultSet>
+class SearchResultSet : public Wrapper<zim::SearchResultSet>
 {
   public:
-    WSearchResultSet() = default;
-    WSearchResultSet(const zim::SearchResultSet& o) : Wrapper(o) {};
+    SearchResultSet() = default;
+    SearchResultSet(const zim::SearchResultSet& o) : Wrapper(o) {};
 
 
     FORWARD(zim::SearchIterator, begin)
@@ -181,27 +181,27 @@ class WSearchResultSet : public Wrapper<zim::SearchResultSet>
     FORWARD(int, size)
 };
 
-class WSearch : public Wrapper<zim::Search>
+class Search : public Wrapper<zim::Search>
 {
   public:
-    WSearch() = default;
-    WSearch(zim::Search&& s) : Wrapper(std::move(s)) {};
+    Search() = default;
+    Search(zim::Search&& s) : Wrapper(std::move(s)) {};
 
     FORWARD(int, getEstimatedMatches)
-    FORWARD(WSearchResultSet, getResults)
+    FORWARD(wrapper::SearchResultSet, getResults)
 };
 
-class WSearcher : public Wrapper<zim::Searcher>
+class Searcher : public Wrapper<zim::Searcher>
 {
   public:
-    WSearcher() = default;
-    WSearcher(const WArchive& a) : Wrapper(zim::Searcher(*a)) {};
-    WSearcher(const zim::Searcher& o) : Wrapper(o) {};
+    Searcher() = default;
+    Searcher(const wrapper::Archive& a) : Wrapper(zim::Searcher(*a)) {};
+    Searcher(const zim::Searcher& o) : Wrapper(o) {};
 
     FORWARD(void, setVerbose)
-    FORWARD(WSearch, search)
+    FORWARD(wrapper::Search, search)
 };
-
+} // namespace wrapper
 #undef FORWARD
 
 
