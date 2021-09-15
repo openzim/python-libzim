@@ -42,6 +42,21 @@ import sys
 
 pybool = type(True)
 
+def create_module(name, doc, members):
+    module = ModuleType(name, doc)
+    _all = []
+    for obj in members:
+        if isinstance(obj, tuple):
+            name = obj[0]
+            obj = obj[1]
+        else:
+            name = obj.__name__
+        setattr(module, name, obj)
+        _all.append(name)
+    module.__all__ = _all
+    sys.modules[name] = module
+    return module
+
 ###############################################################################
 #   Public API to be called from C++ side                                     #
 ###############################################################################
@@ -445,27 +460,18 @@ writer_public_objects = [
     StringProvider,
     pascalize
 ]
-writer = ModuleType(writer_module_name, writer_module_doc)
-_all = []
-for obj in writer_public_objects:
-    if isinstance(obj, tuple):
-        name = obj[0]
-        obj = obj[1]
-    else:
-        name = obj.__name__
-    setattr(writer, name, obj)
-    _all.append(name)
-writer.__all__ = _all
-sys.modules[writer_module_name] = writer
+writer = create_module(writer_module_name, writer_module_doc, writer_public_objects)
 
 
 ###############################################################################
 #   Reader module                                                             #
 ###############################################################################
 
+reader_module_name = f"{__name__}.reader"
 cdef Py_ssize_t itemsize = 1
 
 cdef class ReadingBlob:
+    __module__ = reader_module_name
     cdef zim.Blob c_blob
     cdef Py_ssize_t size
     cdef int view_count
@@ -521,6 +527,7 @@ cdef class Entry:
         ----------
         *c_entry : Entry (zim::)
             a pointer to the C++ entry object """
+    __module__ = reader_module_name
     cdef zim.Entry c_entry
 
     # Factory functions - Currently Cython can't use classmethods
@@ -575,6 +582,7 @@ cdef class Item:
         ----------
         *c_entry : Entry (zim::)
             a pointer to the C++ entry object """
+    __module__ = reader_module_name
     cdef zim.Item c_item
     cdef ReadingBlob _blob
     cdef bool _haveBlob
@@ -637,6 +645,7 @@ cdef class Archive:
         _filename : pathlib.Path
             the file name of the Archive Reader object """
 
+    __module__ = reader_module_name
     cdef zim.Archive c_archive
     cdef object _filename
 
@@ -815,12 +824,34 @@ cdef class Archive:
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(filename={self.filename})"
 
+reader_module_doc = """ libzim reader module
+
+- Archive to open and read ZIM files
+- `Archive` gives access to all `Entry`
+- `Entry` gives access to `Item` (content)
+
+Usage:
+
+with Archive(fpath) as zim:
+    entry = zim.get_entry_by_path(zim.main_entry.path)
+    print(f"Article {entry.title} at {entry.path} is "
+          f"{entry.get_item().content.nbytes}b")"""
+reader_public_objects = [
+    Archive,
+    Entry,
+    Item,
+]
+reader = create_module(reader_module_name, reader_module_doc, reader_public_objects)
+
 
 ###############################################################################
 #   Search module                                                             #
 ###############################################################################
 
+search_module_name = f"{__name__}.search"
+
 cdef class Query:
+    __module__ = search_module_name
     cdef zim.Query c_query
 
     def set_query(self, query: str):
@@ -828,6 +859,7 @@ cdef class Query:
 
 
 cdef class SearchResultSet:
+    __module__ = search_module_name
     cdef zim.SearchResultSet c_resultset
 
     @staticmethod
@@ -844,6 +876,7 @@ cdef class SearchResultSet:
             preincrement(current)
 
 cdef class Search:
+    __module__ = search_module_name
     cdef zim.Search c_search
 
     # Factory functions - Currently Cython can't use classmethods
@@ -878,6 +911,7 @@ cdef class Searcher:
         *c_archive : Searcher
             a pointer to a C++ Searcher object
     """
+    __module__ = search_module_name
 
     cdef zim.Searcher c_searcher
 
@@ -893,4 +927,28 @@ cdef class Searcher:
 
     def search(self, object query: Query):
         return Search.from_search(move(self.c_searcher.search(query.c_query)))
+
+search_module_doc = """ libzim search module
+
+- Archive to open and read ZIM files
+- `Archive` gives access to all `Entry`
+- `Entry` gives access to `Item` (content)
+
+Usage:
+
+archive = Archive(fpath)
+searcher = Searcher(archive)
+query = Query()
+query.setQuery("foo")
+search = searcher.search(query)
+resultSet = search.getResult(10, 10) # get result from 10 to 20 (10 results)
+for path in resultSet:
+    print(path)"""
+search_public_objects = [
+    Searcher,
+    Query
+]
+search = create_module(search_module_name, search_module_doc, search_public_objects)
+
+__all__ = ["writer", "reader", "search"]
 
