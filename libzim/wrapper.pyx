@@ -18,7 +18,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
-cimport libzim.zim as zim
+cimport zim
 
 import os
 import enum
