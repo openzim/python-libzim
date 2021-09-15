@@ -33,9 +33,12 @@ from libcpp.memory cimport shared_ptr
 from libcpp.map cimport map
 from libcpp.utility cimport move
 
+from typing import Dict, Union
+import datetime
 import pathlib
 import traceback
-
+from types import ModuleType
+import sys
 
 pybool = type(True)
 
@@ -127,7 +130,10 @@ cdef public api:
 #   Creator module                                                            #
 ###############################################################################
 
+writer_module_name = f"{__name__}.writer"
+
 cdef class WritingBlob:
+    __module__ = writer_module_name
     cdef zim.Blob c_blob
     cdef bytes ref_content
 
@@ -145,18 +151,20 @@ cdef class WritingBlob:
 
 class Compression(enum.Enum):
     """ Compression algorithms available to create ZIM files """
+    __module__ = writer_module_name
     none = zim.CompressionType.zimcompNone
     lzma = zim.CompressionType.zimcompLzma
     zstd = zim.CompressionType.zimcompZstd
 
 
 class Hint(enum.Enum):
+    __module__ = writer_module_name
     COMPRESS = zim.HintKeys.COMPRESS
     FRONT_ARTICLE = zim.HintKeys.FRONT_ARTICLE
 
 
 
-cdef class Creator:
+cdef class _Creator:
     """ Zim Creator
 
         Attributes
@@ -167,6 +175,7 @@ cdef class Creator:
             path to create the ZIM file at
         _started : bool
             flag if the creator has started """
+    __module__ = writer_module_name
 
     cdef zim.ZimCreator c_creator
     cdef object _filename
@@ -287,6 +296,168 @@ cdef class Creator:
     @property
     def filename(self):
         return self._filename
+
+class ContentProvider:
+    __module__ = writer_module_name
+    def __init__(self):
+        self.generator = None
+
+    def get_size(self) -> int:
+        """Size of get_data's result in bytes"""
+        raise NotImplementedError("get_size must be implemented.")
+
+    def feed(self) -> WritingBlob:
+        """Blob(s) containing the complete content of the article.
+        Must return an empty blob to tell writer no more content has to be written.
+        Sum(size(blobs)) must be equals to `self.get_size()`
+        """
+        if self.generator is None:
+            self.generator = self.gen_blob()
+
+        try:
+            # We have to keep a ref to _blob to be sure gc do not del it while cpp is
+            # using it
+            self._blob = next(self.generator)
+        except StopIteration:
+            self._blob = WritingBlob("")
+
+        return self._blob
+
+    def gen_blob(self):
+        """Generator yielding blobs for the content of the article"""
+        raise NotImplementedError("gen_blob (ro feed) must be implemented")
+
+
+class StringProvider(ContentProvider):
+    __module__ = writer_module_name
+    def __init__(self, content):
+        super().__init__()
+        self.content = content.encode("UTF-8") if isinstance(content, str) else content
+
+    def get_size(self):
+        return len(self.content)
+
+    def gen_blob(self):
+        yield WritingBlob(self.content)
+
+
+class FileProvider(ContentProvider):
+    __module__ = writer_module_name
+    def __init__(self, filepath):
+        super().__init__()
+        self.filepath = filepath
+        self.size = os.path.getsize(self.filepath)
+
+    def get_size(self):
+        return self.size
+
+    def gen_blob(self):
+        bsize = 1048576  # 1MiB chunk
+        with open(self.filepath, "rb") as fh:
+            res = fh.read(bsize)
+            while res:
+                yield WritingBlob(res)
+                res = fh.read(bsize)
+
+
+class BaseWritingItem:
+    """Item stub to override
+
+    Pass a subclass of it to Creator.add_item()"""
+    __module__ = writer_module_name
+
+    def __init__(self):
+        self._blob = None
+
+    def get_path(self) -> str:
+        """Full path of item"""
+        raise NotImplementedError("get_path must be implemented.")
+
+    def get_title(self) -> str:
+        """Item title. Might be indexed and used in suggestions"""
+        raise NotImplementedError("get_title must be implemented.")
+
+    def get_mimetype(self) -> str:
+        """MIME-type of the item's content."""
+        raise NotImplementedError("get_mimetype must be implemented.")
+
+    def get_contentprovider(self) -> ContentProvider:
+        """ContentProvider containing the complete content of the item"""
+        raise NotImplementedError("get_contentprovider must be implemented.")
+
+    def get_hints(self) -> Dict[Hint, int]:
+        raise NotImplementedError("get_hints must be implemented.")
+
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}(path={self.get_path()}, "
+            f"title={self.get_title()})"
+        )
+
+
+def pascalize(keyword: str):
+    """Converts python case to pascal case.
+    example: long_description -> LongDescription"""
+    return "".join(keyword.title().split("_"))
+
+
+class Creator(_Creator):
+    __module__ = writer_module_name
+    def config_compression(self, compression: Compression):
+        if not isinstance(compression, Compression):
+            compression = getattr(Compression, compression.lower())
+        return super().config_compression(compression)
+
+    def add_metadata(
+        self, name: str, content: Union[str, bytes, datetime.date, datetime.datetime]
+    ):
+        name = pascalize(name)
+        if name == "Date" and isinstance(content, (datetime.date, datetime.datetime)):
+            content = content.strftime("%Y-%m-%d").encode("UTF-8")
+        if isinstance(content, str):
+            content = content.encode("UTF-8")
+        super().add_metadata(name=name, content=content)
+
+    def __repr__(self) -> str:
+        return f"Creator(filename={self.filename})"
+
+writer_module_doc = """ libzim writer module
+- Creator to create ZIM files
+- Item to store ZIM articles metadata
+- ContentProvider to store an Item's content
+- Blob to store actual content
+
+Usage:
+with Creator(pathlib.Path("myfile.zim")) as creator:
+    creator.configVerbose(False)
+    creator.add_metadata("Name", b"my name")
+    # example
+    creator.add_item(MyItemSubclass(path, title, mimetype, content)
+    creator.setMainPath(path)"""
+writer_public_objects = [
+    Creator,
+    Compression,
+    ('Blob', WritingBlob),
+    Hint,
+    ('Item', BaseWritingItem),
+    ContentProvider,
+    FileProvider,
+    StringProvider,
+    pascalize
+]
+writer = ModuleType(writer_module_name, writer_module_doc)
+_all = []
+for obj in writer_public_objects:
+    if isinstance(obj, tuple):
+        name = obj[0]
+        obj = obj[1]
+    else:
+        name = obj.__name__
+    setattr(writer, name, obj)
+    _all.append(name)
+writer.__all__ = _all
+sys.modules[writer_module_name] = writer
+
 
 ###############################################################################
 #   Reader module                                                             #
