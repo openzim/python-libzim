@@ -39,77 +39,9 @@ import traceback
 
 pybool = type(True)
 
-#########################
-#         Blob          #
-#########################
-
-cdef class WritingBlob:
-    cdef zim.Blob c_blob
-    cdef bytes ref_content
-
-    def __cinit__(self, content):
-        if isinstance(content, str):
-            self.ref_content = content.encode('UTF-8')
-        else:
-            self.ref_content = content
-        self.c_blob = move(zim.Blob(<char *> self.ref_content, len(self.ref_content)))
-
-    def size(self):
-        return self.c_blob.size()
-
-cdef Py_ssize_t itemsize = 1
-
-cdef class ReadingBlob:
-    cdef zim.Blob c_blob
-    cdef Py_ssize_t size
-    cdef int view_count
-
-    # Factory functions - Currently Cython can't use classmethods
-    @staticmethod
-    cdef from_blob(zim.Blob blob):
-        """ Creates a python Blob from a C++ Blob (zim::) -> Blob
-
-            Parameters
-            ----------
-            blob : Blob
-                A C++ Entry
-            Returns
-            ------
-            Blob
-                Casted blob """
-        cdef ReadingBlob rblob = ReadingBlob()
-        rblob.c_blob = move(blob)
-        rblob.size = rblob.c_blob.size()
-        rblob.view_count = 0
-        return rblob
-
-    def __dealloc__(self):
-        if self.view_count:
-            raise RuntimeError("Blob has views")
-
-    def __getbuffer__(self, Py_buffer *buffer, int flags):
-        if flags&PyBUF_WRITABLE:
-            raise BufferError("Cannot create writable memoryview on readonly data")
-        buffer.obj = self
-        buffer.buf = <void*>self.c_blob.data()
-        buffer.len = self.size
-        buffer.readonly = 1
-        buffer.format = 'c'
-        buffer.internal = NULL                  # see References
-        buffer.itemsize = itemsize
-        buffer.ndim = 1
-        buffer.shape = &self.size
-        buffer.strides = &itemsize
-        buffer.suboffsets = NULL                # for pointer arrays only
-
-        self.view_count += 1
-
-    def __releasebuffer__(self, Py_buffer *buffer):
-        self.view_count -= 1
-
-
-#------- pure virtual methods --------
-
+###############################################################################
+#   Public API to be called from C++ side                                     #
+###############################################################################
 
 # This call a python method and return a python object.
 cdef object call_method(object obj, string method):
@@ -189,6 +121,26 @@ cdef public api:
             error[0] = traceback.format_exc().encode('UTF-8')
 
         return ret
+
+
+###############################################################################
+#   Creator module                                                            #
+###############################################################################
+
+cdef class WritingBlob:
+    cdef zim.Blob c_blob
+    cdef bytes ref_content
+
+    def __cinit__(self, content):
+        if isinstance(content, str):
+            self.ref_content = content.encode('UTF-8')
+        else:
+            self.ref_content = content
+        self.c_blob = move(zim.Blob(<char *> self.ref_content, len(self.ref_content)))
+
+    def size(self):
+        return self.c_blob.size()
+
 
 
 class Compression(enum.Enum):
@@ -336,9 +288,60 @@ cdef class Creator:
     def filename(self):
         return self._filename
 
-########################
-#         Entry        #
-########################
+###############################################################################
+#   Reader module                                                             #
+###############################################################################
+
+cdef Py_ssize_t itemsize = 1
+
+cdef class ReadingBlob:
+    cdef zim.Blob c_blob
+    cdef Py_ssize_t size
+    cdef int view_count
+
+    # Factory functions - Currently Cython can't use classmethods
+    @staticmethod
+    cdef from_blob(zim.Blob blob):
+        """ Creates a python Blob from a C++ Blob (zim::) -> Blob
+
+            Parameters
+            ----------
+            blob : Blob
+                A C++ Entry
+            Returns
+            ------
+            Blob
+                Casted blob """
+        cdef ReadingBlob rblob = ReadingBlob()
+        rblob.c_blob = move(blob)
+        rblob.size = rblob.c_blob.size()
+        rblob.view_count = 0
+        return rblob
+
+    def __dealloc__(self):
+        if self.view_count:
+            raise RuntimeError("Blob has views")
+
+    def __getbuffer__(self, Py_buffer *buffer, int flags):
+        if flags&PyBUF_WRITABLE:
+            raise BufferError("Cannot create writable memoryview on readonly data")
+        buffer.obj = self
+        buffer.buf = <void*>self.c_blob.data()
+        buffer.len = self.size
+        buffer.readonly = 1
+        buffer.format = 'c'
+        buffer.internal = NULL                  # see References
+        buffer.itemsize = itemsize
+        buffer.ndim = 1
+        buffer.shape = &self.size
+        buffer.strides = &itemsize
+        buffer.suboffsets = NULL                # for pointer arrays only
+
+        self.view_count += 1
+
+    def __releasebuffer__(self, Py_buffer *buffer):
+        self.view_count -= 1
+
 
 cdef class Entry:
     """ Entry in a Zim archive
@@ -452,12 +455,6 @@ cdef class Item:
     def __repr__(self):
         return f"{self.__class__.__name__}(url={self.path}, title={self.title})"
 
-
-
-
-#########################
-#        Archive        #
-#########################
 
 cdef class Archive:
     """ Zim Archive Reader
@@ -648,9 +645,9 @@ cdef class Archive:
         return f"{self.__class__.__name__}(filename={self.filename})"
 
 
-#########################
-#      Searcher         #
-#########################
+###############################################################################
+#   Search module                                                             #
+###############################################################################
 
 cdef class Query:
     cdef zim.Query c_query
