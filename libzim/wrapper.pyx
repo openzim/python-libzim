@@ -17,6 +17,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+# Make our libzim module a package by setting a __path__
+# There is no real path here, but it will be passed to our module finder.
+__path__ = "___LIBZIM___"
 
 cimport zim
 
@@ -39,6 +42,7 @@ import pathlib
 import traceback
 from types import ModuleType
 import sys
+import importlib
 
 pybool = type(True)
 
@@ -949,6 +953,33 @@ search_public_objects = [
     Query
 ]
 search = create_module(search_module_name, search_module_doc, search_public_objects)
+
+
+class ModuleLoader(importlib.abc.Loader):
+    # Create our module. Easy, just return the created module
+    @staticmethod
+    def create_module(spec):
+        return {
+            'libzim.writer': writer,
+            'libzim.reader': reader,
+            'libzim.search': search
+        }.get(spec.name, None)
+
+    @staticmethod
+    def exec_module(module):
+        # Nothing to execute for our already existing module.
+        # But we need to define exec_module to tell python not use the legacy import system.
+        pass
+
+class ModuleFinder(importlib.abc.MetaPathFinder):
+    def find_spec(self, fullname, path, target=None):
+        if path != __path__:
+            # This is not our problem, let import mechanism continue
+            return None
+        return importlib.machinery.ModuleSpec(fullname, ModuleLoader)
+
+# register finder for our submodules
+sys.meta_path.insert(0, ModuleFinder())
 
 __all__ = ["writer", "reader", "search"]
 
