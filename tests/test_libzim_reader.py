@@ -11,6 +11,7 @@ import pytest
 import libzim.writer
 from libzim.reader import Archive
 from libzim.search import Searcher, Query
+from libzim.suggestion import SuggestionSearcher
 
 
 # expected data for tests ZIMs (see `all_zims`)
@@ -122,9 +123,12 @@ ZIMS_DATA = {
         "entry_count": 60,
         "all_entry_count": 75,
         "article_count": 0,
-        "suggestion_string": "favicon",
+        "suggestion_string": "Free",
         "suggestion_count": 1,
-        "suggestion_result": ["favicon.png"],
+        "suggestion_result": [
+            "FreedomBox for Communities_Offline Wikipedia "
+            + "- Wikibooks, open books for an open world.html"
+        ],
         "search_string": "main",
         "search_count": 2,
         "search_result": [
@@ -411,12 +415,11 @@ def test_reader_suggest_search(
         assert search.getEstimatedMatches() == search_count
         assert list(search.getResults(0, search_count)) == search_result
 
-#TODO: restore suggestion search
-#     assert (
-#         zim.get_estimated_suggestions_results_count(suggestion_string)
-#         == suggestion_count
-#     )
-#     assert list(zim.suggest(suggestion_string)) == suggestion_result
+    if suggestion_string is not None:
+        suggestion_searcher = SuggestionSearcher(zim)
+        suggestion = suggestion_searcher.suggest(suggestion_string)
+        assert suggestion.getEstimatedMatches() == suggestion_count
+        assert list(suggestion.getResults(0, suggestion_count)) == suggestion_result
 
 
 @pytest.mark.parametrize(

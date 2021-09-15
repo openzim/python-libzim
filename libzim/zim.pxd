@@ -176,3 +176,32 @@ cdef extern from "libwrapper.h" namespace "wrapper":
         SearchIterator begin()
         SearchIterator end()
         int size()
+
+    cdef cppclass SuggestionItem:
+        string getPath()
+        string getTitle()
+        string getSnippet()
+        bool hasSnippet()
+
+    cdef cppclass SuggestionIterator:
+        SuggestionIterator()
+        SuggestionIterator operator++()
+        bint operator==(SuggestionIterator)
+        bint operator!=(SuggestionIterator)
+        SuggestionItem getSuggestionItem()
+        Entry getEntry()
+
+    cdef cppclass SuggestionSearcher:
+        SuggestionSearcher()
+        SuggestionSearcher(const Archive& archive) except +
+        setVerbose(bool verbose)
+        SuggestionSearch suggest(string query) except +
+
+    cdef cppclass SuggestionSearch:
+        int getEstimatedMatches() except +
+        SuggestionResultSet getResults(int start, int count) except +
+
+    cdef cppclass SuggestionResultSet:
+        SuggestionIterator begin()
+        SuggestionIterator end()
+        int size()
