@@ -10,7 +10,7 @@ import pytest
 
 import libzim.writer
 from libzim.reader import Archive
-from libzim.searcher import Searcher, Query
+from libzim.search import Searcher, Query
 
 
 # expected data for tests ZIMs (see `all_zims`)
