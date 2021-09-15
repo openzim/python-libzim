@@ -34,7 +34,7 @@
 ObjWrapper::ObjWrapper(PyObject* obj)
   : m_obj(obj)
 {
-  if (import_libzim__wrapper()) {
+  if (import_libzim()) {
     std::cerr << "Error executing import_libzim!\n";
     throw std::runtime_error("Error executing import_libzim");
   }
