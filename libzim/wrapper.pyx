@@ -955,6 +955,99 @@ search_public_objects = [
 search = create_module(search_module_name, search_module_doc, search_public_objects)
 
 
+###############################################################################
+#   Suggestion module                                                         #
+###############################################################################
+
+suggestion_module_name = f"{__name__}.suggestion"
+
+cdef class SuggestionResultSet:
+    __module__ = suggestion_module_name
+    cdef zim.SuggestionResultSet c_resultset
+
+    @staticmethod
+    cdef from_resultset(zim.SuggestionResultSet _resultset):
+        cdef SuggestionResultSet resultset = SuggestionResultSet()
+        resultset.c_resultset = move(_resultset)
+        return resultset
+
+    def __iter__(self):
+        cdef zim.SuggestionIterator current = self.c_resultset.begin()
+        cdef zim.SuggestionIterator end = self.c_resultset.end()
+        while current != end:
+            yield current.getSuggestionItem().getPath().decode('UTF-8')
+            preincrement(current)
+
+cdef class SuggestionSearch:
+    __module__ = suggestion_module_name
+    cdef zim.SuggestionSearch c_search
+
+    # Factory functions - Currently Cython can't use classmethods
+    @staticmethod
+    cdef from_search(zim.SuggestionSearch _search):
+        """ Creates a python ReadArticle from a C++ Article (zim::) -> ReadArticle
+
+            Parameters
+            ----------
+            _item : Item
+                A C++ Item
+            Returns
+            ------
+            Item
+                Casted item """
+        cdef SuggestionSearch search = SuggestionSearch()
+        search.c_search = move(_search)
+        return search
+
+    def getEstimatedMatches(self):
+        return self.c_search.getEstimatedMatches()
+
+    def getResults(self, start, count):
+        return SuggestionResultSet.from_resultset(move(self.c_search.getResults(start, count)))
+
+
+cdef class SuggestionSearcher:
+    """ Zim Archive SuggestionSearcher
+
+        Attributes
+        ----------
+        *c_archive : Searcher
+            a pointer to a C++ Searcher object
+    """
+    __module__ = suggestion_module_name
+
+    cdef zim.SuggestionSearcher c_searcher
+
+    def __cinit__(self, object archive: Archive):
+        """ Constructs an Archive from full zim file path
+
+            Parameters
+            ----------
+            filename : pathlib.Path
+                Full path to a zim file """
+
+        self.c_searcher = move(zim.SuggestionSearcher(archive.c_archive))
+
+    def suggest(self, query: str):
+        return SuggestionSearch.from_search(move(self.c_searcher.suggest(query.encode('utf8'))))
+
+suggestion_module_doc = """ libzim suggestion module
+
+Usage:
+
+archive = Archive(fpath)
+suggestion_searcher = SuggestionSearcher(archive)
+suggestion = suggestion searcher.suggest("foo")
+resultSet = suggestion.getResult(10, 10) # get result from 10 to 20 (10 results)
+for path in resultSet:
+    print(path)"""
+suggestion_public_objects = [
+    SuggestionSearcher
+]
+suggestion = create_module(suggestion_module_name, suggestion_module_doc, suggestion_public_objects)
+
+
+
 class ModuleLoader(importlib.abc.Loader):
     # Create our module. Easy, just return the created module
     @staticmethod
@@ -962,7 +1055,8 @@ class ModuleLoader(importlib.abc.Loader):
         return {
             'libzim.writer': writer,
             'libzim.reader': reader,
-            'libzim.search': search
+            'libzim.search': search,
+            'libzim.suggestion': suggestion
         }.get(spec.name, None)
 
     @staticmethod
@@ -981,5 +1075,5 @@ class ModuleFinder(importlib.abc.MetaPathFinder):
 # register finder for our submodules
 sys.meta_path.insert(0, ModuleFinder())
 
-__all__ = ["writer", "reader", "search"]
+__all__ = ["writer", "reader", "search", "suggestion"]
 

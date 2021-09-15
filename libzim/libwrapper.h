@@ -29,6 +29,7 @@
 #include <zim/writer/item.h>
 #include <zim/writer/contentProvider.h>
 #include <zim/search.h>
+#include <zim/suggestion.h>
 
 struct _object;
 typedef _object PyObject;
@@ -200,6 +201,71 @@ class Searcher : public Wrapper<zim::Searcher>
 
     FORWARD(void, setVerbose)
     FORWARD(wrapper::Search, search)
+};
+
+class SuggestionItem : public Wrapper<zim::SuggestionItem>
+{
+  public:
+    SuggestionItem() = default;
+    SuggestionItem(const zim::SuggestionItem& o) : Wrapper(o) {};
+
+    FORWARD(std::string, getTitle)
+    FORWARD(std::string, getPath)
+    FORWARD(std::string, getSnippet)
+    FORWARD(bool, hasSnippet)
+};
+
+class SuggestionIterator : public Wrapper<zim::SuggestionIterator>
+{
+  public:
+    SuggestionIterator() = default;
+    SuggestionIterator(const zim::SuggestionIterator& o) : Wrapper(o) {};
+    zim::SuggestionIterator& operator*() const { return *mp_base; }
+
+    FORWARD(bool, operator==)
+    bool operator!=(const wrapper::SuggestionIterator& it) const {
+      return *mp_base != *it;
+    }
+    FORWARD(wrapper::SuggestionIterator, operator++)
+    SuggestionItem getSuggestionItem() const {
+      return mp_base->operator*();
+    }
+//    FORWARD(wrapper::SuggestionItem, operator*)
+    FORWARD(wrapper::Entry, getEntry)
+};
+
+class SuggestionResultSet : public Wrapper<zim::SuggestionResultSet>
+{
+  public:
+    SuggestionResultSet() = default;
+    SuggestionResultSet(const zim::SuggestionResultSet& o) : Wrapper(o) {};
+
+
+    FORWARD(wrapper::SuggestionIterator, begin)
+    FORWARD(wrapper::SuggestionIterator, end)
+    FORWARD(int, size)
+};
+
+
+class SuggestionSearch : public Wrapper<zim::SuggestionSearch>
+{
+  public:
+    SuggestionSearch() = default;
+    SuggestionSearch(zim::SuggestionSearch&& s) : Wrapper(std::move(s)) {};
+
+    FORWARD(int, getEstimatedMatches)
+    FORWARD(wrapper::SuggestionResultSet, getResults)
+};
+
+class SuggestionSearcher : public Wrapper<zim::SuggestionSearcher>
+{
+  public:
+    SuggestionSearcher() = default;
+    SuggestionSearcher(const wrapper::Archive& a) : Wrapper(zim::SuggestionSearcher(*a)) {};
+    SuggestionSearcher(const zim::SuggestionSearcher& o) : Wrapper(o) {};
+
+    FORWARD(void, setVerbose)
+    FORWARD(wrapper::SuggestionSearch, suggest)
 };
 } // namespace wrapper
 #undef FORWARD
