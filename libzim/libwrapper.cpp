@@ -23,7 +23,7 @@
 #include <Python.h>
 #include "libwrapper.h"
 
-#include "wrapper_api.h"
+#include "libzim_api.h"
 
 #include <cstdlib>
 #include <iostream>
