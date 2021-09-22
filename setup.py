@@ -63,23 +63,27 @@ class fixed_build_ext(build_ext):
             self.rpath[:] = []
 
 
+include_dirs = ["libzim"]
+library_dirs = []
 # Check for the CPP Libzim library headers in expected directory
-if not (BASE_DIR / LIBZIM_INCLUDE_DIR / "zim/zim.h").exists():
+if (BASE_DIR / LIBZIM_INCLUDE_DIR / "zim" / "zim.h").exists() and
+   (BASE_DIR / LIBZIM_LIB_DIR / LIBZIM_DYLIB).exists():
     print(
-        f"[!] Warning: Couldn't find zim/*.h in ./{LIBZIM_INCLUDE_DIR}!\n"
-        f"    Hint: install from source using from https://github.com/openzim/libzim\n"
-        f"          or download a prebuilt release's headers into ./include/zim/*.h\n"
-        f"          (or set CFLAGS='-I<library_path>/include')"
+        f"Found lizim library and headers in local directory.\n"
+        f"We will use them to compile python-libzim.\n"
+        f"Hint : If you don't want to use them (and use \"system\" installed one), remove them."
     )
-
-# Check for the CPP Libzim shared library in expected directory or system paths
-if not ((BASE_DIR / LIBZIM_LIBRARY_DIR / LIBZIM_DYLIB).exists() or find_library("zim")):
-    print(
-        f"[!] Warning: Couldn't find {LIBZIM_DYLIB} in ./{LIBZIM_LIBRARY_DIR} or system"
-        f"    Hint: install from source using https://github.com/openzim/libzim\n"
-        f"          or download a prebuilt {LIBZIM_DYLIB} release into ./lib.\n"
-        f"          (or set LDFLAGS='-L<library_path>/lib/[x86_64-linux-gnu]')"
-    )
+    include_dirs.append("include")
+    library_dirs = ["lib"]
+else:
+    # Check for library.
+    if not find_library("zim"):
+        print(
+            "[!] The libzim library cannot be found.\n"
+            "Please verify that the library is correctly installed of and can be found."
+        )
+        sys.exit(1)
+    print("Using system installed library. We are assuming CFLAGS/LDFLAGS are correctly set.")
 
 
 def get_long_description():
@@ -89,9 +93,9 @@ def get_long_description():
 wrapper_extension = Extension(
     name="libzim",
     sources=["libzim/libzim.pyx", "libzim/libwrapper.cpp"],
-    include_dirs=["libzim", LIBZIM_INCLUDE_DIR],
+    include_dir=include_dirs,
     libraries=["zim"],
-    library_dirs=[LIBZIM_LIBRARY_DIR],
+    library_dirs=library_dirs,
     extra_compile_args=["-std=c++11", "-Wall", "-Wextra"],
     language="c++",
     define_macros=[("CYTHON_TRACE", "1"), ("CYTHON_TRACE_NOGIL", "1")]
