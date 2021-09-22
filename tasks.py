@@ -37,7 +37,9 @@ def lint(c):
 
 
 if __name__ == "__main__":
-    print("""\
+    print(
+        """\
 This file is not intended to be directly run.
 Install invoke and run the `invoke` command line.
-""")
+"""
+    )
