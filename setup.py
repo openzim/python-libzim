@@ -35,15 +35,15 @@ on environment variables side.
 
 
 import os
-import sys
 import platform
-from pathlib import Path
+import sys
 from ctypes.util import find_library
+from pathlib import Path
 from textwrap import dedent
 
-from setuptools import setup, Extension
 from Cython.Build import cythonize
 from Cython.Distutils.build_ext import new_build_ext as build_ext
+from setuptools import Extension, setup
 
 base_dir = Path(__file__).parent
 
@@ -56,6 +56,7 @@ else:
     define_macros = []
 
 if platform.system() == "Darwin":
+
     class fixed_build_ext(build_ext):
         """Workaround for rpath bug in distutils for OSX."""
 
@@ -68,32 +69,45 @@ if platform.system() == "Darwin":
                 for ext in self.extensions:
                     ext.extra_link_args.append("-Wl,-rpath," + path)
             self.rpath[:] = []
-    cmdclass={"build_ext": fixed_build_ext}
+
+    cmdclass = {"build_ext": fixed_build_ext}
     dyn_lib_ext = "dylib"
 else:
-    cmdclass={"build_ext": build_ext}
+    cmdclass = {"build_ext": build_ext}
     dyn_lib_ext = "so"
 
 include_dirs = ["libzim"]
 library_dirs = []
 # Check for the CPP Libzim library headers in expected directory
-if (base_dir / "include" / "zim" / "zim.h").exists() and (base_dir / "lib" / f"libzim.{dyn_lib_ext}").exists():
-    print(dedent("""\
+header_file = base_dir / "include" / "zim" / "zim.h"
+lib_file = base_dir / "lib" / f"libzim.{dyn_lib_ext}"
+if header_file.exists() and lib_file.exists():
+    print(
+        dedent(
+            """\
         Found lizim library and headers in local directory.
         We will use them to compile python-libzim.
         Hint : If you don't want to use them (and use "system" installed one), remove them.
-    """))
+    """
+        )
+    )
     include_dirs.append("include")
     library_dirs = ["lib"]
 else:
     # Check for library.
     if not find_library("zim"):
-        print(dedent("""\
+        print(
+            dedent(
+                """\
             "[!] The libzim library cannot be found.
             "Please verify that the library is correctly installed of and can be found.
-        """))
+        """
+            )
+        )
         sys.exit(1)
-    print("Using system installed library. We are assuming CFLAGS/LDFLAGS are correctly set.")
+    print(
+        "Using system installed library. We are assuming CFLAGS/LDFLAGS are correctly set."
+    )
 
 wrapper_extension = Extension(
     name="libzim",
