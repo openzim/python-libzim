@@ -37,7 +37,6 @@ from setuptools import setup, Extension
 from Cython.Build import cythonize
 from Cython.Distutils.build_ext import new_build_ext as build_ext
 
-GITHUB_URL = "https://github.com/openzim/python-libzim"
 BASE_DIR = Path(__file__).parent
 LIBZIM_INCLUDE_DIR = "include"  # the libzim C++ header src dir (containing zim/*.h)
 LIBZIM_LIBRARY_DIR = "lib"  # the libzim .so binary lib dir (containing libzim.so)
@@ -86,10 +85,6 @@ else:
     print("Using system installed library. We are assuming CFLAGS/LDFLAGS are correctly set.")
 
 
-def get_long_description():
-    return (BASE_DIR / "README.md").read_text()
-
-
 wrapper_extension = Extension(
     name="libzim",
     sources=["libzim/libzim.pyx", "libzim/libwrapper.cpp"],
@@ -108,58 +103,7 @@ if PROFILE:
     compiler_directives.update({"linetrace": "True"})
 
 setup(
-    # Basic information about libzim module
-    name="libzim",
-    version="1.0.0.dev0",
-    url=GITHUB_URL,
-    project_urls={
-        "Source": GITHUB_URL,
-        "Bug Tracker": f"{GITHUB_URL}/issues",
-        "Changelog": f"{GITHUB_URL}/releases",
-        "Documentation": f"{GITHUB_URL}/blob/master/README.md",
-        "Donate": "https://www.kiwix.org/en/support-us/",
-    },
-    author="Monadical Inc.",
-    author_email="jdc@monadical.com",
-    license="GPL-3.0-or-later",
-    description="A python-facing API for creating and interacting with ZIM files",
-    long_description=get_long_description(),
-    long_description_content_type="text/markdown",
-    python_requires=">=3.6",
     # Content
-    packages=["libzim"],
     cmdclass={"build_ext": fixed_build_ext},
     ext_modules=cythonize([wrapper_extension], compiler_directives=compiler_directives),
-    # Packaging
-    include_package_data=True,
-    zip_safe=False,
-    # Extra
-    classifiers=[
-        "Development Status :: 3 - Alpha",
-        "Topic :: Utilities",
-        "Topic :: Software Development :: Libraries",
-        "Topic :: Software Development :: Libraries :: Python Modules",
-        "Topic :: System :: Archiving",
-        "Topic :: System :: Archiving :: Compression",
-        "Topic :: System :: Archiving :: Mirroring",
-        "Topic :: System :: Archiving :: Backup",
-        "Topic :: Internet :: WWW/HTTP",
-        "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
-        "Topic :: Sociology :: History",
-        "Intended Audience :: Developers",
-        "Intended Audience :: Education",
-        "Intended Audience :: End Users/Desktop",
-        "Intended Audience :: Information Technology",
-        "Intended Audience :: System Administrators",
-        "Programming Language :: Cython",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        # "Typing :: Typed",
-        "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
-        "Natural Language :: English",
-        "Operating System :: OS Independent",
-    ],
 )
