@@ -278,7 +278,7 @@ cdef class _Creator:
         with nogil:
             self.c_creator.addItem(item)
 
-    def add_metadata(self, str name, bytes content, str mimetype = "text/plain"):
+    def add_metadata(self, str name, bytes content, str mimetype = "text/plain;charset=utf-8"):
         if not self._started:
             raise RuntimeError("ZimCreator not started")
 
