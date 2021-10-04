@@ -162,7 +162,7 @@ class Archive : public Wrapper<zim::Archive>
     FORWARD(bool, hasIllustration)
     FORWARD(bool, hasEntryByPath)
     FORWARD(bool, hasEntryByTitle)
-    FORWARD(bool, is_multiPart)
+    FORWARD(bool, isMultiPart)
     FORWARD(bool, hasNewNamespaceScheme)
     FORWARD(bool, hasFulltextIndex)
     FORWARD(bool, hasTitleIndex)
