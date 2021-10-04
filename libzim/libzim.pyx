@@ -771,7 +771,7 @@ cdef class Archive:
 
     @property
     def is_multipart(self) -> bool:
-        return self.c_archive.is_multiPart()
+        return self.c_archive.isMultiPart()
 
     @property
     def has_fulltext_index(self) -> bool:

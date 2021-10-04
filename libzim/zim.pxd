@@ -155,7 +155,7 @@ cdef extern from "libwrapper.h" namespace "wrapper":
         # set[unsigned int] getIllustrationSizes() except +
         bool hasEntryByPath(string path) except +
         bool hasEntryByTitle(string title) except +
-        bool is_multiPart() except +
+        bool isMultiPart() except +
         bool hasNewNamespaceScheme() except +
         bool hasFulltextIndex() except +
         bool hasTitleIndex() except +
