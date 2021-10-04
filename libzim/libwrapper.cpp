@@ -165,3 +165,18 @@ zim::writer::Hints WriterItemWrapper::getHints() const
 {
   return callMethodOnObj<zim::writer::Hints>(m_obj, "get_hints");
 }
+
+zim::Compression comp_from_int(int compValue)
+{
+  switch(compValue) {
+    case 0:
+      return zim::Compression::None;
+    case 1:
+      return zim::Compression::Lzma;
+    case 2:
+      return zim::Compression::Zstd;
+    default:
+      // Should we raise a error ?
+      return zim::Compression::None;
+  }
+}

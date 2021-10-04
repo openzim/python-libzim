@@ -315,4 +315,13 @@ class ContentProviderWrapper : public zim::writer::ContentProvider, private ObjW
     zim::Blob feed() override;
 };
 
+
+// Small helpers
+
+// The current stable cython version (0.29.24) doesn't support scoped enum (next version >30 will be).
+// The cython generated __Pyx_PyInt_As_enum__zim_3a__3a_Compression(PyOobject*)
+// try to do some strange bit shifting of `zim::Compression` which doesn't compile.
+// Let's provide our own function for this
+zim::Compression comp_from_int(int compValue);
+
 #endif // LIBZIM_LIBWRAPPER_H
