@@ -31,12 +31,12 @@ cdef extern from "zim/zim.h" namespace "zim":
     ctypedef uint64_t size_type
     ctypedef uint64_t offset_type
     ctypedef uint32_t entry_index_type
-    ctypedef enum CompressionType:
-        zimcompNone
-        zimcompZip
-        zimcompBzip2
-        zimcompLzma
-        zimcompZstd
+    cdef enum Compression:
+        # We need to declare something here to be syntaxically correct
+        # but we don't use those values (even if they are valid).
+        None "zim::Compression::None"
+        Lzma "zim::Compression::Lzma"
+        Zstd "zim::Compression::Zstd"
 
 
 cdef extern from "zim/writer/item.h" namespace "zim::writer":
@@ -54,7 +54,7 @@ cdef extern from "zim/writer/contentProvider.h" namespace "zim::writer":
 cdef extern from "zim/writer/creator.h" namespace "zim::writer":
     cdef cppclass ZimCreator "zim::writer::Creator":
         void configVerbose(bint verbose)
-        void configCompression(CompressionType comptype)
+        void configCompression(Compression compression)
         void configClusterSize(int size)
         void configIndexing(bint indexing, string language)
         void configNbWorkers(int nbWorkers)
@@ -92,6 +92,8 @@ cdef extern from "libwrapper.h":
         ContentProviderWrapper(PyObject* obj) except +
     cdef cppclass WriterItemWrapper:
         WriterItemWrapper(PyObject* obj) except +
+
+    Compression comp_from_int(int)
 
 
 # Import the cpp wrappers.

@@ -171,9 +171,11 @@ cdef class WritingBlob:
 class Compression(enum.Enum):
     """ Compression algorithms available to create ZIM files """
     __module__ = writer_module_name
-    none = zim.CompressionType.zimcompNone
-    lzma = zim.CompressionType.zimcompLzma
-    zstd = zim.CompressionType.zimcompZstd
+    # We don't care of the exact value. The function comp_from_int will do the right
+    # conversion to zim::Compression
+    none = 0
+    lzma = 1
+    zstd = 2
 
 
 class Hint(enum.Enum):
@@ -223,10 +225,10 @@ cdef class _Creator:
         self.c_creator.configVerbose(verbose)
         return self
 
-    def config_compression(self, comptype: Compression) -> Creator:
+    def config_compression(self, compression: Compression) -> Creator:
         if self._started:
             raise RuntimeError("ZimCreator started")
-        self.c_creator.configCompression(comptype.value)
+        self.c_creator.configCompression(zim.comp_from_int(compression.value))
         return self
 
     def config_clustersize(self, int size) -> Creator:
