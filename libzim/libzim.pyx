@@ -19,7 +19,15 @@
 
 # Make our libzim module a package by setting a __path__
 # There is no real path here, but it will be passed to our module finder.
-__path__ = "___LIBZIM___"
+"""openZIM's file format library binding
+
+- libzim.writer to create ZIM file with Creator
+- libzim.reader to open ZIM file as Archive
+- libzim.search to search on an Archive
+- libzim.suggestion to retrieve suggestions on an Archive
+
+https://openzim.org"""
+__path__ = []
 
 cimport zim
 
@@ -1148,10 +1156,10 @@ class ModuleLoader(importlib.abc.Loader):
 
 class ModuleFinder(importlib.abc.MetaPathFinder):
     def find_spec(self, fullname, path, target=None):
-        if path != __path__:
-            # This is not our problem, let import mechanism continue
-            return None
-        return importlib.machinery.ModuleSpec(fullname, ModuleLoader)
+        if fullname.startswith("libzim."):
+            return importlib.machinery.ModuleSpec(fullname, ModuleLoader)
+        # This is not our problem, let import mechanism continue
+        return None
 
 # register finder for our submodules
 sys.meta_path.insert(0, ModuleFinder())
