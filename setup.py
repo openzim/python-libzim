@@ -33,13 +33,11 @@ If you have installed libzim from the packages, you probably don't have anything
 on environment variables side.
 """
 
-
 import os
 import platform
 import sys
 from ctypes.util import find_library
 from pathlib import Path
-from textwrap import dedent
 
 from Cython.Build import cythonize
 from Cython.Distutils.build_ext import new_build_ext as build_ext
@@ -83,13 +81,10 @@ header_file = base_dir / "include" / "zim" / "zim.h"
 lib_file = base_dir / "lib" / f"libzim.{dyn_lib_ext}"
 if header_file.exists() and lib_file.exists():
     print(
-        dedent(
-            """\
-        Found lizim library and headers in local directory.
-        We will use them to compile python-libzim.
-        Hint : If you don't want to use them (and use "system" installed one), remove them.
-    """
-        )
+        "Found lizim library and headers in local directory. "
+        "We will use them to compile python-libzim.\n"
+        "Hint : If you don't want to use them "
+        "(and use “system” installed one), remove them."
     )
     include_dirs.append("include")
     library_dirs = ["lib"]
@@ -97,16 +92,13 @@ else:
     # Check for library.
     if not find_library("zim"):
         print(
-            dedent(
-                """\
-            "[!] The libzim library cannot be found.
-            "Please verify that the library is correctly installed of and can be found.
-        """
-            )
+            "[!] The libzim library cannot be found.\n"
+            "Please verify that the library is correctly installed and can be found."
         )
         sys.exit(1)
     print(
-        "Using system installed library. We are assuming CFLAGS/LDFLAGS are correctly set."
+        "Using system installed library. "
+        "We are assuming CFLAGS/LDFLAGS are correctly set."
     )
 
 wrapper_extension = Extension(
