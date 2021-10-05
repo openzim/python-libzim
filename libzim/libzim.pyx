@@ -36,17 +36,19 @@ from libcpp.memory cimport shared_ptr
 from libcpp.map cimport map
 from libcpp.utility cimport move
 
-from typing import Dict, Union
+from typing import Dict, Union, Generator, List, Set, Iterator
 import datetime
 import pathlib
 import traceback
 from types import ModuleType
 import sys
-import importlib
+import importlib.abc
 
 pybool = type(True)
+pyint = type(1)
 
 def create_module(name, doc, members):
+    """Create/define a module for name and docstring, populated by members"""
     module = ModuleType(name, doc)
     _all = []
     for obj in members:
@@ -65,7 +67,7 @@ def create_module(name, doc, members):
 #   Public API to be called from C++ side                                     #
 ###############################################################################
 
-# This call a python method and return a python object.
+# This calls a python method and returns a python object.
 cdef object call_method(object obj, string method):
     func = getattr(obj, method.decode('UTF-8'))
     return func()
@@ -98,6 +100,7 @@ cdef public api:
         return move(zim.Blob())
 
     zim.ContentProvider* contentprovider_cy_call_fct(object obj, string method, string *error) with gil:
+        """Lookup and execute a pure virtual method on object returning a ContentProvider"""
         try:
             contentProvider = call_method(obj, method)
             if not contentProvider:
@@ -128,12 +131,14 @@ cdef public api:
         return 0
 
     map[zim.HintKeys, uint64_t] convertToCppHints(dict hintsDict):
+        """C++ Hints from Python dict"""
         cdef map[zim.HintKeys, uint64_t] ret;
         for key, value in hintsDict.items():
             ret[key.value] = <uint64_t>value
         return ret
 
     map[zim.HintKeys, uint64_t] hints_cy_call_fct(object obj, string method, string* error) with gil:
+        """Lookup and execute a pure virtual method on object returning Hints"""
         cdef map[zim.HintKeys, uint64_t] ret;
         try:
             func = getattr(obj, method.decode('UTF-8'))
@@ -156,7 +161,7 @@ cdef class WritingBlob:
     cdef zim.Blob c_blob
     cdef bytes ref_content
 
-    def __cinit__(self, content):
+    def __cinit__(self, content: Union[str, bytes]):
         if isinstance(content, str):
             self.ref_content = content.encode('UTF-8')
         else:
@@ -169,7 +174,7 @@ cdef class WritingBlob:
 
 
 class Compression(enum.Enum):
-    """ Compression algorithms available to create ZIM files """
+    """Compression algorithms available to create ZIM files"""
     __module__ = writer_module_name
     # We don't care of the exact value. The function comp_from_int will do the right
     # conversion to zim::Compression
@@ -186,7 +191,7 @@ class Hint(enum.Enum):
 
 
 cdef class _Creator:
-    """ Zim Creator
+    """ZIM Creator
 
         Attributes
         ----------
@@ -195,7 +200,7 @@ cdef class _Creator:
         _filename: pathlib.Path
             path to create the ZIM file at
         _started : bool
-            flag if the creator has started """
+            flag if the creator has started"""
     __module__ = writer_module_name
 
     cdef zim.ZimCreator c_creator
@@ -208,60 +213,78 @@ cdef class _Creator:
         # fail early if destination is not writable
         parent = self._filename.expanduser().resolve().parent
         if not os.access(parent, mode=os.W_OK, effective_ids=(os.access in os.supports_effective_ids)):
-            raise IOError("Unable to write ZIM file at {}".format(self._filename))
+            raise IOError(f"Unable to write ZIM file at {self._filename}")
 
     def __init__(self, filename: pathlib.Path):
-        """ Constructs a File from full zim file path
+        """Constructs a Creator for a ZIM file at path
 
             Parameters
             ----------
             filename : pathlib.Path
-                Full path to a zim file """
+                Full path to a zim file"""
         pass
 
-    def config_verbose(self, bool verbose) -> Creator:
+    def config_verbose(self, bool verbose: bool) -> Creator:
+        """Set creator verbosity (inside libzim). Default is off"""
         if self._started:
-            raise RuntimeError("ZimCreator started")
+            raise RuntimeError("Creator started")
         self.c_creator.configVerbose(verbose)
         return self
 
     def config_compression(self, compression: Compression) -> Creator:
+        """Set compression algorithm to use. Check libzim for default
+
+            Fall 2021 default: zstd"""
         if self._started:
-            raise RuntimeError("ZimCreator started")
+            raise RuntimeError("Creator started")
         self.c_creator.configCompression(zim.comp_from_int(compression.value))
         return self
 
-    def config_clustersize(self, int size) -> Creator:
+    def config_clustersize(self, int size: pyint) -> Creator:
+        """Set size of created clusters. Check libzim for default
+
+            libzim will store at most this value per cluster before creating
+            another one.
+            Fall 2021 default: 2Mib"""
         if self._started:
-            raise RuntimeError("ZimCreator started")
+            raise RuntimeError("Creator started")
         self.c_creator.configClusterSize(size)
         return self
 
-    def config_indexing(self, bool indexing, str language) -> Creator:
+    def config_indexing(self, bool indexing: bool, str language: str) -> Creator:
+        """Configure fulltext indexing feature
+
+            indexing: whether to create a full-text index of the content
+            language: language (ISO-639-3 code) to assume content in during indexation"""
         if self._started:
-            raise RuntimeError("ZimCreator started")
-        self.c_creator.configIndexing(indexing, language.encode('utf8'))
+            raise RuntimeError("Creator started")
+        self.c_creator.configIndexing(indexing, language.encode('UTF-8'))
         return self
 
-    def config_nbworkers(self, int nbWorkers) -> Creator:
+    def config_nbworkers(self, int nbWorkers: pyint) -> Creator:
+        """Number of thread to use for internal worker"""
         if self._started:
-            raise RuntimeError("ZimCreator started")
+            raise RuntimeError("Creator started")
         self.c_creator.configNbWorkers(nbWorkers)
         return self
 
-    def set_mainpath(self, str mainPath) -> Creator:
-        self.c_creator.setMainPath(mainPath.encode('utf8'))
+    def set_mainpath(self, str mainPath: str) -> Creator:
+        """Set path of the main entry"""
+        self.c_creator.setMainPath(mainPath.encode('UTF-8'))
         return self
 
-    def add_illustration(self, size: int, content):
+    def add_illustration(self, int size: pyint, content: bytes):
+        """Add a PNG illustration to Archive
+
+            https://wiki.openzim.org/wiki/Metadata"""
         cdef string _content = content
         self.c_creator.addIllustration(size, _content)
 
 #    def set_uuid(self, uuid) -> Creator:
 #        self.c_creator.setUuid(uuid)
 
-    def add_item(self, WriterItem not None):
-        """ Add an item to the Creator object.
+    def add_item(self, writer_item not None: BaseWritingItem):
+        """Add an item to the Creator object.
 
             Parameters
             ----------
@@ -270,39 +293,46 @@ cdef class _Creator:
             Raises
             ------
                 RuntimeError
-                    If the ZimCreator was already finalized """
+                    If the ZimCreator was already finalized"""
         if not self._started:
-            raise RuntimeError("ZimCreator not started")
+            raise RuntimeError("Creator not started")
 
         # Make a shared pointer to ZimArticleWrapper from the ZimArticle object
         cdef shared_ptr[zim.WriterItem] item = shared_ptr[zim.WriterItem](
-            new zim.WriterItemWrapper(<PyObject*>WriterItem));
+            new zim.WriterItemWrapper(<PyObject*>writer_item));
         with nogil:
             self.c_creator.addItem(item)
 
-    def add_metadata(self, str name, bytes content, str mimetype = "text/plain;charset=utf-8"):
-        if not self._started:
-            raise RuntimeError("ZimCreator not started")
+    def add_metadata(self, str name: str, bytes content: bytes, str mimetype: str = "text/plain;charset=UTF-8"):
+        """Add metadata entry to Archive
 
-        cdef string _name = name.encode('utf8')
+        https://wiki.openzim.org/wiki/Metadata"""
+        if not self._started:
+            raise RuntimeError("Creator not started")
+
+        cdef string _name = name.encode('UTF-8')
         cdef string _content = content
-        cdef string _mimetype = mimetype.encode('utf8')
+        cdef string _mimetype = mimetype.encode('UTF-8')
         with nogil:
             self.c_creator.addMetadata(_name, _content, _mimetype)
 
-    def add_redirection(self, str path, str title, str targetPath, dict hints):
-        if not self._started:
-            raise RuntimeError("ZimCreator not started")
+    def add_redirection(self, str path: str, str title: str, str targetPath: str, dict hints: Dict[Hint, pyint]):
+        """Add redirection entry to Archive
 
-        cdef string _path = path.encode('utf8')
-        cdef string _title = title.encode('utf8')
-        cdef string _targetPath = targetPath.encode('utf8')
+            https://wiki.openzim.org/wiki/ZIM_file_format#Redirect_Entry
+            """
+        if not self._started:
+            raise RuntimeError("Creator not started")
+
+        cdef string _path = path.encode('UTF-8')
+        cdef string _title = title.encode('UTF-8')
+        cdef string _targetPath = targetPath.encode('UTF-8')
         cdef map[zim.HintKeys, uint64_t] _hints = convertToCppHints(hints)
         with nogil:
             self.c_creator.addRedirection(_path, _title, _targetPath, _hints)
 
     def __enter__(self):
-        cdef string _path = str(self._filename).encode('utf8')
+        cdef string _path = str(self._filename).encode('UTF-8')
         with nogil:
             self.c_creator.startZimCreation(_path)
         self._started = True
@@ -315,7 +345,7 @@ cdef class _Creator:
         self._started = False
 
     @property
-    def filename(self):
+    def filename(self) -> pathlib.Path:
         return self._filename
 
 class ContentProvider:
@@ -323,7 +353,7 @@ class ContentProvider:
     def __init__(self):
         self.generator = None
 
-    def get_size(self) -> int:
+    def get_size(self) -> pyint:
         """Size of get_data's result in bytes"""
         raise NotImplementedError("get_size must be implemented.")
 
@@ -344,35 +374,37 @@ class ContentProvider:
 
         return self._blob
 
-    def gen_blob(self):
+    def gen_blob(self) -> Generator[WritingBlob, None, None]:
         """Generator yielding blobs for the content of the article"""
         raise NotImplementedError("gen_blob (ro feed) must be implemented")
 
 
 class StringProvider(ContentProvider):
+    """ContentProvider for a single encoded-or-not UTF-8 string"""
     __module__ = writer_module_name
-    def __init__(self, content):
+    def __init__(self, content: Union[str, bytes]):
         super().__init__()
         self.content = content.encode("UTF-8") if isinstance(content, str) else content
 
-    def get_size(self):
+    def get_size(self) -> pyint:
         return len(self.content)
 
-    def gen_blob(self):
+    def gen_blob(self) -> Generator[WritingBlob, None, None]:
         yield WritingBlob(self.content)
 
 
 class FileProvider(ContentProvider):
+    """ContentProvider for a file using its local path"""
     __module__ = writer_module_name
-    def __init__(self, filepath):
+    def __init__(self, filepath: Union[pathlib.Path, str]):
         super().__init__()
         self.filepath = filepath
         self.size = os.path.getsize(self.filepath)
 
-    def get_size(self):
+    def get_size(self) -> pyint:
         return self.size
 
-    def gen_blob(self):
+    def gen_blob(self) -> Generator[WritingBlob, None, None]:
         bsize = 1048576  # 1MiB chunk
         with open(self.filepath, "rb") as fh:
             res = fh.read(bsize)
@@ -406,7 +438,8 @@ class BaseWritingItem:
         """ContentProvider containing the complete content of the item"""
         raise NotImplementedError("get_contentprovider must be implemented.")
 
-    def get_hints(self) -> Dict[Hint, int]:
+    def get_hints(self) -> Dict[Hint, pyint]:
+        """Dict of Hint: value informing Creator how to handle this item"""
         raise NotImplementedError("get_hints must be implemented.")
 
     def __repr__(self) -> str:
@@ -418,6 +451,7 @@ class BaseWritingItem:
 
 def pascalize(keyword: str):
     """Converts python case to pascal case.
+
     example: long_description -> LongDescription"""
     return "".join(keyword.title().split("_"))
 
@@ -442,19 +476,22 @@ class Creator(_Creator):
     def __repr__(self) -> str:
         return f"Creator(filename={self.filename})"
 
-writer_module_doc = """ libzim writer module
+writer_module_doc = """libzim writer module
 - Creator to create ZIM files
 - Item to store ZIM articles metadata
 - ContentProvider to store an Item's content
 - Blob to store actual content
+- StringProvider to store an Item's content from a string
+- FileProvider to store an Item's content from a file path
+- Compression to select the algorithm to compress ZIM archive with
 
 Usage:
 with Creator(pathlib.Path("myfile.zim")) as creator:
-    creator.configVerbose(False)
+    creator.config_verbose(False)
     creator.add_metadata("Name", b"my name")
     # example
     creator.add_item(MyItemSubclass(path, title, mimetype, content)
-    creator.setMainPath(path)"""
+    creator.set_mainpath(path)"""
 writer_public_objects = [
     Creator,
     Compression,
@@ -485,7 +522,7 @@ cdef class ReadingBlob:
     # Factory functions - Currently Cython can't use classmethods
     @staticmethod
     cdef from_blob(zim.Blob blob):
-        """ Creates a python Blob from a C++ Blob (zim::) -> Blob
+        """Creates a python Blob from a C++ Blob (zim::) -> Blob
 
             Parameters
             ----------
@@ -494,7 +531,7 @@ cdef class ReadingBlob:
             Returns
             ------
             Blob
-                Casted blob """
+                Casted blob"""
         cdef ReadingBlob rblob = ReadingBlob()
         rblob.c_blob = move(blob)
         rblob.size = rblob.c_blob.size()
@@ -527,19 +564,19 @@ cdef class ReadingBlob:
 
 
 cdef class Entry:
-    """ Entry in a Zim archive
+    """Entry in a ZIM archive
 
         Attributes
         ----------
         *c_entry : Entry (zim::)
-            a pointer to the C++ entry object """
+            a pointer to the C++ entry object"""
     __module__ = reader_module_name
     cdef zim.Entry c_entry
 
     # Factory functions - Currently Cython can't use classmethods
     @staticmethod
     cdef from_entry(zim.Entry ent):
-        """ Creates a python Entry from a C++ Entry (zim::) -> Entry
+        """Creates a python Entry from a C++ Entry (zim::) -> Entry
 
             Parameters
             ----------
@@ -548,7 +585,7 @@ cdef class Entry:
             Returns
             ------
             Entry
-                Casted entry """
+                Casted entry"""
         cdef Entry entry = Entry()
         entry.c_entry = move(ent)
         return entry
@@ -562,15 +599,17 @@ cdef class Entry:
         return self.c_entry.getPath().decode("UTF-8", "strict")
 
     @property
-    def _index(self) -> int:
+    def _index(self) -> pyint:
+        """Internal index in Archive"""
         return self.c_entry.getIndex()
 
     @property
-    def is_redirect(self) -> bool:
-        """ Whether entry is a redirect -> bool """
+    def is_redirect(self) -> pybool:
+        """Whether entry is a redirect"""
         return self.c_entry.isRedirect()
 
     def get_redirect_entry(self) -> Entry:
+        """Target of this entry, if a redirect"""
         cdef zim.Entry entry = move(self.c_entry.getRedirectEntry())
         return Entry.from_entry(move(entry))
 
@@ -578,16 +617,16 @@ cdef class Entry:
         cdef zim.Item item = move(self.c_entry.getItem(True))
         return Item.from_item(move(item))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}(url={self.path}, title={self.title})"
 
 cdef class Item:
-    """ Item in a Zim archive
+    """Item in a ZIM archive
 
         Attributes
         ----------
         *c_entry : Entry (zim::)
-            a pointer to the C++ entry object """
+            a pointer to the C++ entry object"""
     __module__ = reader_module_name
     cdef zim.Item c_item
     cdef ReadingBlob _blob
@@ -596,7 +635,7 @@ cdef class Item:
     # Factory functions - Currently Cython can't use classmethods
     @staticmethod
     cdef from_item(zim.Item _item):
-        """ Creates a python ReadArticle from a C++ Article (zim::) -> ReadArticle
+        """Creates a python ReadArticle from a C++ Article (zim::) -> ReadArticle
 
             Parameters
             ----------
@@ -605,7 +644,7 @@ cdef class Item:
             Returns
             ------
             Item
-                Casted item """
+                Casted item"""
         cdef Item item = Item()
         item.c_item = move(_item)
         return item
@@ -630,43 +669,44 @@ cdef class Item:
         return self.c_item.getMimetype().decode('UTF-8')
 
     @property
-    def _index(self) -> int:
+    def _index(self) -> pyint:
+        """Internal index in Archive"""
         return self.c_item.getIndex()
 
     @property
-    def size(self) -> int:
+    def size(self) -> pyint:
         return self.c_item.getSize()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}(url={self.path}, title={self.title})"
 
 
 cdef class Archive:
-    """ Zim Archive Reader
+    """ZIM Archive Reader
 
         Attributes
         ----------
         *c_archive : Archive
             a pointer to a C++ Archive object
         _filename : pathlib.Path
-            the file name of the Archive Reader object """
+            the file name of the Archive Reader object"""
 
     __module__ = reader_module_name
     cdef zim.Archive c_archive
     cdef object _filename
 
     def __cinit__(self, object filename: pathlib.Path):
-        """ Constructs an Archive from full zim file path
+        """Constructs an Archive from full zim file path
 
             Parameters
             ----------
             filename : pathlib.Path
-                Full path to a zim file """
+                Full path to a zim file"""
 
         self.c_archive = move(zim.Archive(str(filename).encode('UTF-8')))
         self._filename = pathlib.Path(self.c_archive.getFilename().decode("UTF-8", "strict"))
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> pybool:
         if Archive not in type(self).mro() or Archive not in type(other).mro():
             return False
         try:
@@ -679,15 +719,16 @@ cdef class Archive:
         return self._filename
 
     @property
-    def filesize(self) -> int:
-        """ total size of ZIM file (or files if split """
+    def filesize(self) -> pyint:
+        """Total size of ZIM file (or files if split"""
         return self.c_archive.getFilesize()
 
-    def has_entry_by_path(self, path: str) -> bool:
+    def has_entry_by_path(self, path: str) -> pybool:
+        """Whether Archive has an entry with this path"""
         return self.c_archive.hasEntryByPath(<string>path.encode('UTF-8'))
 
     def get_entry_by_path(self, path: str) -> Entry:
-        """ Entry from a path -> Entry
+        """Entry from a path -> Entry
 
             Parameters
             ----------
@@ -700,7 +741,7 @@ cdef class Archive:
             Raises
             ------
                 KeyError
-                    If an entry with the provided path is not found in the archive """
+                    If an entry with the provided path is not found in the archive"""
         cdef zim.Entry entry
         try:
             entry = move(self.c_archive.getEntryByPath(<string>path.encode('UTF-8')))
@@ -708,11 +749,12 @@ cdef class Archive:
             raise KeyError(str(e))
         return Entry.from_entry(move(entry))
 
-    def has_entry_by_title(self, title: str) -> bool:
+    def has_entry_by_title(self, title: str) -> pybool:
+        """Whether Archive has en entry with this title"""
         return self.c_archive.hasEntryByTitle(<string>title.encode('UTF-8'))
 
     def get_entry_by_title(self, title: str) -> Entry:
-        """ Entry from a title -> Entry
+        """Entry from a title -> Entry
 
             Parameters
             ----------
@@ -725,7 +767,7 @@ cdef class Archive:
             Raises
             ------
                 KeyError
-                    If an entry with the provided title is not found in the archive """
+                    If an entry with the provided title is not found in the archive"""
         cdef zim.Entry entry
         try:
             entry = move(self.c_archive.getEntryByTitle(<string>title.encode('UTF-8')))
@@ -734,12 +776,12 @@ cdef class Archive:
         return Entry.from_entry(move(entry))
 
     @property
-    def metadata_keys(self):
-        """ List[str] of Metadata present in this archive """
+    def metadata_keys(self) -> List[str]:
+        """List of Metadata keys present in this archive"""
         return [key.decode("UTF-8", "strict") for key in self.c_archive.getMetadataKeys()]
 
     def get_metadata(self, name: str) -> bytes:
-        """ A Metadata's content -> bytes
+        """A Metadata's content -> bytes
 
             Parameters
             ----------
@@ -748,78 +790,106 @@ cdef class Archive:
             Returns
             -------
             bytes
-                Metadata entry's content. Can be of any type. """
+                Metadata entry's content. Can be of any type."""
         return bytes(self.c_archive.getMetadata(name.encode('UTF-8')))
 
-    def _get_entry_by_id(self, entry_id: int) -> Entry:
+    def _get_entry_by_id(self, entry_id: pyint) -> Entry:
+        """Entry from an entry Id"""
         cdef zim.Entry entry = move(self.c_archive.getEntryByPath(<zim.entry_index_type>entry_id))
         return Entry.from_entry(move(entry))
 
     @property
-    def has_main_entry(self) -> bool:
+    def has_main_entry(self) -> pybool:
+        """Whether Archive has a Main Entry set"""
         return self.c_archive.hasMainEntry()
 
     @property
     def main_entry(self) -> Entry:
+        """Main Entry of the Archive"""
         return Entry.from_entry(move(self.c_archive.getMainEntry()))
 
     @property
     def uuid(self) -> UUID:
+        """Archive UUID"""
         return UUID(self.c_archive.getUuid().hex())
 
     @property
-    def has_new_namespace_scheme(self) -> bool:
+    def has_new_namespace_scheme(self) -> pybool:
+        """Whether Archive is using new “namespaceless” namespace scheme"""
         return self.c_archive.hasNewNamespaceScheme()
 
     @property
-    def is_multipart(self) -> bool:
+    def is_multipart(self) -> pybool:
+        """Whether Archive is multipart (split over multiple files)"""
         return self.c_archive.isMultiPart()
 
     @property
-    def has_fulltext_index(self) -> bool:
+    def has_fulltext_index(self) -> pybool:
+        """Whether Archive includes a full-text index"""
         return self.c_archive.hasFulltextIndex()
 
     @property
-    def has_title_index(self) -> bool:
+    def has_title_index(self) -> pybool:
+        """Whether Archive includes a Title index"""
         return self.c_archive.hasTitleIndex()
 
     @property
     def has_checksum(self) -> str:
+        """Whether Archive includes a checksum of its content"""
         return self.c_archive.hasChecksum()
 
     @property
     def checksum(self) -> str:
+        """Archive's checksum"""
         return self.c_archive.getChecksum().decode("UTF-8", "strict")
 
-    def check(self) -> bool:
-        """ whether Archive has a checksum anf file verifies it """
+    def check(self) -> pybool:
+        """Whether Archive has a checksum and file verifies it"""
         return self.c_archive.check()
 
     @property
-    def entry_count(self) -> int:
+    def entry_count(self) -> pyint:
+        """Number of user entries in Archive
+
+            If Archive doesn't support “user entries”
+            then this returns `all_entry_count`"""
         return self.c_archive.getEntryCount()
 
     @property
-    def all_entry_count(self) -> int:
+    def all_entry_count(self) -> pyint:
+        """Number of entries in Archive.
+
+            Total number of entries in the archive, including internal entries
+            created by libzim itself, metadata, indexes, etc."""
         return self.c_archive.getAllEntryCount()
 
     @property
-    def article_count(self) -> int:
+    def article_count(self) -> pyint:
+        """Number of “articles” in the Archive
+
+            If Archive has_new_namespace_scheme then this is the
+            number of Entry with “FRONT_ARTICLE” Hint.
+
+            Otherwise, this is the number or entries in “A” namespace.
+
+            Note: a few ZIM created during transition might have new scheme but no
+            listing, resulting in this returning all entries."""
         return self.c_archive.getArticleCount()
 
-    def get_illustration_sizes(self):
+    def get_illustration_sizes(self) -> Set[pyint]:
+        """Sizes for which an illustration is available (@1 scale only)"""
         # FIXME: using static shortcut instead of libzim's
         # cdef set[unsigned int] sizes = self.c_archive.getIllustrationSizes()
         return {48}
 
-    def has_illustration(self, size: int = None) -> bool:
-        """ whether Archive has an Illustration metadata for this size """
+    def has_illustration(self, size: pyint = None) -> pybool:
+        """Whether Archive has an illustration metadata for this size"""
         if size is not None:
             return self.c_archive.hasIllustration(size)
         return self.c_archive.hasIllustration()
 
-    def get_illustration_item(self, size: int = None) -> Item:
-        """ Illustration Metadata Item for this size """
+    def get_illustration_item(self, size: pyint = None) -> Item:
+        """Illustration Metadata Item for this size"""
         try:
             if size is not None:
                 return Item.from_item(move(self.c_archive.getIllustrationItem(size)))
@@ -830,11 +900,11 @@ cdef class Archive:
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(filename={self.filename})"
 
-reader_module_doc = """ libzim reader module
+reader_module_doc = """libzim reader module
 
-- Archive to open and read ZIM files
-- `Archive` gives access to all `Entry`
-- `Entry` gives access to `Item` (content)
+- Archive to open and read ZIM files (gives access to all `Entry`)
+- Entry knows about redirections, exposes path and title and gives access to `Item`
+- Item holds the content and metadata
 
 Usage:
 
@@ -857,14 +927,16 @@ reader = create_module(reader_module_name, reader_module_doc, reader_public_obje
 search_module_name = f"{__name__}.search"
 
 cdef class Query:
+    """ZIM agnostic Query-builder to use with a Searcher"""
     __module__ = search_module_name
     cdef zim.Query c_query
 
     def set_query(self, query: str):
-        self.c_query.setQuery(query.encode('utf8'))
+        self.c_query.setQuery(query.encode('UTF-8'))
 
 
 cdef class SearchResultSet:
+    """Iterator over a Search result: entry paths"""
     __module__ = search_module_name
     cdef zim.SearchResultSet c_resultset
 
@@ -874,7 +946,8 @@ cdef class SearchResultSet:
         resultset.c_resultset = move(_resultset)
         return resultset
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
+        """Entry paths found in Archive for Search"""
         cdef zim.SearchIterator current = self.c_resultset.begin()
         cdef zim.SearchIterator end = self.c_resultset.end()
         while current != end:
@@ -882,13 +955,14 @@ cdef class SearchResultSet:
             preincrement(current)
 
 cdef class Search:
+    """Search request over a ZIM Archive"""
     __module__ = search_module_name
     cdef zim.Search c_search
 
     # Factory functions - Currently Cython can't use classmethods
     @staticmethod
     cdef from_search(zim.Search _search):
-        """ Creates a python ReadArticle from a C++ Article (zim::) -> ReadArticle
+        """Creates a python ReadArticle from a C++ Article (zim::) -> ReadArticle
 
             Parameters
             ----------
@@ -897,59 +971,59 @@ cdef class Search:
             Returns
             ------
             Item
-                Casted item """
+                Casted item"""
         cdef Search search = Search()
         search.c_search = move(_search)
         return search
 
-    def getEstimatedMatches(self):
+    def getEstimatedMatches(self) -> pyint:
+        """Estimated number of results in Archive for the search"""
         return self.c_search.getEstimatedMatches()
 
-    def getResults(self, start, count):
+    def getResults(self, start: pyint, count: pyint) -> SearchResultSet:
+        """Iterator over Entry paths found in Archive for the search"""
         return SearchResultSet.from_resultset(move(self.c_search.getResults(start, count)))
 
 
 cdef class Searcher:
-    """ Zim Archive Searcher
+    """ZIM Archive Searcher
 
         Attributes
         ----------
         *c_archive : Searcher
-            a pointer to a C++ Searcher object
-    """
+            a pointer to a C++ Searcher object"""
     __module__ = search_module_name
 
     cdef zim.Searcher c_searcher
 
     def __cinit__(self, object archive: Archive):
-        """ Constructs an Archive from full zim file path
+        """Constructs an Archive from full zim file path
 
             Parameters
             ----------
             filename : pathlib.Path
-                Full path to a zim file """
+                Full path to a zim file"""
 
         self.c_searcher = move(zim.Searcher(archive.c_archive))
 
-    def search(self, object query: Query):
+    def search(self, object query: Query) -> Search:
+        """Search object for a query of this Searcher's ZIM Archive"""
         return Search.from_search(move(self.c_searcher.search(query.c_query)))
 
-search_module_doc = """ libzim search module
+search_module_doc = """libzim search module
 
-- Archive to open and read ZIM files
-- `Archive` gives access to all `Entry`
-- `Entry` gives access to `Item` (content)
+- Query to prepare a query from a string
+- Searcher to perform a search over a libzim.reader.Archive
 
 Usage:
 
-archive = Archive(fpath)
+archive = libzim.reader.Archive(fpath)
 searcher = Searcher(archive)
 query = Query()
 query.setQuery("foo")
 search = searcher.search(query)
-resultSet = search.getResult(10, 10) # get result from 10 to 20 (10 results)
-for path in resultSet:
-    print(path)"""
+for path in search.getResult(10, 10) # get result from 10 to 20 (10 results)
+    print(path, archive.get_entry_by_path(path).title)"""
 search_public_objects = [
     Searcher,
     Query
@@ -964,6 +1038,7 @@ search = create_module(search_module_name, search_module_doc, search_public_obje
 suggestion_module_name = f"{__name__}.suggestion"
 
 cdef class SuggestionResultSet:
+    """Iterator over a SuggestionSearch result: entry paths"""
     __module__ = suggestion_module_name
     cdef zim.SuggestionResultSet c_resultset
 
@@ -973,7 +1048,8 @@ cdef class SuggestionResultSet:
         resultset.c_resultset = move(_resultset)
         return resultset
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
+        """Entry paths found in Archive for SuggestionSearch"""
         cdef zim.SuggestionIterator current = self.c_resultset.begin()
         cdef zim.SuggestionIterator end = self.c_resultset.end()
         while current != end:
@@ -987,7 +1063,7 @@ cdef class SuggestionSearch:
     # Factory functions - Currently Cython can't use classmethods
     @staticmethod
     cdef from_search(zim.SuggestionSearch _search):
-        """ Creates a python ReadArticle from a C++ Article (zim::) -> ReadArticle
+        """Creates a python ReadArticle from a C++ Article (zim::) -> ReadArticle
 
             Parameters
             ----------
@@ -996,53 +1072,56 @@ cdef class SuggestionSearch:
             Returns
             ------
             Item
-                Casted item """
+                Casted item"""
         cdef SuggestionSearch search = SuggestionSearch()
         search.c_search = move(_search)
         return search
 
-    def getEstimatedMatches(self):
+    def getEstimatedMatches(self) -> pyint:
+        """Estimated number of results in Archive for the suggestion search"""
         return self.c_search.getEstimatedMatches()
 
-    def getResults(self, start, count):
+    def getResults(self, start: pyint, count: pyint) -> SuggestionResultSet:
+        """Iterator over Entry paths found in Archive for the suggestion search"""
         return SuggestionResultSet.from_resultset(move(self.c_search.getResults(start, count)))
 
 
 cdef class SuggestionSearcher:
-    """ Zim Archive SuggestionSearcher
+    """ZIM Archive SuggestionSearcher
 
         Attributes
         ----------
         *c_archive : Searcher
-            a pointer to a C++ Searcher object
-    """
+            a pointer to a C++ Searcher object"""
     __module__ = suggestion_module_name
 
     cdef zim.SuggestionSearcher c_searcher
 
     def __cinit__(self, object archive: Archive):
-        """ Constructs an Archive from full zim file path
+        """Constructs an Archive from full zim file path
 
             Parameters
             ----------
             filename : pathlib.Path
-                Full path to a zim file """
+                Full path to a zim file"""
 
         self.c_searcher = move(zim.SuggestionSearcher(archive.c_archive))
 
-    def suggest(self, query: str):
-        return SuggestionSearch.from_search(move(self.c_searcher.suggest(query.encode('utf8'))))
+    def suggest(self, query: str) -> SuggestionSearch:
+        """SuggestionSearch object for a query of this SuggestionSearcher's ZIM Archive"""
+        return SuggestionSearch.from_search(move(self.c_searcher.suggest(query.encode('UTF-8'))))
 
-suggestion_module_doc = """ libzim suggestion module
+suggestion_module_doc = """libzim suggestion module
+
+- SuggestionSearcher to perform a suggestion search over a libzim.reader.Archive
 
 Usage:
 
 archive = Archive(fpath)
 suggestion_searcher = SuggestionSearcher(archive)
-suggestion = suggestion searcher.suggest("foo")
-resultSet = suggestion.getResult(10, 10) # get result from 10 to 20 (10 results)
-for path in resultSet:
-    print(path)"""
+suggestions = suggestion_searcher.suggest("foo")
+for path in suggestion.getResult(10, 10) # get result from 10 to 20 (10 results)
+    print(path, archive.get_entry_by_path(path).title)"""
 suggestion_public_objects = [
     SuggestionSearcher
 ]
