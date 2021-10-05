@@ -21,7 +21,7 @@ from cpython.ref cimport PyObject
 
 from libc.stdint cimport uint32_t, uint64_t
 from libcpp cimport bool
-from libcpp.memory cimport shared_ptr, unique_ptr
+from libcpp.memory cimport shared_ptr
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libcpp.map cimport map
@@ -31,21 +31,12 @@ cdef extern from "zim/zim.h" namespace "zim":
     ctypedef uint64_t size_type
     ctypedef uint64_t offset_type
     ctypedef uint32_t entry_index_type
-    ctypedef enum CompressionType:
-        zimcompNone
-        zimcompZip
-        zimcompBzip2
-        zimcompLzma
-        zimcompZstd
-
-
-cdef extern from "zim/blob.h" namespace "zim":
-    cdef cppclass Blob:
-        Blob() except +
-        Blob(const char* data, uint64_t size) except +
-        const char* data() except +
-        const char* end() except +
-        uint64_t size() except +
+    cdef enum Compression:
+        # We need to declare something here to be syntaxically correct
+        # but we don't use those values (even if they are valid).
+        None "zim::Compression::None"
+        Lzma "zim::Compression::Lzma"
+        Zstd "zim::Compression::Zstd"
 
 
 cdef extern from "zim/writer/item.h" namespace "zim::writer":
@@ -63,7 +54,7 @@ cdef extern from "zim/writer/contentProvider.h" namespace "zim::writer":
 cdef extern from "zim/writer/creator.h" namespace "zim::writer":
     cdef cppclass ZimCreator "zim::writer::Creator":
         void configVerbose(bint verbose)
-        void configCompression(CompressionType comptype)
+        void configCompression(Compression compression)
         void configClusterSize(int size)
         void configIndexing(bint indexing, string language)
         void configNbWorkers(int nbWorkers)
@@ -75,81 +66,83 @@ cdef extern from "zim/writer/creator.h" namespace "zim::writer":
         void setMainPath(string mainPath)
         void addIllustration(unsigned int size, string content)
 
-cdef extern from "lib.h":
-    # The only thing we need to know here is how to create the Wrapper.
-    # Other (cpp) methods must exists and they will be called,
-    # but we don't care about them here.
+cdef extern from "zim/search.h" namespace "zim":
+    cdef cppclass Query:
+        Query()
+        Query& setQuery(string query)
+        Query& setGeorange(float latitude, float longitude, float distance)
+
+
+cdef extern from "zim/search_iterator.h" namespace "zim":
+    cdef cppclass SearchIterator:
+        SearchIterator()
+        SearchIterator operator++()
+        bint operator==(SearchIterator)
+        bint operator!=(SearchIterator)
+        string getPath()
+        string getTitle()
+
+
+# Import the python wrappers (ObjWrapper) from libwrapper.
+# The only thing we need to know here is how to create the wrappers.
+# Other (cpp) methods must exists (to be called from cpp side),
+# but we don't care about them as we will not call them in python side.
+cdef extern from "libwrapper.h":
     cdef cppclass ContentProviderWrapper(ContentProvider):
         ContentProviderWrapper(PyObject* obj) except +
     cdef cppclass WriterItemWrapper:
         WriterItemWrapper(PyObject* obj) except +
 
-cdef extern from "lib.h":
-    cdef cppclass ZimEntry:
+    Compression comp_from_int(int)
+
+
+# Import the cpp wrappers.
+cdef extern from "libwrapper.h" namespace "wrapper":
+    cdef cppclass Blob:
+        Blob() except +
+        Blob(const char* data, uint64_t size) except +
+        const char* data() except +
+        const char* end() except +
+        uint64_t size() except +
+
+    cdef cppclass Entry:
         string getTitle()
         string getPath() except +
 
         bint isRedirect()
-        ZimItem* getItem(bint follow) except +
-        ZimItem* getRedirect() except +
-        ZimEntry* getRedirectEntry() except +
+        Item getItem(bint follow) except +
+        Item getRedirect() except +
+        Entry getRedirectEntry() except +
 
         int getIndex() except +
 
-
-cdef extern from "lib.h":
-    cdef cppclass ZimItem:
-        ZimItem __enter__()
+    cdef cppclass Item:
         string getTitle() except +
         string getPath() except +
         string getMimetype() except +
 
-        const Blob getData(offset_type offset) except +
-        const Blob getData(offset_type offset, size_type size) except +
+        Blob getData(offset_type offset) except +
+        Blob getData(offset_type offset, size_type size) except +
         size_type  getSize() except +
 
         int getIndex() except +
 
-
-cdef extern from "zim/search_iterator.h" namespace "zim":
-    cdef cppclass search_iterator:
-        search_iterator()
-        search_iterator operator++()
-        bint operator==(search_iterator)
-        bint operator!=(search_iterator)
-        string get_path()
-        string get_title()
-
-
-cdef extern from "lib.h":
-    cdef cppclass ZimSearch:
-        ZimSearch()
-        ZimSearch(const ZimArchive zimfile)
-        ZimSearch(vector[const ZimArchive] zimfiles)
-        void set_suggestion_mode(bint suggestion)
-        void set_query(string query)
-        void set_range(int, int)
-        search_iterator begin()
-        search_iterator end()
-        int get_matches_estimated()
-
-
-cdef extern from "lib.h":
-    cdef cppclass ZimArchive:
-        ZimArchive(string filename) except +
+    cdef cppclass Archive:
+        Archive() except +
+        Archive(string filename) except +
 
         int getFilesize() except +
 
-        ZimEntry* getEntryByPath(string path) except +
-        ZimEntry* getEntryByPath(entry_index_type idx) except +
-        ZimEntry* getEntryByTitle(string title) except +
+        Entry getEntryByPath(string path) except +
+        Entry getEntryByPath(entry_index_type idx) except +
+        Entry getEntryByTitle(string title) except +
 
         string getMetadata(string name) except +
         vector[string] getMetadataKeys() except +
 
-        ZimEntry* getMainEntry() except +
-        ZimItem* getIllustrationItem() except +
-        ZimItem* getIllustrationItem(int size) except +
+        Entry getMainEntry() except +
+        Item getIllustrationItem() except +
+        Item getIllustrationItem(int size) except +
         size_type getEntryCount() except +
         size_type getAllEntryCount() except +
         size_type getArticleCount() except +
@@ -164,9 +157,53 @@ cdef extern from "lib.h":
         # set[unsigned int] getIllustrationSizes() except +
         bool hasEntryByPath(string path) except +
         bool hasEntryByTitle(string title) except +
-        bool is_multiPart() except +
+        bool isMultiPart() except +
         bool hasNewNamespaceScheme() except +
         bool hasFulltextIndex() except +
         bool hasTitleIndex() except +
         bool hasChecksum() except +
         bool check() except +
+
+    cdef cppclass Searcher:
+        Searcher()
+        Searcher(const Archive& archive) except +
+        setVerbose(bool verbose)
+        Search search(Query query) except +
+
+    cdef cppclass Search:
+        int getEstimatedMatches() except +
+        SearchResultSet getResults(int start, int count) except +
+
+    cdef cppclass SearchResultSet:
+        SearchIterator begin()
+        SearchIterator end()
+        int size()
+
+    cdef cppclass SuggestionItem:
+        string getPath()
+        string getTitle()
+        string getSnippet()
+        bool hasSnippet()
+
+    cdef cppclass SuggestionIterator:
+        SuggestionIterator()
+        SuggestionIterator operator++()
+        bint operator==(SuggestionIterator)
+        bint operator!=(SuggestionIterator)
+        SuggestionItem getSuggestionItem()
+        Entry getEntry()
+
+    cdef cppclass SuggestionSearcher:
+        SuggestionSearcher()
+        SuggestionSearcher(const Archive& archive) except +
+        setVerbose(bool verbose)
+        SuggestionSearch suggest(string query) except +
+
+    cdef cppclass SuggestionSearch:
+        int getEstimatedMatches() except +
+        SuggestionResultSet getResults(int start, int count) except +
+
+    cdef cppclass SuggestionResultSet:
+        SuggestionIterator begin()
+        SuggestionIterator end()
+        int size()
