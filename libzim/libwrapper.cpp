@@ -66,7 +66,7 @@ ObjWrapper::~ObjWrapper()
 }
 
 
-// Just call the rigth (regarding the output) method.
+// Just call the right (regarding the output) method.
 // No check or error handling.
 template<typename Output>
 Output _callMethodOnObj(PyObject *obj, const std::string& methodName, std::string& error);
@@ -176,7 +176,7 @@ zim::Compression comp_from_int(int compValue)
     case 2:
       return zim::Compression::Zstd;
     default:
-      // Should we raise a error ?
+      // Should we raise an error ?
       return zim::Compression::None;
   }
 }
