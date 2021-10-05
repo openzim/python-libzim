@@ -34,6 +34,7 @@ cimport zim
 import datetime
 import enum
 import importlib
+import importlib.abc
 import os
 import pathlib
 import sys
