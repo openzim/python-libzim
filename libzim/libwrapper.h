@@ -34,7 +34,7 @@
 struct _object;
 typedef _object PyObject;
 
-// There is two kind of wrapping :
+// There are two kinds of wrapping :
 //  - Wrapping C++ object to pass it in the Python world.
 //  - Wrapping Python objects to pass it to the C++ world (mainly used by the creator).
 //
@@ -50,8 +50,8 @@ typedef _object PyObject;
 // item = archive.getItem(...);
 // ```
 // Which is not possible because the Item has not default constructor.
-// The solution is to manipulate all libzim object throw pointer
-// (pointer can be defaul constructed to nullptr).
+// The solution is to manipulate all libzim object through pointers
+// (pointer can be default constructed to nullptr).
 // As the libzim functions/methods return directly the instance, we have to wrap all
 // of them (in pure C++) to make them return a pointer.
 // (Hopefully, copy constructor is available on libzim classes)
@@ -65,7 +65,7 @@ typedef _object PyObject;
 // Wrapper<Foo> instead of Foo.
 // As Wrapper<Foo> do not inherit from Foo, we must define all the methods we want to wrap in python.
 // Thoses methods just have to forward the call from the wrapper to the wrapped instance.
-// As Wrapper<Foo> can be implicitly construct from Foo, we can also simply forward the call and the
+// As Wrapper<Foo> can be implicitly constructed from Foo, we can also simply forward the call and the
 // conversion will be made for us.
 // The macro FORWARD help us a lot here.
 
