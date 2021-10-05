@@ -10,13 +10,15 @@ import pytest
 
 import libzim.writer
 from libzim.reader import Archive
+from libzim.search import Searcher, Query
+from libzim.suggestion import SuggestionSearcher
 
 
 # expected data for tests ZIMs (see `all_zims`)
 ZIMS_DATA = {
     "blank.zim": {
         "filename": "blank.zim",
-        "filesize": 17660,
+        "filesize": 1173,
         "new_ns": True,
         "mutlipart": False,
         "zim_uuid": None,
@@ -26,17 +28,17 @@ ZIMS_DATA = {
         "has_main_entry": False,
         "has_favicon_entry": False,
         "has_fulltext_index": False,
-        "has_title_index": True,
+        "has_title_index": False,
         "has_checksum": True,
         "checksum": None,
         "is_valid": True,
         "entry_count": 0,
-        "all_entry_count": 4,
+        "all_entry_count": 2,
         "article_count": 0,
-        "suggestion_string": "",
+        "suggestion_string": None,
         "suggestion_count": 0,
         "suggestion_result": [],
-        "search_string": "",
+        "search_string": None,
         "search_count": 0,
         "search_result": [],
         "test_path": None,
@@ -121,12 +123,19 @@ ZIMS_DATA = {
         "entry_count": 60,
         "all_entry_count": 75,
         "article_count": 0,
-        "suggestion_string": "favicon",
+        "suggestion_string": "Free",
         "suggestion_count": 1,
-        "suggestion_result": ["favicon.png"],
-        "search_string": "favicon",
-        "search_count": 1,
-        "search_result": ["favicon.png"],
+        "suggestion_result": [
+            "FreedomBox for Communities_Offline Wikipedia "
+            + "- Wikibooks, open books for an open world.html"
+        ],
+        "search_string": "main",
+        "search_count": 2,
+        "search_result": [
+            "Wikibooks.html",
+            "FreedomBox for Communities_Offline Wikipedia "
+            + "- Wikibooks, open books for an open world.html",
+        ],
         "test_path": "FreedomBox for Communities_Offline Wikipedia - Wikibooks, "
         "open books for an open world.html",
         "test_title": "FreedomBox for Communities/Offline Wikipedia - Wikibooks, "
@@ -398,15 +407,19 @@ def test_reader_suggest_search(
     assert zim.all_entry_count == all_entry_count
     assert zim.article_count == article_count
 
+    if search_string is not None:
+        query = Query()
+        query.set_query(search_string)
+        searcher = Searcher(zim)
+        search = searcher.search(query)
+        assert search.getEstimatedMatches() == search_count
+        assert list(search.getResults(0, search_count)) == search_result
 
-# TODO: restore [search-api]
-#     assert (
-#         zim.get_estimated_suggestions_results_count(suggestion_string)
-#         == suggestion_count
-#     )
-#     assert list(zim.suggest(suggestion_string)) == suggestion_result
-#     assert zim.get_estimated_search_results_count(search_string) == search_count
-#     assert list(zim.search(search_string)) == search_result
+    if suggestion_string is not None:
+        suggestion_searcher = SuggestionSearcher(zim)
+        suggestion = suggestion_searcher.suggest(suggestion_string)
+        assert suggestion.getEstimatedMatches() == suggestion_count
+        assert list(suggestion.getResults(0, suggestion_count)) == suggestion_result
 
 
 @pytest.mark.parametrize(
