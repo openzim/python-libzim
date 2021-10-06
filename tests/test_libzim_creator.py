@@ -1,27 +1,26 @@
 #!/usr/bin/env python
 
-import sys
 import base64
-import pathlib
 import datetime
 import itertools
+import pathlib
 import subprocess
+import sys
 from typing import Dict
 
 import pytest
 
 import libzim.writer
-from libzim.writer import (
-    Creator,
-    Item,
-    ContentProvider,
-    FileProvider,
-    StringProvider,
-    Blob,
-    Hint,
-)
 from libzim.reader import Archive
-
+from libzim.writer import (
+    Blob,
+    ContentProvider,
+    Creator,
+    FileProvider,
+    Hint,
+    Item,
+    StringProvider,
+)
 
 HOME_PATH = "lorem_ipsum"
 

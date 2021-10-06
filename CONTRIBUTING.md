@@ -30,14 +30,14 @@ pipenv run pip install -e .
 ### Run Linters & Tests
 
 ```bash
-# Autoformat code with black
-black --exclude=setup.py .
-# Lint and check for errors with flake8
-flake8 --exclude=setup.py .
+# Check format and linting
+invoke check
+# Autoformat and import sorting
+invoke lint
 # Typecheck with mypy (optional)
 mypy .
 # Run tests
-pytest .
+invoke test
 ```
 
 ### Rebuild Cython extension during development

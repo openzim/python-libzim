@@ -20,7 +20,7 @@
 import uuid
 
 from libzim.reader import Archive
-from libzim.writer import Item, StringProvider, Creator
+from libzim.writer import Creator, Item, StringProvider
 
 
 class TestItem(Item):

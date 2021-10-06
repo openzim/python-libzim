@@ -15,11 +15,12 @@ The Cython and Cythonize compilation is done automatically with setup.py:
 
 To compile or run this project, you must first get the libzim headers & binary:
 
- - You can get the headers here and build and install the binary from source:
-   https://github.com/openzim/libzim
-
- - Or you can download a full prebuilt release (if one exists for your platform):
+ - Compile and install libzim from source : https://github.com/openzim/libzim
+ - Download a full prebuilt release (if one exists for your platform):
    https://download.openzim.org/release/libzim/
+ - Installed a packaged version of libzim :
+   . `apt-get install libzim-devel`
+   . `dnf install libzim-dev`
 
 Either place the `libzim.so` and `zim/*.h` files in `./lib/` and `./include/`,
    or set these environment variables to use custom libzim header and dylib paths:
@@ -27,135 +28,92 @@ Either place the `libzim.so` and `zim/*.h` files in `./lib/` and `./include/`,
  $ export CFLAGS="-I/tmp/libzim_linux-x86_64-6.1.1/include"
  $ export LDFLAGS="-L/tmp/libzim_linux-x86_64-6.1.1/lib/x86_64-linux-gnu"
  $ export LD_LIBRARY_PATH+=":/tmp/libzim_linux-x86_64-6.1.1/lib/x86_64-linux-gnu"
+
+If you have installed libzim from the packages, you probably don't have anything to do
+on environment variables side.
 """
+
 import os
 import platform
-from pathlib import Path
+import sys
 from ctypes.util import find_library
+from pathlib import Path
 
-from setuptools import setup, Extension
 from Cython.Build import cythonize
 from Cython.Distutils.build_ext import new_build_ext as build_ext
+from setuptools import Extension, setup
 
-GITHUB_URL = "https://github.com/openzim/python-libzim"
-BASE_DIR = Path(__file__).parent
-LIBZIM_INCLUDE_DIR = "include"  # the libzim C++ header src dir (containing zim/*.h)
-LIBZIM_LIBRARY_DIR = "lib"  # the libzim .so binary lib dir (containing libzim.so)
-LIBZIM_DYLIB = "libzim.{ext}".format(
-    ext="dylib" if platform.system() == "Darwin" else "so"
-)
-# set PROFILE env to `1` to enable profile info on build (used for coverage reporting)
-PROFILE = os.getenv("PROFILE", "") == "1"
+base_dir = Path(__file__).parent
 
+# Check if we need profiling (env var PROFILE set to `1`, used for coverage reporting)
+compiler_directives = {"language_level": "3"}
+if os.getenv("PROFILE", "") == "1":
+    define_macros = [("CYTHON_TRACE", "1"), ("CYTHON_TRACE_NOGIL", "1")]
+    compiler_directives.update(linetrace=True)
+else:
+    define_macros = []
 
-class fixed_build_ext(build_ext):
-    """Workaround for rpath bug in distutils for OSX."""
+if platform.system() == "Darwin":
 
-    def finalize_options(self):
-        super().finalize_options()
-        # Special treatment of rpath in case of OSX, to work around python
-        # distutils bug 36353. This constructs proper rpath arguments for clang.
-        # See https://bugs.python.org/issue36353
-        if platform.system() == "Darwin":
+    class fixed_build_ext(build_ext):
+        """Workaround for rpath bug in distutils for OSX."""
+
+        def finalize_options(self):
+            super().finalize_options()
+            # Special treatment of rpath in case of OSX, to work around python
+            # distutils bug 36353. This constructs proper rpath arguments for clang.
+            # See https://bugs.python.org/issue36353
             for path in self.rpath:
                 for ext in self.extensions:
                     ext.extra_link_args.append("-Wl,-rpath," + path)
             self.rpath[:] = []
 
+    cmdclass = {"build_ext": fixed_build_ext}
+    dyn_lib_ext = "dylib"
+else:
+    cmdclass = {"build_ext": build_ext}
+    dyn_lib_ext = "so"
 
+include_dirs = ["libzim"]
+library_dirs = []
 # Check for the CPP Libzim library headers in expected directory
-if not (BASE_DIR / LIBZIM_INCLUDE_DIR / "zim/zim.h").exists():
+header_file = base_dir / "include" / "zim" / "zim.h"
+lib_file = base_dir / "lib" / f"libzim.{dyn_lib_ext}"
+if header_file.exists() and lib_file.exists():
     print(
-        f"[!] Warning: Couldn't find zim/*.h in ./{LIBZIM_INCLUDE_DIR}!\n"
-        f"    Hint: install from source using from https://github.com/openzim/libzim\n"
-        f"          or download a prebuilt release's headers into ./include/zim/*.h\n"
-        f"          (or set CFLAGS='-I<library_path>/include')"
+        "Found lizim library and headers in local directory. "
+        "We will use them to compile python-libzim.\n"
+        "Hint : If you don't want to use them "
+        "(and use “system” installed one), remove them."
     )
-
-# Check for the CPP Libzim shared library in expected directory or system paths
-if not ((BASE_DIR / LIBZIM_LIBRARY_DIR / LIBZIM_DYLIB).exists() or find_library("zim")):
+    include_dirs.append("include")
+    library_dirs = ["lib"]
+else:
+    # Check for library.
+    if not find_library("zim"):
+        print(
+            "[!] The libzim library cannot be found.\n"
+            "Please verify that the library is correctly installed and can be found."
+        )
+        sys.exit(1)
     print(
-        f"[!] Warning: Couldn't find {LIBZIM_DYLIB} in ./{LIBZIM_LIBRARY_DIR} or system"
-        f"    Hint: install from source using https://github.com/openzim/libzim\n"
-        f"          or download a prebuilt {LIBZIM_DYLIB} release into ./lib.\n"
-        f"          (or set LDFLAGS='-L<library_path>/lib/[x86_64-linux-gnu]')"
+        "Using system installed library. "
+        "We are assuming CFLAGS/LDFLAGS are correctly set."
     )
-
-
-def get_long_description():
-    return (BASE_DIR / "README.md").read_text()
-
 
 wrapper_extension = Extension(
     name="libzim",
     sources=["libzim/libzim.pyx", "libzim/libwrapper.cpp"],
-    include_dirs=["libzim", LIBZIM_INCLUDE_DIR],
+    include_dirs=include_dirs,
     libraries=["zim"],
-    library_dirs=[LIBZIM_LIBRARY_DIR],
+    library_dirs=library_dirs,
     extra_compile_args=["-std=c++11", "-Wall", "-Wextra"],
     language="c++",
-    define_macros=[("CYTHON_TRACE", "1"), ("CYTHON_TRACE_NOGIL", "1")]
-    if PROFILE
-    else [],
+    define_macros=define_macros,
 )
 
-compiler_directives = {"language_level": "3"}
-if PROFILE:
-    compiler_directives.update({"linetrace": "True"})
-
 setup(
-    # Basic information about libzim module
-    name="libzim",
-    version="1.0.0.dev0",
-    url=GITHUB_URL,
-    project_urls={
-        "Source": GITHUB_URL,
-        "Bug Tracker": f"{GITHUB_URL}/issues",
-        "Changelog": f"{GITHUB_URL}/releases",
-        "Documentation": f"{GITHUB_URL}/blob/master/README.md",
-        "Donate": "https://www.kiwix.org/en/support-us/",
-    },
-    author="Monadical Inc.",
-    author_email="jdc@monadical.com",
-    license="GPL-3.0-or-later",
-    description="A python-facing API for creating and interacting with ZIM files",
-    long_description=get_long_description(),
-    long_description_content_type="text/markdown",
-    python_requires=">=3.6",
     # Content
-    packages=["libzim"],
-    cmdclass={"build_ext": fixed_build_ext},
+    cmdclass=cmdclass,
     ext_modules=cythonize([wrapper_extension], compiler_directives=compiler_directives),
-    # Packaging
-    include_package_data=True,
-    zip_safe=False,
-    # Extra
-    classifiers=[
-        "Development Status :: 3 - Alpha",
-        "Topic :: Utilities",
-        "Topic :: Software Development :: Libraries",
-        "Topic :: Software Development :: Libraries :: Python Modules",
-        "Topic :: System :: Archiving",
-        "Topic :: System :: Archiving :: Compression",
-        "Topic :: System :: Archiving :: Mirroring",
-        "Topic :: System :: Archiving :: Backup",
-        "Topic :: Internet :: WWW/HTTP",
-        "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
-        "Topic :: Sociology :: History",
-        "Intended Audience :: Developers",
-        "Intended Audience :: Education",
-        "Intended Audience :: End Users/Desktop",
-        "Intended Audience :: Information Technology",
-        "Intended Audience :: System Administrators",
-        "Programming Language :: Cython",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        # "Typing :: Typed",
-        "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
-        "Natural Language :: English",
-        "Operating System :: OS Independent",
-    ],
 )
