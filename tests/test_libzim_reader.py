@@ -469,7 +469,8 @@ def test_reader_get_entries(
     with pytest.raises(KeyError):
         zim.get_entry_by_title("___missing")
 
-    # FIXME: unable to retrieve entry by title on example.zim
+    # example.zim cannot be queried by title as all its entries have been created
+    # with empty titles but the ZIM contains a v1 title listing.
     if test_title and filename != "example.zim":
         assert zim.has_entry_by_title(test_title)
         assert zim.get_entry_by_title(test_title).path == entry.path
