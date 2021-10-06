@@ -18,13 +18,12 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from cpython.ref cimport PyObject
-
 from libc.stdint cimport uint32_t, uint64_t
 from libcpp cimport bool
+from libcpp.map cimport map
 from libcpp.memory cimport shared_ptr
 from libcpp.string cimport string
 from libcpp.vector cimport vector
-from libcpp.map cimport map
 
 
 cdef extern from "zim/zim.h" namespace "zim":
