@@ -1,26 +1,27 @@
 #!/usr/bin/env python
 
-import sys
 import base64
-import pathlib
 import datetime
 import itertools
+import pathlib
 import subprocess
-
+import sys
+from typing import Dict
 
 import pytest
 
 import libzim.writer
-from libzim.writer import (
-    Creator,
-    Item,
-    ContentProvider,
-    FileProvider,
-    StringProvider,
-    Blob,
-)
 from libzim.reader import Archive
-
+from libzim.suggestion import SuggestionSearcher
+from libzim.writer import (
+    Blob,
+    ContentProvider,
+    Creator,
+    FileProvider,
+    Hint,
+    Item,
+    StringProvider,
+)
 
 HOME_PATH = "lorem_ipsum"
 
@@ -44,6 +45,9 @@ class StaticItem(libzim.writer.Item):
         if getattr(self, "filepath", None):
             return FileProvider(filepath=self.filepath)
         return StringProvider(content=getattr(self, "content", ""))
+
+    def get_hints(self) -> Dict[Hint, int]:
+        return getattr(self, "hints", {Hint.FRONT_ARTICLE: True})
 
 
 @pytest.fixture(scope="function")
@@ -210,9 +214,9 @@ def test_creator_compression(fpath, lipsum_item):
 
 
 @pytest.mark.parametrize("cluster_size", [0, 128, 512, 8196, 10240])
-def test_creator_minclustersize(fpath, cluster_size, lipsum_item):
+def test_creator_clustersize(fpath, cluster_size, lipsum_item):
     """ensure we can create ZIM with arbitrary min-cluster-size"""
-    with Creator(fpath).config_minclustersize(cluster_size) as c:
+    with Creator(fpath).config_clustersize(cluster_size) as c:
         c.add_item(lipsum_item)
 
 
@@ -248,7 +252,7 @@ def test_creator_nbworkers(fpath, lipsum_item, nb_workers):
 def test_creator_combine_config(fpath, lipsum_item):
     with Creator(fpath).config_verbose(True).config_compression(
         "lzma"
-    ).config_minclustersize(1024).config_indexing(True, "eng").config_nbworkers(2) as c:
+    ).config_clustersize(1024).config_indexing(True, "eng").config_nbworkers(2) as c:
         c.add_item(lipsum_item)
 
 
@@ -257,7 +261,7 @@ def test_creator_combine_config(fpath, lipsum_item):
     [
         ("verbose", (True,)),
         ("compression", ("lzma",)),
-        ("minclustersize", (1024,)),
+        ("clustersize", (1024,)),
         ("indexing", (True, "eng")),
         ("nbworkers", (2,)),
     ],
@@ -331,27 +335,18 @@ def test_creator_mainpath(fpath, lipsum_item):
         assert zim.main_entry
 
 
-def test_creator_faviconpath(fpath, favicon_data):
-    favicon_path = HOME_PATH
-    favicon_item = StaticItem(
-        mimetype="image/png", path=favicon_path, content=favicon_data
-    )
-    with Creator(fpath).set_faviconpath(favicon_path) as c:
-        c.add_item(favicon_item)
-
-    zim = Archive(fpath)
-    assert zim.has_favicon_entry is True
-    assert zim.favicon_entry.path == "favicon"
-    assert zim.favicon_entry.get_item().path == favicon_path
-
-    fpath.unlink()
-
+def test_creator_illustration(fpath, favicon_data):
     with Creator(fpath) as c:
-        c.add_item(favicon_item)
+        c.add_illustration(48, favicon_data)
+        c.add_illustration(96, favicon_data)
+
     zim = Archive(fpath)
-    assert zim.has_favicon_entry is False
-    with pytest.raises(RuntimeError):
-        assert zim.favicon_entry
+    assert zim.has_illustration() is True
+    assert zim.has_illustration(48) is True
+    assert zim.has_illustration(96) is True
+    assert zim.has_illustration(128) is False
+    assert bytes(zim.get_illustration_item().content) == favicon_data
+    assert bytes(zim.get_illustration_item(96).content) == favicon_data
 
 
 def test_creator_additem(fpath, lipsum_item):
@@ -432,13 +427,13 @@ def test_creator_redirection(fpath, lipsum_item):
     # ensure we can't add if not started
     c = Creator(fpath)
     with pytest.raises(RuntimeError, match="not started"):
-        c.add_redirection("home", "hello", HOME_PATH)
+        c.add_redirection("home", "hello", HOME_PATH, {Hint.FRONT_ARTICLE: True})
     del c
 
     with Creator(fpath) as c:
         c.add_item(lipsum_item)
-        c.add_redirection("home", "hello", HOME_PATH)
-        c.add_redirection("accueil", "bonjour", HOME_PATH)
+        c.add_redirection("home", "hello", HOME_PATH, {Hint.FRONT_ARTICLE: True})
+        c.add_redirection("accueil", "bonjour", HOME_PATH, {Hint.FRONT_ARTICLE: True})
 
     zim = Archive(fpath)
     assert zim.entry_count == 3
@@ -450,8 +445,15 @@ def test_creator_redirection(fpath, lipsum_item):
         == zim.get_entry_by_path(HOME_PATH).path
     )
     assert zim.get_entry_by_path("accueil").get_item().path == HOME_PATH
-    assert "home" in list(zim.suggest("hello"))
-    assert "accueil" in list(zim.suggest("bonjour"))
+
+    # suggestions
+    sugg_searcher = SuggestionSearcher(zim)
+    sugg_hello = sugg_searcher.suggest("hello")
+    assert "home" in list(sugg_hello.getResults(0, sugg_hello.getEstimatedMatches()))
+    sugg_bonjour = sugg_searcher.suggest("bonjour")
+    assert "accueil" in list(
+        sugg_bonjour.getResults(0, sugg_hello.getEstimatedMatches())
+    )
 
 
 def test_item_notimplemented(fpath, lipsum_item):
@@ -532,6 +534,9 @@ def test_item_contentprovider_none(fpath):
         def get_contentprovider(self):
             return ""
 
+        def get_hints(self):
+            return {}
+
     with Creator(fpath) as c:
         with pytest.raises(RuntimeError, match="ContentProvider is None"):
             c.add_item(AnItem())
@@ -548,9 +553,74 @@ def test_missing_contentprovider(fpath):
         def get_mimetype(self):
             return ""
 
+        def get_hints(self):
+            return {}
+
     with Creator(fpath) as c:
         with pytest.raises(RuntimeError, match="has no attribute"):
             c.add_item(AnItem())
+
+
+def test_missing_hints(fpath):
+    class AnItem:
+        def get_path(self):
+            return ""
+
+        def get_title(self):
+            return ""
+
+        def get_mimetype(self):
+            return ""
+
+    with Creator(fpath) as c:
+        with pytest.raises(RuntimeError, match="has no attribute 'get_hints'"):
+            c.add_item(AnItem())
+
+        with pytest.raises(RuntimeError, match="must be implemented"):
+            c.add_item(libzim.writer.Item())
+
+
+def test_nondict_hints(fpath):
+    with Creator(fpath) as c:
+        with pytest.raises(RuntimeError, match="has no attribute 'items'"):
+            c.add_item(StaticItem(path="1", title="", hints=1))
+
+        with pytest.raises(TypeError, match="hints"):
+            c.add_redirection("a", "", "b", hints=1)
+
+
+def test_hints_values(fpath):
+    with Creator(fpath) as c:
+        # correct values
+        c.add_item(StaticItem(path="0", title="", hints={}))
+        c.add_item(
+            StaticItem(
+                path="1",
+                title="",
+                hints={Hint.FRONT_ARTICLE: True, Hint.COMPRESS: False},
+            )
+        )
+        # non-expected Hints are ignored
+        c.add_item(StaticItem(path="2", title="", hints={"hello": "world"}))
+        # Hint values are casted to bool
+        c.add_item(StaticItem(path="3", title="", hints={Hint.FRONT_ARTICLE: "world"}))
+        c.add_redirection(
+            path="4", title="", targetPath="0", hints={Hint.COMPRESS: True}
+        )
+        # filtered-out values
+        c.add_item(StaticItem(path="5", title="", hints={5: True}))
+        c.add_item(StaticItem(path="6", title="", hints={"yolo": True}))
+        c.add_item(StaticItem(path="7", title="", hints={"FRONT_ARTICLE": True}))
+        c.add_item(StaticItem(path="8", title="", hints={0: True}))
+
+        # non-existent Hint
+        with pytest.raises(AttributeError, match="YOLO"):
+            c.add_item(StaticItem(path="0", title="", hints={Hint.YOLO: True}))
+
+        with pytest.raises(AttributeError, match="YOLO"):
+            c.add_redirection(
+                path="5", title="", target_path="0", hints={Hint.YOLO: True}
+            )
 
 
 def test_reimpfeed(fpath):
@@ -576,6 +646,9 @@ def test_reimpfeed(fpath):
 
         def get_mimetype(self):
             return ""
+
+        def get_hints(self):
+            return {}
 
         def get_contentprovider(self):
             return AContentProvider()
@@ -606,6 +679,9 @@ def test_virtualmethods_int_exc(fpath):
 
         def get_mimetype(self):
             return ""
+
+        def get_hints(self):
+            return {}
 
         def get_contentprovider(self):
             return AContentProvider()
