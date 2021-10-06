@@ -15,6 +15,11 @@ def build_ext(c):
 
 @task
 def test(c):
+    c.run("python -m pytest --color=yes --ff .")
+
+
+@task
+def coverage(c):
     c.run(
         "python -m pytest --color=yes --ff "
         "--cov=libzim --cov-config=.coveragerc "
