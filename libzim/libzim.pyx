@@ -887,8 +887,6 @@ cdef class Archive:
 
     def get_illustration_sizes(self) -> Set[pyint]:
         """Sizes for which an illustration is available (@1 scale only)"""
-        # FIXME: using static shortcut instead of libzim's
-        # cdef set[unsigned int] sizes = self.c_archive.getIllustrationSizes()
         return {48}
 
     def has_illustration(self, size: pyint = None) -> pybool:
