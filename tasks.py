@@ -7,8 +7,6 @@ A description file for invoke (https://www.pyinvoke.org/)
 
 from invoke import task
 
-MAX_LINE_LENGTH = 88
-
 
 @task
 def build_ext(c):
@@ -37,17 +35,17 @@ def install_dev(c):
 
 @task
 def check(c):
-    c.run("isort --profile=black --check-only .")
+    c.run("isort --check-only .")
     c.run("black --check .")
     c.run('echo "one pass for show-stopper syntax errors or undefined names"')
     c.run("flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics")
     c.run('echo "one pass for small stylistic things"')
-    c.run(f"flake8 . --count --max-line-length={MAX_LINE_LENGTH} --statistics")
+    c.run("flake8 . --count --statistics")
 
 
 @task
 def lint(c):
-    c.run("isort --profile=black .")
+    c.run("isort .")
     c.run("black .")
     c.run("flake8 .")
 
