@@ -947,6 +947,7 @@ cdef class Query:
 
     def set_query(self, query: str):
         self.c_query.setQuery(query.encode('UTF-8'))
+        return self
 
 
 cdef class SearchResultSet:
@@ -1033,8 +1034,7 @@ Usage:
 
 archive = libzim.reader.Archive(fpath)
 searcher = Searcher(archive)
-query = Query()
-query.setQuery("foo")
+query = Query().setQuery("foo")
 search = searcher.search(query)
 for path in search.getResult(10, 10) # get result from 10 to 20 (10 results)
     print(path, archive.get_entry_by_path(path).title)"""

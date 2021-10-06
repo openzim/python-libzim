@@ -407,8 +407,7 @@ def test_reader_suggest_search(
     assert zim.article_count == article_count
 
     if search_string is not None:
-        query = Query()
-        query.set_query(search_string)
+        query = Query().set_query(search_string)
         searcher = Searcher(zim)
         search = searcher.search(query)
         assert search.getEstimatedMatches() == search_count
