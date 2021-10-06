@@ -22,6 +22,7 @@ from libc.stdint cimport uint32_t, uint64_t
 from libcpp cimport bool
 from libcpp.map cimport map
 from libcpp.memory cimport shared_ptr
+from libcpp.set cimport set
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 
@@ -153,7 +154,7 @@ cdef extern from "libwrapper.h" namespace "wrapper":
         bool hasMainEntry() except +
         bool hasIllustration() except +
         bool hasIllustration(unsigned int size) except +
-        # set[unsigned int] getIllustrationSizes() except +
+        set[unsigned int] getIllustrationSizes() except +
         bool hasEntryByPath(string path) except +
         bool hasEntryByTitle(string title) except +
         bool isMultiPart() except +
