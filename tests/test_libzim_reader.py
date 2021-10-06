@@ -1,22 +1,23 @@
 #!/usr/bin/env python
 
-import os
 import gc
-import uuid
+import os
 import pathlib
+import uuid
 from urllib.request import urlretrieve
 
 import pytest
 
 import libzim.writer
 from libzim.reader import Archive
-
+from libzim.search import Query, Searcher
+from libzim.suggestion import SuggestionSearcher
 
 # expected data for tests ZIMs (see `all_zims`)
 ZIMS_DATA = {
     "blank.zim": {
         "filename": "blank.zim",
-        "filesize": 17660,
+        "filesize": 1173,
         "new_ns": True,
         "mutlipart": False,
         "zim_uuid": None,
@@ -26,15 +27,17 @@ ZIMS_DATA = {
         "has_main_entry": False,
         "has_favicon_entry": False,
         "has_fulltext_index": False,
-        "has_title_index": True,
+        "has_title_index": False,
         "has_checksum": True,
         "checksum": None,
         "is_valid": True,
         "entry_count": 0,
-        "suggestion_string": "",
+        "all_entry_count": 2,
+        "article_count": 0,
+        "suggestion_string": None,
         "suggestion_count": 0,
         "suggestion_result": [],
-        "search_string": "",
+        "search_string": None,
         "search_count": 0,
         "search_result": [],
         "test_path": None,
@@ -74,6 +77,8 @@ ZIMS_DATA = {
         "checksum": None,
         "is_valid": True,
         "entry_count": 371,
+        "all_entry_count": 371,
+        "article_count": 284,
         "suggestion_string": "lucky",
         "suggestion_count": 1,
         "suggestion_result": ["A/That_Lucky_Old_Sun"],
@@ -90,43 +95,54 @@ ZIMS_DATA = {
     },
     "example.zim": {
         "filename": "example.zim",
-        "filesize": 128326,
-        "new_ns": False,
+        "filesize": 259145,
+        "new_ns": True,
         "mutlipart": False,
-        "zim_uuid": "b0fbc99668acfdadc1e75db00d7010e6",
+        "zim_uuid": "5dc0b3af5df20925f0cad2bf75e78af6",
         "metadata_keys": [
             "Counter",
             "Creator",
             "Date",
             "Description",
             "Language",
-            "Name",
             "Publisher",
+            "Scraper",
+            "Tags",
             "Title",
         ],
-        "test_metadata": "Name",
-        "test_metadata_value": "kiwix.wikibooks_ay_all",
+        "test_metadata": "Title",
+        "test_metadata_value": "Wikibooks",
         "has_main_entry": True,
-        "has_favicon_entry": True,
+        "has_favicon_entry": False,
         "has_fulltext_index": True,
-        "has_title_index": False,
+        "has_title_index": True,
         "has_checksum": True,
-        "checksum": None,
+        "checksum": "abcd818c87079cb29282282b47ee46ec",
         "is_valid": True,
-        "entry_count": 54,
-        "suggestion_string": "Nayriri",
-        "suggestion_count": 2,
-        "suggestion_result": ["A/Nayriri_Uñstawi", "A/index"],
-        "search_string": "Nayriri",
-        "search_count": 1,
-        "search_result": ["A/Nayriri_Uñstawi"],
-        "test_path": "A/Nayriri_Uñstawi",
-        "test_title": "Nayriri Uñstawi",
+        "entry_count": 60,
+        "all_entry_count": 75,
+        "article_count": 0,
+        "suggestion_string": "Free",
+        "suggestion_count": 1,
+        "suggestion_result": [
+            "FreedomBox for Communities_Offline Wikipedia "
+            + "- Wikibooks, open books for an open world.html"
+        ],
+        "search_string": "main",
+        "search_count": 2,
+        "search_result": [
+            "Wikibooks.html",
+            "FreedomBox for Communities_Offline Wikipedia "
+            + "- Wikibooks, open books for an open world.html",
+        ],
+        "test_path": "FreedomBox for Communities_Offline Wikipedia - Wikibooks, "
+        "open books for an open world.html",
+        "test_title": "FreedomBox for Communities/Offline Wikipedia - Wikibooks, "
+        "open books for an open world",
         "test_mimetype": "text/html",
-        "test_size": 2652,
-        "test_content_includes": "This article is issued from",
-        "test_redirect": "A/Main_Page",
-        "test_redirect_to": "A/Nayriri_Uñstawi",
+        "test_size": 52771,
+        "test_content_includes": "looking forward to your contributions.",
+        "test_redirect": None,
     },
     "corner_cases.zim": {
         "filename": "corner_cases.zim",
@@ -158,6 +174,8 @@ ZIMS_DATA = {
         "checksum": None,
         "is_valid": True,
         "entry_count": 19,
+        "all_entry_count": 19,
+        "article_count": 1,
         "suggestion_string": "empty",
         "suggestion_count": 1,
         "suggestion_result": ["A/empty.html"],
@@ -313,17 +331,20 @@ def test_reader_main_favicon_entries(
     else:
         assert zim.main_entry
         if new_ns:
-            assert zim.main_entry.path == "mainPath"
+            assert zim.main_entry.path == "mainPage"
 
     # make sure we have no favicon entry
-    assert zim.has_favicon_entry is has_favicon_entry
+    assert zim.has_illustration(48) is has_favicon_entry
+    if has_favicon_entry:
+        assert 48 in zim.get_illustration_sizes()
+
     if has_favicon_entry is False:
-        with pytest.raises(RuntimeError):
-            assert zim.favicon_entry
+        with pytest.raises(KeyError):
+            assert zim.get_illustration_item(48)
     else:
-        assert zim.favicon_entry
+        assert zim.get_illustration_item()
         if new_ns:
-            assert zim.favicon_entry.path == "-/favicon"
+            assert zim.get_illustration_item().path == "Illustration_48x48@1"
 
 
 @pytest.mark.parametrize(
@@ -354,6 +375,8 @@ def test_reader_checksum(all_zims, filename, has_checksum, is_valid):
         [
             "filename",
             "entry_count",
+            "all_entry_count",
+            "article_count",
             "suggestion_string",
             "suggestion_count",
             "suggestion_result",
@@ -367,6 +390,8 @@ def test_reader_suggest_search(
     all_zims,
     filename,
     entry_count,
+    all_entry_count,
+    article_count,
     suggestion_string,
     suggestion_count,
     suggestion_result,
@@ -378,13 +403,22 @@ def test_reader_suggest_search(
 
     # suggestion and search results
     assert zim.entry_count == entry_count
-    assert (
-        zim.get_estimated_suggestions_results_count(suggestion_string)
-        == suggestion_count
-    )
-    assert list(zim.suggest(suggestion_string)) == suggestion_result
-    assert zim.get_estimated_search_results_count(search_string) == search_count
-    assert list(zim.search(search_string)) == search_result
+    assert zim.all_entry_count == all_entry_count
+    assert zim.article_count == article_count
+
+    if search_string is not None:
+        query = Query()
+        query.set_query(search_string)
+        searcher = Searcher(zim)
+        search = searcher.search(query)
+        assert search.getEstimatedMatches() == search_count
+        assert list(search.getResults(0, search_count)) == search_result
+
+    if suggestion_string is not None:
+        suggestion_searcher = SuggestionSearcher(zim)
+        suggestion = suggestion_searcher.suggest(suggestion_string)
+        assert suggestion.getEstimatedMatches() == suggestion_count
+        assert list(suggestion.getResults(0, suggestion_count)) == suggestion_result
 
 
 @pytest.mark.parametrize(
@@ -435,7 +469,9 @@ def test_reader_get_entries(
     with pytest.raises(KeyError):
         zim.get_entry_by_title("___missing")
 
-    if test_title:
+    # example.zim cannot be queried by title as all its entries have been created
+    # with empty titles but the ZIM contains a v1 title listing.
+    if test_title and filename != "example.zim":
         assert zim.has_entry_by_title(test_title)
         assert zim.get_entry_by_title(test_title).path == entry.path
 
