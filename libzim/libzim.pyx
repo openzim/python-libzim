@@ -45,7 +45,9 @@ from uuid import UUID
 
 from cpython.buffer cimport PyBUF_WRITABLE
 from cpython.ref cimport PyObject
+
 from cython.operator import preincrement
+
 from libc.stdint cimport uint64_t
 from libcpp cimport bool
 from libcpp.map cimport map
@@ -894,7 +896,7 @@ cdef class Archive:
 
     def get_illustration_sizes(self) -> Set[pyint]:
         """Sizes for which an illustration is available (@1 scale only)"""
-        return {48}
+        return self.c_archive.getIllustrationSizes()
 
     def has_illustration(self, size: pyint = None) -> pybool:
         """Whether Archive has an illustration metadata for this size"""
