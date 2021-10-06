@@ -345,6 +345,7 @@ def test_reader_main_favicon_entries(
         assert zim.get_illustration_item()
         if new_ns:
             assert zim.get_illustration_item().path == "Illustration_48x48@1"
+            assert zim.get_illustration_sizes() == {48}
 
 
 @pytest.mark.parametrize(

@@ -350,6 +350,7 @@ def test_creator_illustration(fpath, favicon_data):
     assert zim.has_illustration(128) is False
     assert bytes(zim.get_illustration_item().content) == favicon_data
     assert bytes(zim.get_illustration_item(96).content) == favicon_data
+    assert zim.get_illustration_sizes() == {48, 96}
 
 
 def test_creator_additem(fpath, lipsum_item):

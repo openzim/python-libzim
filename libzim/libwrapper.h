@@ -145,6 +145,7 @@ class Archive : public Wrapper<zim::Archive>
     FORWARD(wrapper::Entry, getEntryByTitle)
     FORWARD(wrapper::Entry, getMainEntry)
     FORWARD(wrapper::Item, getIllustrationItem)
+    FORWARD(std::set<unsigned int>, getIllustrationSizes)
     std::string getUuid() const
     { auto u = mp_base->getUuid();
       std::string uuids(u.data, u.size());
