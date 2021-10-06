@@ -759,11 +759,18 @@ cdef class Archive:
         return Entry.from_entry(move(entry))
 
     def has_entry_by_title(self, title: str) -> pybool:
-        """Whether Archive has en entry with this title"""
+        """Whether Archive has en entry with this title
+
+            Uses get_entry_by_title() so it's specificities apply as well"""
         return self.c_archive.hasEntryByTitle(<string>title.encode('UTF-8'))
 
     def get_entry_by_title(self, title: str) -> Entry:
         """Entry from a title -> Entry
+
+            If ZIM doesn't contain a listing/titleOrdered/v1 entry (most likely
+            because if was created without any FRONT_ARTICLE) then this yields results
+            for matching path if the title was not set at creation time.
+            Otherwise raises KeyError.
 
             Parameters
             ----------
