@@ -12,6 +12,7 @@ import pytest
 
 import libzim.writer
 from libzim.reader import Archive
+from libzim.search import Query, Searcher
 from libzim.suggestion import SuggestionSearcher
 from libzim.writer import (
     Blob,
@@ -232,15 +233,17 @@ def test_creator_clustersize(fpath, cluster_size, lipsum_item):
     ],
 )
 def test_creator_indexing(fpath, lipsum_item, indexing, language, expected):
-    fpath = "lolo.zim"
     with Creator(fpath).config_indexing(indexing, language) as c:
         c.add_item(lipsum_item)
 
     zim = Archive(fpath)
     assert zim.has_fulltext_index == indexing
 
-    # upstream bug https://github.com/openzim/libzim/issues/481
-    # assert zim.get_estimated_search_results_count("standard") == expected
+    if indexing:
+        query = Query().set_query("standard")
+        searcher = Searcher(zim)
+        search = searcher.search(query)
+        assert search.getEstimatedMatches() == expected
 
 
 @pytest.mark.parametrize("nb_workers", [1, 2, 3, 5])
