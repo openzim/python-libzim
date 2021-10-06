@@ -12,6 +12,7 @@ import pytest
 
 import libzim.writer
 from libzim.reader import Archive
+from libzim.suggestion import SuggestionSearcher
 from libzim.writer import (
     Blob,
     ContentProvider,
@@ -444,9 +445,15 @@ def test_creator_redirection(fpath, lipsum_item):
         == zim.get_entry_by_path(HOME_PATH).path
     )
     assert zim.get_entry_by_path("accueil").get_item().path == HOME_PATH
-    # TODO: restore [search-api]
-    # assert "home" in list(zim.suggest("hello"))
-    # assert "accueil" in list(zim.suggest("bonjour"))
+
+    # suggestions
+    sugg_searcher = SuggestionSearcher(zim)
+    sugg_hello = sugg_searcher.suggest("hello")
+    assert "home" in list(sugg_hello.getResults(0, sugg_hello.getEstimatedMatches()))
+    sugg_bonjour = sugg_searcher.suggest("bonjour")
+    assert "accueil" in list(
+        sugg_bonjour.getResults(0, sugg_hello.getEstimatedMatches())
+    )
 
 
 def test_item_notimplemented(fpath, lipsum_item):
