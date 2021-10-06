@@ -8,6 +8,8 @@ __pycache__
 .tox
 .coverage
 coverage.*
+*.swp
+
 
 # Compiled binaries and package builds
 *.so
