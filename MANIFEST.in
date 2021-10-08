@@ -2,6 +2,9 @@ include LICENSE
 include README.md
 include tests/*.py
 include pyproject.toml
+include setup.cfg
+include requirements-dev.txt
+include tasks.py
 
 include libzim/libzim.7.dylib
 include libzim/libzim.so.7
