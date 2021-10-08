@@ -43,18 +43,33 @@ def download_libzim(c, version="7.0.0"):
 
     with urllib.request.urlopen(url) as response, open(fname, "wb") as fh:  # nosec
         fh.write(response.read())
+
+    # extract and remove archive
     c.run(f"tar -xvf {fname.name}")
     c.run(f"rm -vf {fname.name}")
 
+    # remove previous install from target directories
+    c.run("find ./include -not -name 'README.md' -not -name 'include' | xargs rm -rf")
+    c.run("find ./lib -not -name 'README.md' -not -name 'lib' | xargs rm -rf")
+
+    # move extracted bins and headers to expected places
     dname = fname.with_suffix("").stem
     c.run(f"mv -v {dname}/include/* ./include/")
-    c.run(f"mv -v {dname}/lib/* ./lib/")
+    if platform.system() == "Linux":
+        c.run(f"mv -v {dname}/lib/x86_64-linux-gnu/* ./lib/")
+        c.run(f"rmdir {dname}/lib/x86_64-linux-gnu")
+    else:
+        c.run(f"mv -v {dname}/lib/* ./lib/")
+    # remove extracted folder (should be empty)
     c.run(f"rmdir {dname}/lib {dname}/include/ {dname}")
 
+    # add link for version-less dylib and link from root
     if platform.system() == "Darwin":
-        c.run(f"ln -svf ./lib/libzim.{version[0]}.dylib ./")
+        c.run(f"ln -svf ./lib/libzim.{version[0]}.dylib .")
+        c.run(f"ln -svf ./libzim.{version[0]}.dylib lib/libzim.dylib")
     else:
-        c.run(f"ln -svf ./lib/libzim.so.{version[0]} ./")
+        c.run(f"ln -svf ./lib/libzim.so.{version[0]} .")
+        c.run(f"ln -svf ./libzim.so.{version[0]} lib/libzim.so")
 
 
 @task

@@ -6,10 +6,11 @@ on:
       - v*
 
 env:
-  LIBZIM_VERSION: 6.1.8
+  LIBZIM_VERSION: 7.0.0
   LIBZIM_INCLUDE_PATH: include/zim
   TWINE_USERNAME: __token__
   TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+  # TWINE_PASSWORD: ${{ secrets.PYPI_TEST_API_TOKEN }}
   # TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
 
 jobs:
@@ -21,7 +22,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
         # TODO: expand this to cross-platform builds (see V2 approach below)
         # os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: [3.6, 3.7, 3.8]
+        python-version: [3.6, 3.7, 3.8, 3.9]
 
     steps:
       - uses: actions/checkout@v2
@@ -55,7 +56,7 @@ jobs:
           rm $CERTIFICATE
           security set-key-partition-list -S "apple-tool:,apple:" -s -k mysecretpassword build.keychain
           security find-identity -v
-          sudo sntp -sS time.apple.com -t 60
+          sudo sntp -sS -t 60 time4.google.com || true
           xcrun altool --store-password-in-keychain-item "ALTOOL_PASSWORD" \
             -u "${{ secrets.APPLE_SIGNING_ALTOOL_USERNAME }}" \
             -p "${{ secrets.APPLE_SIGNING_ALTOOL_PASSWORD }}"
@@ -99,7 +100,7 @@ jobs:
 
       - name: Build cython and sdist
         run: |
-          pip install --upgrade "cython>=0.29.20,<3.0" setuptools pip wheel
+          pip install --upgrade "cython>=0.29.22,<3.0" setuptools pip wheel
           python3 setup.py build_ext --rpath $RPATH
           if [[  "${{ matrix.python-version }}" == "3.6" ]]
           then
@@ -109,15 +110,15 @@ jobs:
       - name: add macOS libzim binary to source for wheel
         if: matrix.os == 'macos-latest'
         run: |
-          install_name_tool -change libzim.${LIBZIM_VERSION:0:1}.dylib @loader_path/libzim.${LIBZIM_VERSION:0:1}.dylib $(find build -name "wrapper*.so")
-          cp -p lib/libzim.${LIBZIM_VERSION:0:1}.dylib libzim
+          install_name_tool -change libzim.${LIBZIM_VERSION:0:1}.dylib @loader_path/libzim.${LIBZIM_VERSION:0:1}.dylib $(find build -name "libzim.cpython*.so")
+          cp -pv lib/libzim.${LIBZIM_VERSION:0:1}.dylib $(find build/lib* -type d)/
 
       - name: sign macOS wrapper binary
         if: matrix.os == 'macos-latest'
         run: |
           echo "make sure libzim is signed and notarized"
-          spctl -a -v -t install libzim/libzim.${LIBZIM_VERSION:0:1}.dylib
-          wrapper=$(find build -name "wrapper*.so")
+          spctl -a -v -t install lib/libzim.${LIBZIM_VERSION:0:1}.dylib
+          wrapper=$(find build -name "libzim.cpython*.so")
           echo "sign the wrapper"
           codesign --force --sign "${{ secrets.APPLE_SIGNING_IDENTITY }}" ${wrapper} --deep --timestamp
           echo "create ZIP package for notarization request"
@@ -136,7 +137,7 @@ jobs:
 
       - name: add Linux libzim binary to source for wheel
         if: matrix.os == 'ubuntu-latest'
-        run: cp -p lib/libzim.so.${LIBZIM_VERSION:0:1} libzim
+        run: cp -pv lib/libzim.so.${LIBZIM_VERSION:0:1} $(find build/lib* -type d)/
 
       - name: build wheel
         run: python3 setup.py bdist_wheel --plat-name=$PLAFTORM_NAME
