@@ -32,3 +32,8 @@ libzim/libzim_api.h
 Pipfile
 .dev
 .env
+
+libzim.so
+libzim.so.*
+libzim.dylib
+libzim.*.dylib

@@ -5,7 +5,56 @@
 A description file for invoke (https://www.pyinvoke.org/)
 """
 
+import pathlib
+import platform
+import re
+import urllib.request
+
 from invoke import task
+
+
+@task
+def download_libzim(c, version="7.0.0"):
+    """download C++ libzim binary"""
+
+    if platform.machine() != "x86_64" or platform.system() not in ("Linux", "Darwin"):
+        raise NotImplementedError(f"Platform {platform.platform()} not supported")
+
+    is_nightly = re.match(r"^\d{4}-\d{2}-\d{2}$", version)
+
+    if not is_nightly and not re.match(r"^\d\.\d\.\d$", version):
+        raise ValueError(
+            f"Unrecognised version {version}. "
+            "Must be either a x.x.x release or a Y-M-D date to use a nightly"
+        )
+
+    fname = pathlib.Path(
+        "libzim_{os}-x86_64-{version}.tar.gz".format(
+            os={"Linux": "linux", "Darwin": "macos"}.get(platform.system()),
+            version=version,
+        )
+    )
+    url = (
+        f"https://download.openzim.org/nightly/{version}/{fname.name}"
+        if is_nightly
+        else f"https://download.openzim.org/release/libzim/{fname.name}"
+    )
+    print("Downloading from", url)
+
+    with urllib.request.urlopen(url) as response, open(fname, "wb") as fh:  # nosec
+        fh.write(response.read())
+    c.run(f"tar -xvf {fname.name}")
+    c.run(f"rm -vf {fname.name}")
+
+    dname = fname.with_suffix("").stem
+    c.run(f"mv -v {dname}/include/* ./include/")
+    c.run(f"mv -v {dname}/lib/* ./lib/")
+    c.run(f"rmdir {dname}/lib {dname}/include/ {dname}")
+
+    if platform.system() == "Darwin":
+        c.run(f"ln -svf ./lib/libzim.{version[0]}.dylib ./")
+    else:
+        c.run(f"ln -svf ./lib/libzim.so.{version[0]} ./")
 
 
 @task
