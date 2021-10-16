@@ -1,4 +1,4 @@
-## 1.0.dev0
+## 1.0.0
 
 * using libzim 7.x
 * Python 3.9 support
