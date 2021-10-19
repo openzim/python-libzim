@@ -2,7 +2,7 @@ name: test
 on: [push]
 
 env:
-  LIBZIM_VERSION: 2021-10-05
+  LIBZIM_VERSION: 7.0.0
   LIBZIM_INCLUDE_PATH: include/zim
   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   PROFILE: 1
@@ -29,9 +29,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-10.15]
         # TODO: expand this once macos and windows libzim releases become available
-        # os: [ubuntu-latest, windows-latest, macos-latest]
+        # os: [ubuntu-latest, windows-latest, macos-10.15]
         # alternatively we can compile libzim in docker and use the container as an action
         python: [3.6, 3.7, 3.8, 3.9]
 
@@ -45,7 +45,7 @@ jobs:
           architecture: x64
 
       - name: set macOS environ
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-10.15'
         run: |
           echo LIBZIM_EXT=dylib >> $GITHUB_ENV
           echo LIBZIM_RELEASE=libzim_macos-x86_64-$LIBZIM_VERSION >> $GITHUB_ENV
@@ -68,7 +68,7 @@ jobs:
       - name: Download libzim dylib & headers from OpenZIM.org releases
         if: steps.cache-libzim.outputs.cache-hit != 'true'
         run: |
-          wget -q https://download.openzim.org/nightly/$LIBZIM_VERSION/$LIBZIM_RELEASE.tar.gz
+          wget -q https://download.openzim.org/release/libzim/$LIBZIM_RELEASE.tar.gz
           tar --extract --file=$LIBZIM_RELEASE.tar.gz
           mv $LIBZIM_RELEASE libzim_dist
 
@@ -85,7 +85,7 @@ jobs:
           sudo ldconfig $PWD/lib
 
       - name: update macOS shared objects cache
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-10.15'
         run: |
           export DYLD_LIBRARY_PATH="$PWD/lib:$DYLD_LIBRARY_PATH"
 
