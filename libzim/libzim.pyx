@@ -314,7 +314,7 @@ cdef class _Creator:
         with nogil:
             self.c_creator.addItem(item)
 
-    def add_metadata(self, str name: str, bytes content: bytes, str mimetype: str = "text/plain;charset=UTF-8"):
+    def add_metadata(self, str name: str, bytes content: bytes, str mimetype: str):
         """Add metadata entry to Archive
 
         https://wiki.openzim.org/wiki/Metadata"""
@@ -475,14 +475,15 @@ class Creator(_Creator):
         return super().config_compression(compression)
 
     def add_metadata(
-        self, name: str, content: Union[str, bytes, datetime.date, datetime.datetime]
+        self, name: str, content: Union[str, bytes, datetime.date, datetime.datetime],
+        mimetype: str = "text/plain;charset=UTF-8"
     ):
         name = pascalize(name)
         if name == "Date" and isinstance(content, (datetime.date, datetime.datetime)):
             content = content.strftime("%Y-%m-%d").encode("UTF-8")
         if isinstance(content, str):
             content = content.encode("UTF-8")
-        super().add_metadata(name=name, content=content)
+        super().add_metadata(name=name, content=content, mimetype=mimetype)
 
     def __repr__(self) -> str:
         return f"Creator(filename={self.filename})"
