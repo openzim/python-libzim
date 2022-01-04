@@ -190,6 +190,50 @@ ZIMS_DATA = {
         "test_redirect": "-/favicon",
         "test_redirect_to": "I/empty.png",
     },
+    "small.zim": {
+        "filename": "small.zim",
+        "filesize": 41155,
+        "new_ns": True,
+        "mutlipart": False,
+        "zim_uuid": "3581ae7eedd57e6cd2f1c0cab073643f",
+        "metadata_keys": [
+            "Counter",
+            "Creator",
+            "Date",
+            "Description",
+            "Illustration_48x48@1",
+            "Language",
+            "Publisher",
+            "Scraper",
+            "Tags",
+            "Title",
+        ],
+        "test_metadata": "Title",
+        "test_metadata_value": "Test ZIM file",
+        "has_main_entry": True,
+        "has_favicon_entry": True,
+        "has_fulltext_index": False,
+        "has_title_index": True,
+        "has_checksum": True,
+        "checksum": None,
+        "is_valid": True,
+        "entry_count": 2,
+        "all_entry_count": 16,
+        "article_count": 1,
+        "suggestion_string": None,
+        "suggestion_count": None,
+        "suggestion_result": None,
+        "search_string": None,
+        "search_count": None,
+        "search_result": None,
+        "test_path": "main.html",
+        "test_title": "Test ZIM file",
+        "test_mimetype": "text/html",
+        "test_size": 207,
+        "test_content_includes": "Test ZIM file",
+        "test_redirect": None,
+        "test_redirect_to": None,
+    },
 }
 
 
@@ -220,7 +264,7 @@ def all_zims(tmpdir_factory):
     libzim_urls = [
         f"https://github.com/kiwix/kiwix-lib/raw/master/test/data/{name}"
         for name in ("zimfile.zim", "example.zim", "corner_cases.zim")
-    ]
+    ] + ["https://github.com/openzim/zim-testing-suite/raw/main/data/nons/small.zim"]
 
     # download libzim tests
     for url in libzim_urls:
@@ -313,6 +357,9 @@ def test_reader_metadata(
     assert zim.metadata_keys == metadata_keys
     if test_metadata:
         assert zim.get_metadata(test_metadata).decode("UTF-8") == test_metadata_value
+        item = zim.get_metadata_item(test_metadata)
+        assert item.mimetype == "text/plain"
+        assert item.size > 1
 
 
 @pytest.mark.parametrize(
@@ -346,6 +393,8 @@ def test_reader_main_favicon_entries(
         if new_ns:
             assert zim.get_illustration_item().path == "Illustration_48x48@1"
             assert zim.get_illustration_sizes() == {48}
+
+            assert zim.get_metadata_item("Illustration_48x48@1").mimetype == "image/png"
 
 
 @pytest.mark.parametrize(
