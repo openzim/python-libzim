@@ -138,6 +138,7 @@ cdef extern from "libwrapper.h" namespace "wrapper":
         Entry getEntryByTitle(string title) except +
 
         string getMetadata(string name) except +
+        Item getMetadataItem(string name) except +
         vector[string] getMetadataKeys() except +
 
         Entry getMainEntry() except +

@@ -799,6 +799,11 @@ cdef class Archive:
         """List of Metadata keys present in this archive"""
         return [key.decode("UTF-8", "strict") for key in self.c_archive.getMetadataKeys()]
 
+    def get_metadata_item(self, name: str) -> Item:
+        """A Metadata's Item"""
+        cdef zim.Item item = move(self.c_archive.getMetadataItem(name.encode('UTF-8')))
+        return Item.from_item(move(item))
+
     def get_metadata(self, name: str) -> bytes:
         """A Metadata's content -> bytes
 
