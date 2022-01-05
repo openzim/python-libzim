@@ -153,6 +153,7 @@ class Archive : public Wrapper<zim::Archive>
     }
     FORWARD(zim::size_type, getFilesize)
     FORWARD(std::string, getMetadata)
+    FORWARD(wrapper::Item, getMetadataItem)
     FORWARD(std::vector<std::string>, getMetadataKeys)
     FORWARD(zim::size_type, getEntryCount)
     FORWARD(zim::size_type, getAllEntryCount)
