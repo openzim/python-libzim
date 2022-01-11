@@ -43,6 +43,9 @@ from Cython.Build import cythonize
 from Cython.Distutils.build_ext import new_build_ext as build_ext
 from setuptools import Extension, setup
 
+# Avoid running cythonize on `setup.py clean` and similar
+SKIP_BUILD_CMDS = ["clean", "--help", "egg_info", "--version"]
+
 base_dir = Path(__file__).parent
 
 # Check if we need profiling (env var PROFILE set to `1`, used for coverage reporting)
@@ -69,51 +72,58 @@ if platform.system() == "Darwin":
             self.rpath[:] = []
 
     cmdclass = {"build_ext": fixed_build_ext}
-    dyn_lib_ext = "dylib"
 else:
     cmdclass = {"build_ext": build_ext}
-    dyn_lib_ext = "so"
 
-include_dirs = ["libzim"]
-library_dirs = []
-# Check for the CPP Libzim library headers in expected directory
-header_file = base_dir / "include" / "zim" / "zim.h"
-lib_file = base_dir / "lib" / f"libzim.{dyn_lib_ext}"
-if header_file.exists() and lib_file.exists():
-    print(
-        "Found lizim library and headers in local directory. "
-        "We will use them to compile python-libzim.\n"
-        "Hint : If you don't want to use them "
-        "(and use “system” installed one), remove them."
-    )
-    include_dirs.append("include")
-    library_dirs = ["lib"]
-else:
-    # Check for library.
-    if not find_library("zim"):
+
+def cython_ext_module():
+    dyn_lib_ext = "dylib" if platform.system() == "Darwin" else "so"
+    include_dirs = ["libzim"]
+    library_dirs = []
+    # Check for the CPP Libzim library headers in expected directory
+    header_file = base_dir / "include" / "zim" / "zim.h"
+    lib_file = base_dir / "lib" / f"libzim.{dyn_lib_ext}"
+    if header_file.exists() and lib_file.exists():
         print(
-            "[!] The libzim library cannot be found.\n"
-            "Please verify that the library is correctly installed and can be found."
+            "Found lizim library and headers in local directory. "
+            "Will use them to compile python-libzim.\n"
+            "Hint : If you don't want to use them "
+            "(and use “system” installed one), remove them."
         )
-        sys.exit(1)
-    print(
-        "Using system installed library. "
-        "We are assuming CFLAGS/LDFLAGS are correctly set."
-    )
+        include_dirs.append("include")
+        library_dirs = ["lib"]
+    elif "clean" not in sys.argv:
+        # Check for library.
+        if not find_library("zim"):
+            print(
+                "[!] The libzim library cannot be found.\n"
+                "Please verify it is correctly installed and can be found."
+            )
+            sys.exit(1)
+        print(
+            "Using system installed library; Assuming CFLAGS/LDFLAGS are correctly set."
+        )
 
-wrapper_extension = Extension(
-    name="libzim",
-    sources=["libzim/libzim.pyx", "libzim/libwrapper.cpp"],
-    include_dirs=include_dirs,
-    libraries=["zim"],
-    library_dirs=library_dirs,
-    extra_compile_args=["-std=c++11", "-Wall", "-Wextra"],
-    language="c++",
-    define_macros=define_macros,
-)
+    wrapper_extension = Extension(
+        name="libzim",
+        sources=["libzim/libzim.pyx", "libzim/libwrapper.cpp"],
+        include_dirs=include_dirs,
+        libraries=["zim"],
+        library_dirs=library_dirs,
+        extra_compile_args=["-std=c++11", "-Wall", "-Wextra"],
+        language="c++",
+        define_macros=define_macros,
+    )
+    return cythonize([wrapper_extension], compiler_directives=compiler_directives)
+
+
+if len(sys.argv) == 2 and sys.argv[1] in SKIP_BUILD_CMDS:
+    ext_modules = None
+else:
+    ext_modules = cython_ext_module()
 
 setup(
     # Content
     cmdclass=cmdclass,
-    ext_modules=cythonize([wrapper_extension], compiler_directives=compiler_directives),
+    ext_modules=ext_modules,
 )
