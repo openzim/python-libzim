@@ -236,6 +236,10 @@ ZIMS_DATA = {
     },
 }
 
+skip_if_offline = pytest.mark.skipif(
+    bool(os.getenv("OFFLINE")), reason="OFFLINE environ requested offline-only"
+)
+
 
 def get_pytest_param(name, *fields):
     args = [ZIMS_DATA[name].get(field, f"MISSING-VALUE {field}") for field in fields]
@@ -290,6 +294,7 @@ def test_open_badfile(tmpdir):
         Archive(fpath)
 
 
+@skip_if_offline
 def test_content_ref_keep(all_zims):
     """Get the memoryview on a content and loose the reference on the article.
     We try to load a lot of other articles to detect possible use of dandling pointer
@@ -319,6 +324,7 @@ def test_content_ref_keep(all_zims):
     )
 
 
+@skip_if_offline
 @pytest.mark.parametrize(
     *parametrize_for(["filename", "filesize", "new_ns", "mutlipart", "zim_uuid"])
 )
@@ -342,6 +348,7 @@ def test_reader_archive(all_zims, filename, filesize, new_ns, mutlipart, zim_uui
         assert zim.uuid.hex == zim_uuid
 
 
+@skip_if_offline
 @pytest.mark.parametrize(
     *parametrize_for(
         ["filename", "metadata_keys", "test_metadata", "test_metadata_value"]
@@ -362,6 +369,7 @@ def test_reader_metadata(
         assert item.size > 1
 
 
+@skip_if_offline
 @pytest.mark.parametrize(
     *parametrize_for(["filename", "new_ns", "has_main_entry", "has_favicon_entry"])
 )
@@ -397,6 +405,7 @@ def test_reader_main_favicon_entries(
             assert zim.get_metadata_item("Illustration_48x48@1").mimetype == "image/png"
 
 
+@skip_if_offline
 @pytest.mark.parametrize(
     *parametrize_for(["filename", "has_fulltext_index", "has_title_index"])
 )
@@ -408,6 +417,7 @@ def test_reader_has_index(all_zims, filename, has_fulltext_index, has_title_inde
     assert zim.has_title_index is has_title_index
 
 
+@skip_if_offline
 @pytest.mark.parametrize(*parametrize_for(["filename", "has_checksum", "is_valid"]))
 def test_reader_checksum(all_zims, filename, has_checksum, is_valid):
     zim = Archive(all_zims / filename)
@@ -420,6 +430,7 @@ def test_reader_checksum(all_zims, filename, has_checksum, is_valid):
     assert zim.check() is is_valid
 
 
+@skip_if_offline
 @pytest.mark.parametrize(
     *parametrize_for(
         [
@@ -470,6 +481,7 @@ def test_reader_suggest_search(
         assert list(suggestion.getResults(0, suggestion_count)) == suggestion_result
 
 
+@skip_if_offline
 @pytest.mark.parametrize(
     *parametrize_for(
         [
@@ -525,6 +537,7 @@ def test_reader_get_entries(
         assert zim.get_entry_by_title(test_title).path == entry.path
 
 
+@skip_if_offline
 @pytest.mark.parametrize(
     *parametrize_for(["filename", "test_redirect", "test_redirect_to"])
 )
@@ -545,6 +558,7 @@ def test_reader_redirect(all_zims, filename, test_redirect, test_redirect_to):
                 target_entry.get_redirect_entry().get_redirect_entry()
 
 
+@skip_if_offline
 @pytest.mark.parametrize(*parametrize_for(["filename"]))
 def test_reader_by_id(all_zims, filename):
     zim = Archive(all_zims / filename)
@@ -555,6 +569,7 @@ def test_reader_by_id(all_zims, filename):
         assert zim._get_entry_by_id(index).get_item()._index >= 0
 
 
+@skip_if_offline
 def test_archive_equality(all_zims):
     class Different:
         def __init__(self, filename):
