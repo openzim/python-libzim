@@ -1,3 +1,12 @@
+## 1.1.0
+
+* Allow setting mimetype for metadata
+* added getMetadataItem support (#127)
+* skip cython on setup.py clean (#131)
+* OFFLINE environ skips network-using tests (#132)
+* Added Python3.10 Support
+* Updated Cython to 0.29.26
+
 ## 1.0.0
 
 * using libzim 7.x
