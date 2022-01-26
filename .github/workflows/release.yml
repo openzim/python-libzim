@@ -22,7 +22,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
         # TODO: expand this to cross-platform builds (see V2 approach below)
         # os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
 
     steps:
       - uses: actions/checkout@v2
@@ -100,7 +100,7 @@ jobs:
 
       - name: Build cython and sdist
         run: |
-          pip install --upgrade "cython>=0.29.22,<3.0" setuptools pip wheel
+          pip install --upgrade "cython>=0.29.26,<3.0" setuptools pip wheel
           python3 setup.py build_ext --rpath $RPATH
           if [[  "${{ matrix.python-version }}" == "3.6" ]]
           then
