@@ -6,6 +6,7 @@
 * OFFLINE environ skips network-using tests (#132)
 * Added Python3.10 Support
 * Updated Cython to 0.29.26
+* Fixed `Archive.filesize` (#137)
 
 ## 1.0.0
 

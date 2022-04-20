@@ -131,7 +131,7 @@ cdef extern from "libwrapper.h" namespace "wrapper":
         Archive() except +
         Archive(string filename) except +
 
-        int getFilesize() except +
+        uint64_t getFilesize() except +
 
         Entry getEntryByPath(string path) except +
         Entry getEntryByPath(entry_index_type idx) except +
