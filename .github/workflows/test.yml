@@ -2,7 +2,7 @@ name: test
 on: [push]
 
 env:
-  LIBZIM_VERSION: 7.1.0
+  LIBZIM_VERSION: 7.2.2
   LIBZIM_INCLUDE_PATH: include/zim
   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   PROFILE: 1
@@ -56,7 +56,7 @@ jobs:
         run: |
           echo LIBZIM_EXT=so >> $GITHUB_ENV
           echo LIBZIM_RELEASE=libzim_linux-x86_64-$LIBZIM_VERSION >> $GITHUB_ENV
-          echo LIBZIM_LIBRARY_PATH=lib/x86_64-linux-gnu/libzim.so.7.1.0 >> $GITHUB_ENV
+          echo LIBZIM_LIBRARY_PATH=lib/x86_64-linux-gnu/libzim.so.7.2.2 >> $GITHUB_ENV
 
       - name: Cache libzim dylib & headers
         uses: actions/cache@master
@@ -91,7 +91,7 @@ jobs:
 
       - name: Build cython, sdist, and bdist_wheel
         run: |
-          pip install --upgrade pip install "cython>=0.29.26,<3.0" setuptools pip wheel
+          pip install --upgrade pip install "cython>=0.29.28,<3.0" setuptools pip wheel
           python3 setup.py build_ext --inplace
           python3 setup.py sdist bdist_wheel
 

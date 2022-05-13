@@ -9,11 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-* getMetadataItem support (#127)
-* Added Python3.10 Support
+* `Archive.get_metadata_item()` (#127)
+* Python 3.10 Support
 
 ### Changed
 
+* using libzim 7.2.2
+  * RuntimeError exception is now raises on invalid/duplicate entries
 * Allow setting mimetype for metadata
 * Updated Cython to 0.29.28
 * Fixed `Archive.filesize` (#137)
@@ -25,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0] - 2021-10-09
 
-* using libzim 7.x
+* using libzim 7.0.0
 * Python 3.9 support
 * [breaking] Using new libzim 7-based API for both reader and writer
   * No more namespaces
