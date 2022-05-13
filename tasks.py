@@ -14,7 +14,7 @@ from invoke import task
 
 
 @task
-def download_libzim(c, version="7.1.0"):
+def download_libzim(c, version="7.2.2"):
     """download C++ libzim binary"""
 
     if platform.machine() != "x86_64" or platform.system() not in ("Linux", "Darwin"):
