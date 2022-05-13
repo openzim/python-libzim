@@ -1,14 +1,29 @@
-## 1.1.0
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+
+* getMetadataItem support (#127)
+* Added Python3.10 Support
+
+### Changed
 
 * Allow setting mimetype for metadata
-* added getMetadataItem support (#127)
-* skip cython on setup.py clean (#131)
-* OFFLINE environ skips network-using tests (#132)
-* Added Python3.10 Support
-* Updated Cython to 0.29.26
+* Updated Cython to 0.29.28
 * Fixed `Archive.filesize` (#137)
 
-## 1.0.0
+### Removed
+
+* skip cython on setup.py clean (#131)
+* OFFLINE environ skips network-using tests (#132)
+
+## [1.0.0] - 2021-10-09
 
 * using libzim 7.x
 * Python 3.9 support
@@ -21,7 +36,7 @@
 * macOS releases are signed and notarized
 * Early-failure on invalid destination ZIM path
 
-## 0.0.4
+## [0.0.4]
 
 * added compression argument to Creator to set compression algorithm (libzim.writer.Compression)
 * Creator positional arguments order changed: min_chunk_size moved after compression
@@ -31,11 +46,11 @@
 * Fixed using `get_filename()` (#71)
 * using libzim 6.1.8
 
-## 0.0.3.post0
+## [0.0.3.post0]
 
 * fixed access to bundled libzim on macOS (missing rpath)
 
-## 0.0.3
+## [0.0.3]
 
 * [reader] fixed `main_page` retrieval
 * [reader] provide access to redirect target via `get_redirect_article()` (#51)
@@ -64,7 +79,7 @@
 * building with Cython 0.29.20+
 * using libzim 6.1.7
 
-## 0.0.2
+## [0.0.2]
 
 * initial release
 * using libzim 6.1.6
