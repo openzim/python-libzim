@@ -391,7 +391,6 @@ def test_creator_metadata(fpath, lipsum_item):
         "_videos:no;_details:yes;_ftindex:yes",
         "Flavour": "nopic",
         "Source": "https://en.wikipedia.org/",
-        "Counter": "image/jpeg=5;image/gif=3;image/png=2",
         "Scraper": "sotoki 1.2.3",
     }
 
@@ -417,12 +416,25 @@ def test_creator_metadata(fpath, lipsum_item):
         assert zim.get_metadata(name).decode("UTF-8") == value
 
 
-def test_creator_metadata_nooverwrite(fpath, lipsum_item):
+def test_creator_metadata_overwrite(fpath, lipsum_item, favicon_data):
+    """re-adding an Entry (even Metadata) now raises an exception (libzim 7.2+)"""
     with Creator(fpath) as c:
         c.add_item(lipsum_item)
+        with pytest.raises(RuntimeError, match="Impossible to add"):
+            c.add_item(lipsum_item)
+
         c.add_metadata("Key", "first")
-        # re-setting a value prints a warning and ignore it
-        c.add_metadata("Key", "second")
+        with pytest.raises(RuntimeError, match="Impossible to add"):
+            c.add_metadata("Key", "second")
+
+        c.add_redirection("home", lipsum_item.get_path(), "Home", {})
+        with pytest.raises(RuntimeError, match="Impossible to add"):
+            c.add_redirection("home", lipsum_item.get_path(), "Home again", {})
+
+        c.add_illustration(48, favicon_data)
+        # this currently segfaults but it should not
+        # with pytest.raises(RuntimeError, match="Impossible to add"):
+        #     c.add_illustration(48, favicon_data)
     zim = Archive(fpath)
     assert zim.get_metadata("Key").decode("UTF-8") == "first"
 
