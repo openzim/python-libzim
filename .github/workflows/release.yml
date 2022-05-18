@@ -6,7 +6,7 @@ on:
       - v*
 
 env:
-  LIBZIM_VERSION: 7.1.0
+  LIBZIM_VERSION: 7.2.2
   LIBZIM_INCLUDE_PATH: include/zim
   TWINE_USERNAME: __token__
   TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
@@ -100,7 +100,7 @@ jobs:
 
       - name: Build cython and sdist
         run: |
-          pip install --upgrade "cython>=0.29.26,<3.0" setuptools pip wheel
+          pip install --upgrade "cython>=0.29.28,<3.0" setuptools pip wheel
           python3 setup.py build_ext --rpath $RPATH
           if [[  "${{ matrix.python-version }}" == "3.6" ]]
           then
