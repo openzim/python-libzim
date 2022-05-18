@@ -304,6 +304,8 @@ cdef class _Creator:
             Raises
             ------
                 RuntimeError
+                    If an Item exists with the same path
+                RuntimeError
                     If the ZimCreator was already finalized"""
         if not self._started:
             raise RuntimeError("Creator not started")
@@ -317,7 +319,12 @@ cdef class _Creator:
     def add_metadata(self, str name: str, bytes content: bytes, str mimetype: str):
         """Add metadata entry to Archive
 
-        https://wiki.openzim.org/wiki/Metadata"""
+            https://wiki.openzim.org/wiki/Metadata
+
+            Raises
+            ------
+                RuntimeError
+                    If a Metadata exists with the same name"""
         if not self._started:
             raise RuntimeError("Creator not started")
 
@@ -331,6 +338,11 @@ cdef class _Creator:
         """Add redirection entry to Archive
 
             https://wiki.openzim.org/wiki/ZIM_file_format#Redirect_Entry
+
+            Raises
+            ------
+                RuntimeError
+                    If a Rediction exists with the same path
             """
         if not self._started:
             raise RuntimeError("Creator not started")
