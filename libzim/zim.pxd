@@ -64,7 +64,7 @@ cdef extern from "zim/writer/creator.h" namespace "zim::writer":
         void addRedirection(string path, string title, string targetpath, map[HintKeys, uint64_t] hints) nogil except +
         void finishZimCreation() nogil except +
         void setMainPath(string mainPath)
-        void addIllustration(unsigned int size, string content)
+        void addIllustration(unsigned int size, string content) nogil except +
 
 cdef extern from "zim/search.h" namespace "zim":
     cdef cppclass Query:
