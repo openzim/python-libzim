@@ -433,8 +433,8 @@ def test_creator_metadata_overwrite(fpath, lipsum_item, favicon_data):
 
         c.add_illustration(48, favicon_data)
         # this currently segfaults but it should not
-        # with pytest.raises(RuntimeError, match="Impossible to add"):
-        #     c.add_illustration(48, favicon_data)
+        with pytest.raises(RuntimeError, match="Impossible to add"):
+            c.add_illustration(48, favicon_data)
     zim = Archive(fpath)
     assert zim.get_metadata("Key").decode("UTF-8") == "first"
 
