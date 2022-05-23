@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.1.0] - 2022-05-23
 
 ### Added
 
@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 * using libzim 7.2.2
-  * RuntimeError exception is now raises on invalid/duplicate entries
+  * RuntimeError exception is now raised on invalid/duplicate entries
 * Allow setting mimetype for metadata
 * Updated Cython to 0.29.28
 * Fixed `Archive.filesize` (#137)
@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 * skip cython on setup.py clean (#131)
-* OFFLINE environ skips network-using tests (#132)
+* `OFFLINE` environ skips network-using tests (#132)
 
 ## [1.0.0] - 2021-10-09
 
