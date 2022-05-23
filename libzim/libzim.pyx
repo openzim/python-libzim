@@ -287,7 +287,12 @@ cdef class _Creator:
     def add_illustration(self, int size: pyint, content: bytes):
         """Add a PNG illustration to Archive
 
-            https://wiki.openzim.org/wiki/Metadata"""
+            https://wiki.openzim.org/wiki/Metadata
+
+            Raises
+            ------
+                RuntimeError
+                    If an Illustration exists with the same size"""
         cdef string _content = content
         self.c_creator.addIllustration(size, _content)
 
