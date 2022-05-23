@@ -19,9 +19,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-10.15]
         # TODO: expand this to cross-platform builds (see V2 approach below)
-        # os: [ubuntu-latest, windows-latest, macos-latest]
+        # os: [ubuntu-latest, windows-latest, macos-10.15]
         python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
 
     steps:
@@ -34,7 +34,7 @@ jobs:
           architecture: x64
 
       - name: set macOS environ
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-10.15'
         run: |
           echo LIBZIM_EXT=dylib >> $GITHUB_ENV
           echo LIBZIM_RELEASE=libzim_macos-x86_64-$LIBZIM_VERSION >> $GITHUB_ENV
@@ -43,7 +43,7 @@ jobs:
           echo RPATH=@loader_path/ >> $GITHUB_ENV
 
       - name: install Apple certificate
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-10.15'
         shell: bash
         env:
           CERTIFICATE: /tmp/wmch-devid.p12
@@ -92,7 +92,7 @@ jobs:
           ln -s $GITHUB_WORKSPACE/libzim_dist/$LIBZIM_INCLUDE_PATH include/zim
 
       - name: Link macOS libzim dylib & headers into workspace lib and include folders
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-10.15'
         run: |
           cp -Pp $GITHUB_WORKSPACE/libzim_dist/lib/* lib/
           ln -sf libzim.${LIBZIM_VERSION:0:1}.dylib lib/libzim.dylib
@@ -108,13 +108,13 @@ jobs:
           fi
 
       - name: add macOS libzim binary to source for wheel
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-10.15'
         run: |
           install_name_tool -change libzim.${LIBZIM_VERSION:0:1}.dylib @loader_path/libzim.${LIBZIM_VERSION:0:1}.dylib $(find build -name "libzim.cpython*.so")
           cp -pv lib/libzim.${LIBZIM_VERSION:0:1}.dylib $(find build/lib* -type d)/
 
       - name: sign macOS wrapper binary
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-10.15'
         run: |
           echo "make sure libzim is signed and notarized"
           spctl -a -v -t install lib/libzim.${LIBZIM_VERSION:0:1}.dylib
