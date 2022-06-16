@@ -19,9 +19,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-10.15]
-        # TODO: expand this to cross-platform builds (see V2 approach below)
-        # os: [ubuntu-latest, windows-latest, macos-10.15]
+        os: [ubuntu-20.04, macos-10.15]
         python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
 
     steps:
@@ -62,7 +60,7 @@ jobs:
             -p "${{ secrets.APPLE_SIGNING_ALTOOL_PASSWORD }}"
 
       - name: set linux environ
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-20.04'
         run: |
           echo LIBZIM_EXT=so >> $GITHUB_ENV
           echo LIBZIM_RELEASE=libzim_linux-x86_64-$LIBZIM_VERSION >> $GITHUB_ENV
@@ -85,7 +83,7 @@ jobs:
           mv $LIBZIM_RELEASE libzim_dist
 
       - name: Link Linux libzim dylib & headers into workspace lib and include folders
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-20.04'
         run: |
           cp -dp $GITHUB_WORKSPACE/libzim_dist/lib/x86_64-linux-gnu/* lib/
           ln -s libzim.so.${LIBZIM_VERSION:0:1} lib/libzim.so
@@ -100,9 +98,9 @@ jobs:
 
       - name: Build cython and sdist
         run: |
-          pip install --upgrade "cython>=0.29.28,<3.0" setuptools pip wheel
+          pip install --upgrade "cython>=0.29.30,<3.0" setuptools pip wheel
           python3 setup.py build_ext --rpath $RPATH
-          if [[  "${{ matrix.python-version }}" == "3.6" ]]
+          if [[  "${{ matrix.python-version }}" == "3.8" ]]
           then
             python3 setup.py sdist
           fi
@@ -136,7 +134,7 @@ jobs:
           spctl -a -v -t install ${wrapper} || true
 
       - name: add Linux libzim binary to source for wheel
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-20.04'
         run: cp -pv lib/libzim.so.${LIBZIM_VERSION:0:1} $(find build/lib* -type d)/
 
       - name: build wheel
@@ -152,7 +150,7 @@ jobs:
         run: |
           pip install --upgrade twine
           twine check dist/*
-          if [  "${{ matrix.os }}" == "ubuntu-latest" -a "${{ matrix.python-version }}" = "3.6" ]
+          if [  "${{ matrix.os }}" == "ubuntu-20.04" -a "${{ matrix.python-version }}" = "3.8" ]
           then
             twine upload dist/*.tar.gz
           fi
