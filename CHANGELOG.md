@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-* n/a
+### Changed
+
+* Building with Cython 0.29.30
+* Specifying max python version to 3.10.x in metadata
 
 ## [1.1.0] - 2022-05-23
 
