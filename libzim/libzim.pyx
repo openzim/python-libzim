@@ -132,8 +132,8 @@ cdef public api:
     #         error[0] = traceback.format_exc().encode('UTF-8')
     #     return False
 
-    uint64_t int_cy_call_fct(object obj, string method, string *error) with gil:
-        """Lookup and execute a pure virtual method on object returning an int"""
+    uint64_t uint64_cy_call_fct(object obj, string method, string *error) with gil:
+        """Lookup and execute a pure virtual method on object returning an uint64_t"""
         try:
             return <uint64_t> call_method(obj, method)
         except Exception as e:
