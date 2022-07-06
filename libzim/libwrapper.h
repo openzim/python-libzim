@@ -305,6 +305,7 @@ class WriterItemWrapper : public zim::writer::Item, private ObjWrapper
     std::string getTitle() const override;
     std::string getMimeType() const override;
     std::unique_ptr<zim::writer::ContentProvider> getContentProvider() const override;
+    std::shared_ptr<zim::writer::IndexData> getIndexData() const override;
     zim::writer::Hints getHints() const override;
 };
 
@@ -315,6 +316,19 @@ class ContentProviderWrapper : public zim::writer::ContentProvider, private ObjW
     ~ContentProviderWrapper() = default;
     zim::size_type getSize() const override;
     zim::Blob feed() override;
+};
+
+class IndexDataWrapper: public zim::writer::IndexData, private ObjWrapper
+{
+  public:
+    IndexDataWrapper(PyObject *obj) : ObjWrapper(obj) {};
+    ~IndexDataWrapper() = default;
+    bool hasIndexData() const override;
+    std::string getTitle() const override;
+    std::string getContent() const override;
+    std::string getKeywords() const override;
+    uint32_t getWordCount() const override;
+    IndexData::GeoPosition getGeoPosition() const override;
 };
 
 
