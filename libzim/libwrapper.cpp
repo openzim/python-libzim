@@ -78,7 +78,7 @@ std::string _callMethodOnObj(PyObject *obj, const std::string& methodName, std::
 
 template<>
 uint64_t _callMethodOnObj(PyObject *obj, const std::string& methodName, std::string& error) {
-  return int_cy_call_fct(obj, methodName, &error);
+  return uint64_cy_call_fct(obj, methodName, &error);
 }
 
 template<>
