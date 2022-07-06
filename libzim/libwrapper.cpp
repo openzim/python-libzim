@@ -72,6 +72,11 @@ template<typename Output>
 Output _callMethodOnObj(PyObject *obj, const std::string& methodName, std::string& error);
 
 template<>
+bool _callMethodOnObj(PyObject *obj, const std::string& methodName, std::string& error) {
+  return bool_cy_call_fct(obj, methodName, &error);
+}
+
+template<>
 std::string _callMethodOnObj(PyObject *obj, const std::string& methodName, std::string& error) {
   return string_cy_call_fct(obj, methodName, &error);
 }
@@ -79,6 +84,11 @@ std::string _callMethodOnObj(PyObject *obj, const std::string& methodName, std::
 template<>
 uint64_t _callMethodOnObj(PyObject *obj, const std::string& methodName, std::string& error) {
   return uint64_cy_call_fct(obj, methodName, &error);
+}
+
+template<>
+uint32_t _callMethodOnObj(PyObject *obj, const std::string& methodName, std::string& error) {
+  return uint32_cy_call_fct(obj, methodName, &error);
 }
 
 template<>
@@ -93,9 +103,21 @@ _callMethodOnObj(PyObject *obj, const std::string& methodName, std::string& erro
 }
 
 template<>
+std::shared_ptr<zim::writer::IndexData>
+_callMethodOnObj(PyObject *obj, const std::string& methodName, std::string& error) {
+  return std::shared_ptr<zim::writer::IndexData>(indexdata_cy_call_fct(obj, methodName, &error));
+}
+
+template<>
 zim::writer::Hints
 _callMethodOnObj(PyObject *obj, const std::string& methodName, std::string& error) {
   return hints_cy_call_fct(obj, methodName, &error);
+}
+
+template<>
+zim::writer::IndexData::GeoPosition
+_callMethodOnObj(PyObject *obj, const std::string& methodName, std::string& error) {
+  return geoposition_cy_call_fct(obj, methodName, &error);
 }
 
 // This cpp function call a python method on a python object.
@@ -130,6 +152,44 @@ zim::Blob ContentProviderWrapper::feed()
   return callMethodOnObj<zim::Blob>(m_obj, "feed");
 }
 
+
+/*
+################################
+#  Index Data Wrapper          #
+################################
+*/
+
+bool IndexDataWrapper::hasIndexData() const
+{
+  return callMethodOnObj<bool>(m_obj, "has_indexdata");
+}
+
+std::string IndexDataWrapper::getTitle() const
+{
+  return callMethodOnObj<std::string>(m_obj, "get_title");
+}
+
+std::string IndexDataWrapper::getContent() const
+{
+  return callMethodOnObj<std::string>(m_obj, "get_content");
+}
+
+std::string IndexDataWrapper::getKeywords() const
+{
+  return callMethodOnObj<std::string>(m_obj, "get_keywords");
+}
+
+uint32_t IndexDataWrapper::getWordCount() const
+{
+  return callMethodOnObj<std::uint32_t>(m_obj, "get_wordcount");
+}
+
+zim::writer::IndexData::GeoPosition IndexDataWrapper::getGeoPosition() const
+{
+  return callMethodOnObj<zim::writer::IndexData::GeoPosition>(m_obj, "get_geoposition");
+}
+
+
 /*
 #########################
 #       WriterItem      #
@@ -159,6 +219,15 @@ std::unique_ptr<zim::writer::ContentProvider>
 WriterItemWrapper::getContentProvider() const
 {
   return callMethodOnObj<std::unique_ptr<zim::writer::ContentProvider>>(m_obj, "get_contentprovider");
+}
+
+std::shared_ptr<zim::writer::IndexData>
+WriterItemWrapper::getIndexData() const
+{
+  if (!obj_has_attribute(m_obj, "get_indexdata")) {
+    return zim::writer::Item::getIndexData();
+  }
+  return callMethodOnObj<std::shared_ptr<zim::writer::IndexData>>(m_obj, "get_indexdata");
 }
 
 zim::writer::Hints WriterItemWrapper::getHints() const
