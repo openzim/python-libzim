@@ -20,6 +20,7 @@ from libzim.writer import (
     Creator,
     FileProvider,
     Hint,
+    IndexData,
     Item,
     StringProvider,
 )
@@ -637,6 +638,54 @@ def test_hints_values(fpath):
             c.add_redirection(
                 path="5", title="", target_path="0", hints={Hint.YOLO: True}
             )
+
+
+@pytest.mark.parametrize(
+    "indexData, customContent, search_expected",
+    [
+        (None, "", [("standard", 1), ("home", 0), ("computer", 0)]),
+        (False, "", [("standard", 1), ("home", 0), ("computer", 0)]),
+        (True, "home", [("standard", 1), ("home", 1), ("computer", 0)]),
+        (True, "computer", [("standard", 1), ("home", 0), ("computer", 1)]),
+        (True, "standard", [("standard", 2), ("home", 0), ("computer", 0)]),
+    ],
+)
+def test_custom_indexdata(
+    fpath, lipsum_item, lipsum, indexData, customContent, search_expected
+):
+    item = StaticItem(path=HOME_PATH + "custom", content=lipsum, mimetype="text/html")
+    if indexData is None:
+        item.get_indexdata = lambda: None
+    else:
+
+        class CustomIndexData(IndexData):
+            def has_indexdata(self):
+                return indexData
+
+            def get_title(self):
+                return ""
+
+            def get_content(self):
+                return customContent
+
+            def get_keywords(self):
+                return ""
+
+            def get_wordcount(self):
+                return 1
+
+        item.get_indexdata = CustomIndexData
+
+    with Creator(fpath).config_indexing(True, "eng") as c:
+        c.add_item(lipsum_item)
+        c.add_item(item)
+
+    zim = Archive(fpath)
+    searcher = Searcher(zim)
+    for search_query, expected in search_expected:
+        query = Query().set_query(search_query)
+        search = searcher.search(query)
+        assert search.getEstimatedMatches() == expected
 
 
 def test_reimpfeed(fpath):

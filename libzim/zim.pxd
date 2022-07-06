@@ -45,6 +45,14 @@ cdef extern from "zim/writer/item.h" namespace "zim::writer":
         COMPRESS
         FRONT_ARTICLE
 
+    cdef cppclass IndexData:
+        pass
+
+cdef extern from "zim/writer/item.h" namespace "zim::writer::IndexData":
+    cppclass GeoPosition:
+        GeoPosition()
+        GeoPosition(bool, double, double)
+
 cdef extern from "zim/writer/contentProvider.h" namespace "zim::writer":
     cdef cppclass ContentProvider:
         pass
@@ -91,6 +99,8 @@ cdef extern from "libwrapper.h":
         ContentProviderWrapper(PyObject* obj) except +
     cdef cppclass WriterItemWrapper:
         WriterItemWrapper(PyObject* obj) except +
+    cdef cppclass IndexDataWrapper(IndexData):
+        IndexDataWrapper(PyObject* obj) except +
 
     Compression comp_from_int(int)
 

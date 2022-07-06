@@ -40,7 +40,7 @@ import pathlib
 import sys
 import traceback
 from types import ModuleType
-from typing import Dict, Generator, Iterator, List, Set, Union
+from typing import Dict, Generator, Iterator, List, Optional, Set, Tuple, Union
 from uuid import UUID
 
 from cpython.buffer cimport PyBUF_WRITABLE
@@ -48,7 +48,7 @@ from cpython.ref cimport PyObject
 
 from cython.operator import preincrement
 
-from libc.stdint cimport uint64_t
+from libc.stdint cimport uint32_t, uint64_t
 from libcpp cimport bool
 from libcpp.map cimport map
 from libcpp.memory cimport shared_ptr
@@ -87,6 +87,13 @@ cdef object call_method(object obj, string method):
 # object to the correct cpp type.
 # Will be used by cpp side to call python method.
 cdef public api:
+    bool obj_has_attribute(object obj, string attribute) with gil:
+        """Check if a object has a given attribute"""
+        attr = getattr(obj, attribute.decode('UTF-8'), None)
+        if not attr:
+            return False
+        return True
+
     string string_cy_call_fct(object obj, string method, string *error) with gil:
         """Lookup and execute a pure virtual method on object returning a string"""
         try:
@@ -122,15 +129,27 @@ cdef public api:
 
         return NULL
 
-    # currently have no virtual method returning a bool (was should_index/compress)
-    # bool bool_cy_call_fct(object obj, string method, string *error) with gil:
-    #     """Lookup and execute a pure virtual method on object returning a bool"""
-    #     try:
-    #         func = getattr(obj, method.decode('UTF-8'))
-    #         return func()
-    #     except Exception as e:
-    #         error[0] = traceback.format_exc().encode('UTF-8')
-    #     return False
+    zim.IndexData* indexdata_cy_call_fct(object obj, string method, string *error) with gil:
+        """Lookup and execute a pure virtual method on object returning a IndexData"""
+        try:
+            indexData = call_method(obj, method)
+            if not indexData:
+                # indexData is none
+                return NULL;
+            return new zim.IndexDataWrapper(<PyObject*>indexData)
+        except Exception as e:
+            error[0] = traceback.format_exc().encode('UTF-8')
+
+        return NULL
+
+    bool bool_cy_call_fct(object obj, string method, string *error) with gil:
+        """Lookup and execute a pure virtual method on object returning a bool"""
+        try:
+            return call_method(obj, method)
+        except Exception as e:
+            error[0] = traceback.format_exc().encode('UTF-8')
+
+        return False
 
     uint64_t uint64_cy_call_fct(object obj, string method, string *error) with gil:
         """Lookup and execute a pure virtual method on object returning an uint64_t"""
@@ -140,6 +159,26 @@ cdef public api:
             error[0] = traceback.format_exc().encode('UTF-8')
 
         return 0
+
+    uint32_t uint32_cy_call_fct(object obj, string method, string *error) with gil:
+        """Lookup and execute a pure virtual method on object returning an uint_32"""
+        try:
+            return <uint32_t> call_method(obj, method)
+        except Exception as e:
+            error[0] = traceback.format_exc().encode('UTF-8')
+
+        return 0
+
+    zim.GeoPosition geoposition_cy_call_fct(object obj, string method, string *error) with gil:
+        """Lookup and execute a pure virtual method on object returning a GeoPosition"""
+        try:
+            geoPosition = call_method(obj, method)
+            if geoPosition:
+                return zim.GeoPosition(True, geoPosition[0], geoPosition[1]);
+        except Exception as e:
+            error[0] = traceback.format_exc().encode('UTF-8')
+
+        return zim.GeoPosition(False, 0, 0)
 
     map[zim.HintKeys, uint64_t] convertToCppHints(dict hintsDict):
         """C++ Hints from Python dict"""
@@ -439,6 +478,40 @@ class FileProvider(ContentProvider):
                 yield WritingBlob(res)
                 res = fh.read(bsize)
 
+class IndexData:
+    """ IndexData stub to override
+
+    Return a subclass of it in Item.get_indexdata()"""
+    __module__ = writer_module_name
+
+    def has_indexdata(self) -> bool:
+        """Return true if the IndexData actually contains data"""
+        return False
+
+    def get_title(self) -> str:
+        """Title to index. Might be the same as Item.get_title or not"""
+        raise NotImplementedError("get_title must be implemented.")
+
+    def get_content(self) -> str:
+        """Content to index. Might be the same as Item.get_title or not"""
+        raise NotImplementedError("get_content must be implemented.")
+
+    def get_keywords(self) -> str:
+        """Keywords used to index the item.
+
+        Must be a string containing keywords separated by a space"""
+        raise NotImplementedError("get_keywords must be implemented.")
+
+    def get_wordcount(self) -> int:
+        """Number of word in content"""
+        raise NotImplementedError("get_wordcount must be implemented.")
+
+    def get_geoposition(self) -> Optional[Tuple[float, float]]:
+        """GeoPosition used to index the item.
+
+        Must be a tuple (latitude, longitude) or None"""
+        return None
+
 
 class BaseWritingItem:
     """Item stub to override
@@ -529,6 +602,7 @@ writer_public_objects = [
     ContentProvider,
     FileProvider,
     StringProvider,
+    IndexData,
     pascalize
 ]
 writer = create_module(writer_module_name, writer_module_doc, writer_public_objects)
