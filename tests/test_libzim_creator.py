@@ -254,7 +254,7 @@ def test_creator_nbworkers(fpath, lipsum_item, nb_workers):
 
 def test_creator_combine_config(fpath, lipsum_item):
     with Creator(fpath).config_verbose(True).config_compression(
-        "lzma"
+        "zstd"
     ).config_clustersize(1024).config_indexing(True, "eng").config_nbworkers(2) as c:
         c.add_item(lipsum_item)
 
@@ -263,7 +263,7 @@ def test_creator_combine_config(fpath, lipsum_item):
     "name, args",
     [
         ("verbose", (True,)),
-        ("compression", ("lzma",)),
+        ("compression", ("zstd",)),
         ("clustersize", (1024,)),
         ("indexing", (True, "eng")),
         ("nbworkers", (2,)),
