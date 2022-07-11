@@ -35,7 +35,6 @@ cdef extern from "zim/zim.h" namespace "zim":
         # We need to declare something here to be syntaxically correct
         # but we don't use those values (even if they are valid).
         None "zim::Compression::None"
-        Lzma "zim::Compression::Lzma"
         Zstd "zim::Compression::Zstd"
 
 
