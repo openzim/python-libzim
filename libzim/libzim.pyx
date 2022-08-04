@@ -190,8 +190,7 @@ class Compression(enum.Enum):
     # We don't care of the exact value. The function comp_from_int will do the right
     # conversion to zim::Compression
     none = 0
-    lzma = 1
-    zstd = 2
+    zstd = 1
 
 
 class Hint(enum.Enum):
