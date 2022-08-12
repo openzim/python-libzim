@@ -2,7 +2,7 @@ name: test
 on: [push]
 
 env:
-  LIBZIM_VERSION: 7.2.2
+  LIBZIM_VERSION: 8.0.0
   LIBZIM_INCLUDE_PATH: include/zim
   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   PROFILE: 1
@@ -29,31 +29,31 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, macos-10.15]
-        python: ["3.6", "3.7", "3.8", "3.9", "3.10"]
+        os: [ubuntu-20.04, macos-12]
+        python: ["3.6.15", "3.7", "3.8", "3.9", "3.10"]
 
     steps:
       - uses: actions/checkout@v2
 
       - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4.2.0
         with:
           python-version: ${{ matrix.python }}
           architecture: x64
 
       - name: set macOS environ
-        if: matrix.os == 'macos-10.15'
+        if: matrix.os == 'macos-12'
         run: |
           echo LIBZIM_EXT=dylib >> $GITHUB_ENV
           echo LIBZIM_RELEASE=libzim_macos-x86_64-$LIBZIM_VERSION >> $GITHUB_ENV
-          echo LIBZIM_LIBRARY_PATH=lib/libzim.7.dylib >> $GITHUB_ENV
+          echo LIBZIM_LIBRARY_PATH=lib/libzim.8.dylib >> $GITHUB_ENV
 
       - name: set linux environ
         if: matrix.os == 'ubuntu-20.04'
         run: |
           echo LIBZIM_EXT=so >> $GITHUB_ENV
           echo LIBZIM_RELEASE=libzim_linux-x86_64-$LIBZIM_VERSION >> $GITHUB_ENV
-          echo LIBZIM_LIBRARY_PATH=lib/x86_64-linux-gnu/libzim.so.7.2.2 >> $GITHUB_ENV
+          echo LIBZIM_LIBRARY_PATH=lib/x86_64-linux-gnu/libzim.so.$LIBZIM_VERSION >> $GITHUB_ENV
 
       - name: Cache libzim dylib & headers
         uses: actions/cache@master
@@ -81,14 +81,9 @@ jobs:
         run: |
           sudo ldconfig $PWD/lib
 
-      - name: update macOS shared objects cache
-        if: matrix.os == 'macos-10.15'
-        run: |
-          export DYLD_LIBRARY_PATH="$PWD/lib:$DYLD_LIBRARY_PATH"
-
       - name: Build cython, sdist, and bdist_wheel
         run: |
-          pip install --upgrade pip install "cython>=0.29.30,<3.0" setuptools pip wheel
+          pip install --upgrade pip install "cython>=0.29.32,<3.0" setuptools pip wheel
           python3 setup.py build_ext --inplace
           python3 setup.py sdist bdist_wheel
 
@@ -96,7 +91,7 @@ jobs:
         run: |
           pip install pytest pytest-cov
           pip install -e .
-          export DYLD_LIBRARY_PATH="$PWD/lib:$DYLD_LIBRARY_PATH"
+          export DYLD_LIBRARY_PATH="$PWD:$PWD/lib:$DYLD_LIBRARY_PATH"
           pytest --cov=libzim --cov-report=term --cov-report term-missing .
 
       - name: Upload coverage report to codecov
