@@ -54,7 +54,6 @@ jobs:
           rm $CERTIFICATE
           security set-key-partition-list -S "apple-tool:,apple:" -s -k mysecretpassword $(pwd)/build.keychain
           security find-identity -v
-          sudo sntp -sS -t 60 time4.google.com || true
           xcrun notarytool store-credentials \
             --apple-id "${{ secrets.APPLE_SIGNING_ALTOOL_USERNAME }}" \
             --password "${{ secrets.APPLE_SIGNING_ALTOOL_PASSWORD }}" \
