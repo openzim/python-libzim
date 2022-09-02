@@ -47,17 +47,21 @@ jobs:
           CERTIFICATE: /tmp/wmch-devid.p12
         run: |
           echo "${{ secrets.APPLE_SIGNING_CERTIFICATE }}" | base64 --decode -o $CERTIFICATE
-          security create-keychain -p mysecretpassword build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p mysecretpassword build.keychain
-          security import $CERTIFICATE -k build.keychain -P "${{ secrets.APPLE_SIGNING_P12_PASSWORD }}" -A
+          security create-keychain -p mysecretpassword $(pwd)/build.keychain
+          security default-keychain -s $(pwd)/build.keychain
+          security unlock-keychain -p mysecretpassword $(pwd)/build.keychain
+          security import $CERTIFICATE -k $(pwd)/build.keychain -P "${{ secrets.APPLE_SIGNING_P12_PASSWORD }}" -A
           rm $CERTIFICATE
-          security set-key-partition-list -S "apple-tool:,apple:" -s -k mysecretpassword build.keychain
+          security set-key-partition-list -S "apple-tool:,apple:" -s -k mysecretpassword $(pwd)/build.keychain
           security find-identity -v
           sudo sntp -sS -t 60 time4.google.com || true
-          xcrun altool --store-password-in-keychain-item "ALTOOL_PASSWORD" \
-            -u "${{ secrets.APPLE_SIGNING_ALTOOL_USERNAME }}" \
-            -p "${{ secrets.APPLE_SIGNING_ALTOOL_PASSWORD }}"
+          xcrun notarytool store-credentials \
+            --apple-id "${{ secrets.APPLE_SIGNING_ALTOOL_USERNAME }}" \
+            --password "${{ secrets.APPLE_SIGNING_ALTOOL_PASSWORD }}" \
+            --team-id "${{ secrets.APPLE_SIGNING_TEAM }}" \
+            --validate \
+            --keychain $(pwd)/build.keychain \
+            build-profile
 
       - name: set linux environ
         if: matrix.os == 'ubuntu-20.04'
@@ -123,15 +127,12 @@ jobs:
           wrapper_zip="${wrapper}.zip"
           ditto -c -k --keepParent ${wrapper} ${wrapper_zip}
           echo "request notarization"
-          xcrun altool --notarize-app --file ${wrapper_zip} \
-            --primary-bundle-id org.openzim.libzim.pylibzim \
-            --username "${{ secrets.APPLE_SIGNING_ALTOOL_USERNAME }}" \
-            --password "@keychain:ALTOOL_PASSWORD" \
-            --asc-provider "${{ secrets.APPLE_SIGNING_TEAM }}"
+          security unlock-keychain -p mysecretpassword $(pwd)/build.keychain
+          xcrun notarytool submit --keychain $(pwd)/build.keychain --keychain-profile "build-profile" --wait ${wrapper_zip}
           echo "remove zip file"
           rm ${wrapper_zip}
           echo "display request status (should be rejected)"
-          spctl -a -v -t install ${wrapper} || true
+          spctl --assess -vv --type install ${wrapper}
 
       - name: add Linux libzim binary to source for wheel
         if: matrix.os == 'ubuntu-20.04'
