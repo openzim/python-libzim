@@ -6,7 +6,7 @@ on:
       - v*
 
 env:
-  LIBZIM_VERSION: 7.2.2
+  LIBZIM_VERSION: 8.0.0
   LIBZIM_INCLUDE_PATH: include/zim
   TWINE_USERNAME: __token__
   TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
@@ -19,20 +19,20 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, macos-10.15]
-        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
+        os: [ubuntu-20.04, macos-12]
+        python-version: ["3.6.15", "3.7", "3.8", "3.9", "3.10"]
 
     steps:
       - uses: actions/checkout@v2
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4.2.0
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
 
       - name: set macOS environ
-        if: matrix.os == 'macos-10.15'
+        if: matrix.os == 'macos-12'
         run: |
           echo LIBZIM_EXT=dylib >> $GITHUB_ENV
           echo LIBZIM_RELEASE=libzim_macos-x86_64-$LIBZIM_VERSION >> $GITHUB_ENV
@@ -41,23 +41,26 @@ jobs:
           echo RPATH=@loader_path/ >> $GITHUB_ENV
 
       - name: install Apple certificate
-        if: matrix.os == 'macos-10.15'
+        if: matrix.os == 'macos-12'
         shell: bash
         env:
           CERTIFICATE: /tmp/wmch-devid.p12
         run: |
           echo "${{ secrets.APPLE_SIGNING_CERTIFICATE }}" | base64 --decode -o $CERTIFICATE
-          security create-keychain -p mysecretpassword build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p mysecretpassword build.keychain
-          security import $CERTIFICATE -k build.keychain -P "${{ secrets.APPLE_SIGNING_P12_PASSWORD }}" -A
+          security create-keychain -p mysecretpassword $(pwd)/build.keychain
+          security default-keychain -s $(pwd)/build.keychain
+          security unlock-keychain -p mysecretpassword $(pwd)/build.keychain
+          security import $CERTIFICATE -k $(pwd)/build.keychain -P "${{ secrets.APPLE_SIGNING_P12_PASSWORD }}" -A
           rm $CERTIFICATE
-          security set-key-partition-list -S "apple-tool:,apple:" -s -k mysecretpassword build.keychain
+          security set-key-partition-list -S "apple-tool:,apple:" -s -k mysecretpassword $(pwd)/build.keychain
           security find-identity -v
-          sudo sntp -sS -t 60 time4.google.com || true
-          xcrun altool --store-password-in-keychain-item "ALTOOL_PASSWORD" \
-            -u "${{ secrets.APPLE_SIGNING_ALTOOL_USERNAME }}" \
-            -p "${{ secrets.APPLE_SIGNING_ALTOOL_PASSWORD }}"
+          xcrun notarytool store-credentials \
+            --apple-id "${{ secrets.APPLE_SIGNING_ALTOOL_USERNAME }}" \
+            --password "${{ secrets.APPLE_SIGNING_ALTOOL_PASSWORD }}" \
+            --team-id "${{ secrets.APPLE_SIGNING_TEAM }}" \
+            --validate \
+            --keychain $(pwd)/build.keychain \
+            build-profile
 
       - name: set linux environ
         if: matrix.os == 'ubuntu-20.04'
@@ -86,19 +89,19 @@ jobs:
         if: matrix.os == 'ubuntu-20.04'
         run: |
           cp -dp $GITHUB_WORKSPACE/libzim_dist/lib/x86_64-linux-gnu/* lib/
-          ln -s libzim.so.${LIBZIM_VERSION:0:1} lib/libzim.so
-          ln -s $GITHUB_WORKSPACE/libzim_dist/$LIBZIM_INCLUDE_PATH include/zim
+          ln -sf libzim.so.${LIBZIM_VERSION:0:1} lib/libzim.so
+          ln -sf $GITHUB_WORKSPACE/libzim_dist/$LIBZIM_INCLUDE_PATH include/zim
 
       - name: Link macOS libzim dylib & headers into workspace lib and include folders
-        if: matrix.os == 'macos-10.15'
+        if: matrix.os == 'macos-12'
         run: |
           cp -Pp $GITHUB_WORKSPACE/libzim_dist/lib/* lib/
           ln -sf libzim.${LIBZIM_VERSION:0:1}.dylib lib/libzim.dylib
-          ln -s $GITHUB_WORKSPACE/libzim_dist/$LIBZIM_INCLUDE_PATH include/zim
+          ln -sf $GITHUB_WORKSPACE/libzim_dist/$LIBZIM_INCLUDE_PATH include/zim
 
       - name: Build cython and sdist
         run: |
-          pip install --upgrade "cython>=0.29.30,<3.0" setuptools pip wheel
+          pip install --upgrade "cython>=0.29.32,<3.0" setuptools pip wheel
           python3 setup.py build_ext --rpath $RPATH
           if [[  "${{ matrix.python-version }}" == "3.8" ]]
           then
@@ -106,13 +109,13 @@ jobs:
           fi
 
       - name: add macOS libzim binary to source for wheel
-        if: matrix.os == 'macos-10.15'
+        if: matrix.os == 'macos-12'
         run: |
           install_name_tool -change libzim.${LIBZIM_VERSION:0:1}.dylib @loader_path/libzim.${LIBZIM_VERSION:0:1}.dylib $(find build -name "libzim.cpython*.so")
           cp -pv lib/libzim.${LIBZIM_VERSION:0:1}.dylib $(find build/lib* -type d)/
 
       - name: sign macOS wrapper binary
-        if: matrix.os == 'macos-10.15'
+        if: matrix.os == 'macos-12'
         run: |
           echo "make sure libzim is signed and notarized"
           spctl -a -v -t install lib/libzim.${LIBZIM_VERSION:0:1}.dylib
@@ -123,15 +126,12 @@ jobs:
           wrapper_zip="${wrapper}.zip"
           ditto -c -k --keepParent ${wrapper} ${wrapper_zip}
           echo "request notarization"
-          xcrun altool --notarize-app --file ${wrapper_zip} \
-            --primary-bundle-id org.openzim.libzim.pylibzim \
-            --username "${{ secrets.APPLE_SIGNING_ALTOOL_USERNAME }}" \
-            --password "@keychain:ALTOOL_PASSWORD" \
-            --asc-provider "${{ secrets.APPLE_SIGNING_TEAM }}"
+          security unlock-keychain -p mysecretpassword $(pwd)/build.keychain
+          xcrun notarytool submit --keychain $(pwd)/build.keychain --keychain-profile "build-profile" --wait ${wrapper_zip}
           echo "remove zip file"
           rm ${wrapper_zip}
           echo "display request status (should be rejected)"
-          spctl -a -v -t install ${wrapper} || true
+          spctl --assess -vv --type install ${wrapper}
 
       - name: add Linux libzim binary to source for wheel
         if: matrix.os == 'ubuntu-20.04'

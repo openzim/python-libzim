@@ -17,7 +17,7 @@ from libzim.suggestion import SuggestionSearcher
 ZIMS_DATA = {
     "blank.zim": {
         "filename": "blank.zim",
-        "filesize": 1173,
+        "filesize": 2197,
         "new_ns": True,
         "mutlipart": False,
         "zim_uuid": None,
