@@ -688,6 +688,15 @@ def test_custom_indexdata(
         assert search.getEstimatedMatches() == expected
 
 
+def test_indexdata_interface():
+    default_id = IndexData()
+    assert default_id.has_indexdata() is False
+    for method in ("title", "content", "keywords", "wordcount"):
+        with pytest.raises(NotImplementedError):
+            getattr(default_id, f"get_{method}")()
+    assert default_id.get_geoposition() is None
+
+
 def test_reimpfeed(fpath):
     class AContentProvider:
         def __init__(self):
