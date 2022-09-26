@@ -89,10 +89,7 @@ cdef object call_method(object obj, string method):
 cdef public api:
     bool obj_has_attribute(object obj, string attribute) with gil:
         """Check if a object has a given attribute"""
-        attr = getattr(obj, attribute.decode('UTF-8'), None)
-        if not attr:
-            return False
-        return True
+        return hasattr(obj, attribute.decode('UTF-8'))
 
     string string_cy_call_fct(object obj, string method, string *error) with gil:
         """Lookup and execute a pure virtual method on object returning a string"""
