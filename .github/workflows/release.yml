@@ -23,7 +23,7 @@ jobs:
         python-version: ["3.6.15", "3.7", "3.8", "3.9", "3.10", "3.11"]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3.1.0
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4.2.0
@@ -72,7 +72,7 @@ jobs:
           echo RPATH=\$ORIGIN >> $GITHUB_ENV
 
       - name: Cache libzim dylib & headers
-        uses: actions/cache@v3
+        uses: actions/cache@v3.0.11
         id: cache-libzim
         with:
           path: libzim_dist
@@ -140,7 +140,7 @@ jobs:
       - name: build wheel
         run: python3 setup.py bdist_wheel --plat-name=$PLAFTORM_NAME
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v3.1.1
         with:
           name: wheels
           path: ./dist
