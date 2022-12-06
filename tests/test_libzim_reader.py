@@ -34,6 +34,7 @@ ZIMS_DATA = {
         "entry_count": 0,
         "all_entry_count": 2,
         "article_count": 0,
+        "media_count": 0,
         "suggestion_string": None,
         "suggestion_count": 0,
         "suggestion_result": [],
@@ -79,6 +80,7 @@ ZIMS_DATA = {
         "entry_count": 371,
         "all_entry_count": 371,
         "article_count": 129,
+        "media_count": 45,
         "suggestion_string": "lucky",
         "suggestion_count": 1,
         "suggestion_result": ["A/That_Lucky_Old_Sun"],
@@ -122,6 +124,7 @@ ZIMS_DATA = {
         "entry_count": 60,
         "all_entry_count": 75,
         "article_count": 0,
+        "media_count": 22,
         "suggestion_string": "Free",
         "suggestion_count": 1,
         "suggestion_result": [
@@ -176,6 +179,7 @@ ZIMS_DATA = {
         "entry_count": 19,
         "all_entry_count": 19,
         "article_count": 1,
+        "media_count": 1,
         "suggestion_string": "empty",
         "suggestion_count": 1,
         "suggestion_result": ["A/empty.html"],
@@ -220,6 +224,7 @@ ZIMS_DATA = {
         "entry_count": 2,
         "all_entry_count": 16,
         "article_count": 1,
+        "media_count": 1,
         "suggestion_string": None,
         "suggestion_count": None,
         "suggestion_result": None,
@@ -438,6 +443,7 @@ def test_reader_checksum(all_zims, filename, has_checksum, is_valid):
             "entry_count",
             "all_entry_count",
             "article_count",
+            "media_count",
             "suggestion_string",
             "suggestion_count",
             "suggestion_result",
@@ -453,6 +459,7 @@ def test_reader_suggest_search(
     entry_count,
     all_entry_count,
     article_count,
+    media_count,
     suggestion_string,
     suggestion_count,
     suggestion_result,
@@ -466,6 +473,7 @@ def test_reader_suggest_search(
     assert zim.entry_count == entry_count
     assert zim.all_entry_count == all_entry_count
     assert zim.article_count == article_count
+    assert zim.media_count == media_count
 
     if search_string is not None:
         query = Query().set_query(search_string)
