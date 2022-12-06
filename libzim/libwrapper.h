@@ -158,6 +158,7 @@ class Archive : public Wrapper<zim::Archive>
     FORWARD(zim::size_type, getEntryCount)
     FORWARD(zim::size_type, getAllEntryCount)
     FORWARD(zim::size_type, getArticleCount)
+    FORWARD(zim::size_type, getMediaCount)
     FORWARD(std::string, getChecksum)
     FORWARD(std::string, getFilename)
     FORWARD(bool, hasMainEntry)

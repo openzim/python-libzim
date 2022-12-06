@@ -5,8 +5,8 @@ include pyproject.toml
 include setup.cfg
 include requirements-dev.txt
 include tasks.py
-include lib/libzim.7.dylib
-include lib/libzim.so.7
+include lib/libzim.8.dylib
+include lib/libzim.so.8
 include libzim/*.cxx
 include libzim/*.h
 include libzim/*.py

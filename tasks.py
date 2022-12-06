@@ -5,16 +5,21 @@
 A description file for invoke (https://www.pyinvoke.org/)
 """
 
+import inspect
 import pathlib
 import platform
 import re
 import urllib.request
 
+# temp local fix for https://github.com/pyinvoke/invoke/issues/891
+if not hasattr(inspect, "getargspec"):
+    inspect.getargspec = inspect.getfullargspec
+
 from invoke import task
 
 
 @task
-def download_libzim(c, version="7.2.2"):
+def download_libzim(c, version="8.1.0"):
     """download C++ libzim binary"""
 
     if platform.machine() != "x86_64" or platform.system() not in ("Linux", "Darwin"):

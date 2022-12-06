@@ -697,6 +697,20 @@ def test_indexdata_interface():
     assert default_id.get_geoposition() is None
 
 
+def test_exc_in_indexdata(fpath, lipsum):
+    item = StaticItem(path=HOME_PATH + "custom", content=lipsum, mimetype="text/html")
+
+    class CustomIndexData(IndexData):
+        def has_indexdata(self):
+            raise IndexError
+
+    item.get_indexdata = CustomIndexData
+
+    with pytest.raises(RuntimeError, match="IndexError"):
+        with Creator(fpath).config_indexing(True, "eng") as c:
+            c.add_item(item)
+
+
 def test_reimpfeed(fpath):
     class AContentProvider:
         def __init__(self):
