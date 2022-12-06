@@ -987,6 +987,13 @@ cdef class Archive:
             listing, resulting in this returning all entries."""
         return self.c_archive.getArticleCount()
 
+    @property
+    def media_count(self) -> pyint:
+        """Number of media in the Archive
+
+            This definition of "media" is based on the mimetype."""
+        return self.c_archive.getMediaCount()
+
     def get_illustration_sizes(self) -> Set[pyint]:
         """Sizes for which an illustration is available (@1 scale only)"""
         return self.c_archive.getIllustrationSizes()
