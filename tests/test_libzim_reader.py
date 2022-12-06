@@ -78,7 +78,7 @@ ZIMS_DATA = {
         "is_valid": True,
         "entry_count": 371,
         "all_entry_count": 371,
-        "article_count": 284,
+        "article_count": 129,
         "suggestion_string": "lucky",
         "suggestion_count": 1,
         "suggestion_result": ["A/That_Lucky_Old_Sun"],
@@ -266,7 +266,7 @@ def all_zims(tmpdir_factory):
     temp_dir = tmpdir_factory.mktemp("data")
 
     libzim_urls = [
-        f"https://github.com/kiwix/kiwix-lib/raw/master/test/data/{name}"
+        f"https://github.com/kiwix/libkiwix/raw/master/test/data/{name}"
         for name in ("zimfile.zim", "example.zim", "corner_cases.zim")
     ] + ["https://github.com/openzim/zim-testing-suite/raw/main/data/nons/small.zim"]
 
