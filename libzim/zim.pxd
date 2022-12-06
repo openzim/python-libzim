@@ -156,6 +156,7 @@ cdef extern from "libwrapper.h" namespace "wrapper":
         size_type getEntryCount() except +
         size_type getAllEntryCount() except +
         size_type getArticleCount() except +
+        size_type getMediaCount() except +
 
         string getChecksum() except +
         string getFilename() except +
