@@ -11,10 +11,10 @@ jobs:
   lint:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4.2.0
         with:
           python-version: "3.10"
           architecture: x64
@@ -33,7 +33,7 @@ jobs:
         python: ["3.6.15", "3.7", "3.8", "3.9", "3.10", "3.11"]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python }}
         uses: actions/setup-python@v4.2.0
@@ -56,7 +56,7 @@ jobs:
           echo LIBZIM_LIBRARY_PATH=lib/x86_64-linux-gnu/libzim.so.$LIBZIM_VERSION >> $GITHUB_ENV
 
       - name: Cache libzim dylib & headers
-        uses: actions/cache@master
+        uses: actions/cache@v3
         id: cache-libzim
         with:
           path: libzim_dist
