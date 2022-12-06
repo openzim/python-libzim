@@ -2,7 +2,7 @@ name: test
 on: [push]
 
 env:
-  LIBZIM_VERSION: 8.0.0
+  LIBZIM_VERSION: 8.1.0
   LIBZIM_INCLUDE_PATH: include/zim
   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   PROFILE: 1
