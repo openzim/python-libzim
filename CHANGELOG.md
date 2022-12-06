@@ -9,22 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `Archive.media_count`
+* `Archive.media_count`
+* Python 3.11 Support
 
 ### Changed
 
-- Using libzim 8.1.0
-- Exceptions in getIndexData dont crash interpreter (#153)
+* Using libzim 8.1.0
+* Exceptions in getIndexData dont crash interpreter (#153)
 
 ## [2.0.0] - 2022-09-06
 
 ### Removed
 
-- Removed `lzma` compression option (#150)
+* Removed `lzma` compression option (#150)
 
 ### Changed
 
-- Using libzim 8.0.0
+* Using libzim 8.0.0
 
 ## [1.1.1] – 2022-06-17
 

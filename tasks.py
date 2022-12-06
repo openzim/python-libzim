@@ -5,10 +5,15 @@
 A description file for invoke (https://www.pyinvoke.org/)
 """
 
+import inspect
 import pathlib
 import platform
 import re
 import urllib.request
+
+# temp local fix for https://github.com/pyinvoke/invoke/issues/891
+if not hasattr(inspect, "getargspec"):
+    inspect.getargspec = inspect.getfullargspec
 
 from invoke import task
 
