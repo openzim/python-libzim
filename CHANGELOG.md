@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Using libzim 8.1.0
+- Exceptions in getIndexData dont crash interpreter (#153)
 
 ## [2.0.0] - 2022-09-06
 
