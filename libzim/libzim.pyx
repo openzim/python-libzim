@@ -1243,6 +1243,37 @@ suggestion_public_objects = [
 ]
 suggestion = create_module(suggestion_module_name, suggestion_module_doc, suggestion_public_objects)
 
+version_module_doc = """libzim version module
+- Get versions of libzim.
+- Print version of libzim.
+
+Usage:
+    versions = Version.get_versions()
+    Version.print_version()"""
+version_public_objects = [
+    Version,
+]
+version_module_name = f"{__name__}.version"
+version = create_module(version_module_name, version_module_doc, version_public_objects)
+
+cdef class Version:
+    __module__ = version_module_name
+    @staticmethod
+    def get_versions() -> [(string, string)]:
+        return zim.getVersions()
+
+    @staticmethod
+    def print_version(out: Union[sys.stdout, sys.stderr] = sys.stdout):
+        versions = Version.get_versions()
+        for i, version in enumerate(versions):
+            output = ""
+            if i > 0:
+                output +=  "+ "
+            output += version[0].decode("utf-8") 
+            output += " "
+            output += version[1].decode("utf-8") 
+            print(output, file=out)
+
 
 
 class ModuleLoader(importlib.abc.Loader):
@@ -1253,7 +1284,8 @@ class ModuleLoader(importlib.abc.Loader):
             'libzim.writer': writer,
             'libzim.reader': reader,
             'libzim.search': search,
-            'libzim.suggestion': suggestion
+            'libzim.suggestion': suggestion,
+            'libzim.version': version 
         }.get(spec.name, None)
 
     @staticmethod
@@ -1272,5 +1304,5 @@ class ModuleFinder(importlib.abc.MetaPathFinder):
 # register finder for our submodules
 sys.meta_path.insert(0, ModuleFinder())
 
-__all__ = ["writer", "reader", "search", "suggestion"]
+__all__ = ["writer", "reader", "search", "suggestion", "version"]
 
