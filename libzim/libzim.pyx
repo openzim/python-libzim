@@ -1259,7 +1259,7 @@ version = create_module(version_module_name, version_module_doc, version_public_
 cdef class Version:
     __module__ = version_module_name
     @staticmethod
-    def get_versions() -> [(string, string)]:
+    def get_versions() -> [(bytes, bytes)]:
         return zim.getVersions()
 
     @staticmethod
