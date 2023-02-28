@@ -1266,12 +1266,13 @@ cdef class Version:
     def print_version(out: Union[sys.stdout, sys.stderr] = sys.stdout):
         versions = Version.get_versions()
         for i, version in enumerate(versions):
-            output = ""
+            prefix = ""
             if i > 0:
-                output +=  "+ "
-            output += version[0].decode("utf-8") 
-            output += " "
-            output += version[1].decode("utf-8") 
+                prefix=  "+"
+            output = "{prefix} {version_name} {version_value}".format(
+                    prefix=prefix, 
+                    version_name=version[0].decode("utf-8"), 
+                    version_value=version[1].decode("utf-8"))
             print(output, file=out)
 
 
