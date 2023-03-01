@@ -22,6 +22,7 @@ from libc.stdint cimport uint32_t, uint64_t
 from libcpp cimport bool
 from libcpp.map cimport map
 from libcpp.memory cimport shared_ptr
+from libcpp.pair cimport pair
 from libcpp.set cimport set
 from libcpp.string cimport string
 from libcpp.vector cimport vector
@@ -218,3 +219,6 @@ cdef extern from "libwrapper.h" namespace "wrapper":
         SuggestionIterator begin()
         SuggestionIterator end()
         int size()
+
+cdef extern from "zim/version.h" namespace "zim":
+    cdef vector[pair[string, string]] getVersions()
