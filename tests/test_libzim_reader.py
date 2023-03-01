@@ -147,52 +147,47 @@ ZIMS_DATA = {
         "test_content_includes": "looking forward to your contributions.",
         "test_redirect": None,
     },
-    "corner_cases.zim": {
-        "filename": "corner_cases.zim",
-        "filesize": 75741,
-        "new_ns": False,
+    "corner_cases%23%26.zim": {
+        "filename": "corner_cases%23%26.zim",
+        "filesize": 35991,
+        "new_ns": True,
         "mutlipart": False,
-        "zim_uuid": "9150439f963dff9ec91ca09a41962d71",
+        "zim_uuid": "702abcbe6fe926152f5d451af7986437",
         "metadata_keys": [
             "Counter",
-            "Creator",
             "Date",
-            "Description",
-            "Flavour",
+            "Illustration_48x48@1",
             "Language",
-            "Name",
-            "Publisher",
             "Scraper",
-            "Source",
             "Tags",
             "Title",
         ],
         "test_metadata": "Title",
-        "test_metadata_value": "=ZIM corner cases",
+        "test_metadata_value": "ZIM corner cases",
         "has_main_entry": True,
         "has_favicon_entry": True,
-        "has_fulltext_index": True,
+        "has_fulltext_index": False,
         "has_title_index": True,
         "has_checksum": True,
         "checksum": None,
         "is_valid": True,
-        "entry_count": 19,
-        "all_entry_count": 19,
-        "article_count": 1,
+        "entry_count": 7,
+        "all_entry_count": 18,
+        "article_count": 2,
         "media_count": 1,
-        "suggestion_string": "empty",
+        "suggestion_string": "c#",
         "suggestion_count": 1,
-        "suggestion_result": ["A/empty.html"],
-        "search_string": "empty",
-        "search_count": 1,
-        "search_result": ["A/empty.html"],
-        "test_path": "A/empty.html",
-        "test_title": "empty",
+        "suggestion_result": ["c#.html"],
+        "search_string": None,
+        "search_count": 0,
+        "search_result": [],
+        "test_path": "empty.html",
+        "test_title": "empty.html",
         "test_mimetype": "text/html",
         "test_size": 0,
         "test_content_includes": "",
-        "test_redirect": "-/favicon",
-        "test_redirect_to": "I/empty.png",
+        "test_redirect": None,
+        "test_redirect_to": None,
     },
     "small.zim": {
         "filename": "small.zim",
@@ -271,8 +266,8 @@ def all_zims(tmpdir_factory):
     temp_dir = tmpdir_factory.mktemp("data")
 
     libzim_urls = [
-        f"https://github.com/kiwix/libkiwix/raw/master/test/data/{name}"
-        for name in ("zimfile.zim", "example.zim", "corner_cases.zim")
+        f"https://github.com/kiwix/libkiwix/raw/main/test/data/{name}"
+        for name in ("zimfile.zim", "example.zim", "corner_cases%23%26.zim")
     ] + ["https://github.com/openzim/zim-testing-suite/raw/main/data/nons/small.zim"]
 
     # download libzim tests
@@ -335,6 +330,7 @@ def test_content_ref_keep(all_zims):
 )
 def test_reader_archive(all_zims, filename, filesize, new_ns, mutlipart, zim_uuid):
     fpath = all_zims / filename
+
     zim = Archive(fpath)
 
     # check externaly verifiable data
@@ -370,7 +366,7 @@ def test_reader_metadata(
     if test_metadata:
         assert zim.get_metadata(test_metadata).decode("UTF-8") == test_metadata_value
         item = zim.get_metadata_item(test_metadata)
-        assert item.mimetype == "text/plain"
+        assert item.mimetype in ("text/plain", "text/plain;charset=utf-8")  # newer
         assert item.size > 1
 
 
@@ -444,6 +440,7 @@ def test_reader_checksum(all_zims, filename, has_checksum, is_valid):
             "all_entry_count",
             "article_count",
             "media_count",
+            "has_fulltext_index",
             "suggestion_string",
             "suggestion_count",
             "suggestion_result",
@@ -460,6 +457,7 @@ def test_reader_suggest_search(
     all_entry_count,
     article_count,
     media_count,
+    has_fulltext_index,
     suggestion_string,
     suggestion_count,
     suggestion_result,
@@ -475,7 +473,7 @@ def test_reader_suggest_search(
     assert zim.article_count == article_count
     assert zim.media_count == media_count
 
-    if search_string is not None:
+    if has_fulltext_index and search_string is not None:
         query = Query().set_query(search_string)
         searcher = Searcher(zim)
         search = searcher.search(query)
