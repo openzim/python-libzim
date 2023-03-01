@@ -39,6 +39,7 @@ import os
 import pathlib
 import sys
 import traceback
+from collections import OrderedDict
 from types import ModuleType
 from typing import Dict, Generator, Iterator, List, Optional, Set, Tuple, Union
 from uuid import UUID
@@ -1243,6 +1244,47 @@ suggestion_public_objects = [
 ]
 suggestion = create_module(suggestion_module_name, suggestion_module_doc, suggestion_public_objects)
 
+version_module_doc = """libzim version module
+- Get version of libzim and its dependencies
+- Print version of libzim and its dependencies
+- Get libzim version
+
+Usage:
+    from libzim.version import get_libzim_version, get_versions, print_versions
+    major, minor, patch = get_libzim_version().split(".", 2)
+
+    for dependency, version in get_versions().items():
+        print(f"- {dependency}={version}")
+
+    print_versions()"""
+
+
+def print_versions(out: Union[sys.stdout, sys.stderr] = sys.stdout):
+    """print libzim and its dependencies list with their versions"""
+    for library, version in get_versions().items():
+        prefix = "" if library == "libzim" else "+ "
+        print(f"{prefix}{library} {version}", file=out or sys.stdout)
+
+
+def get_versions() -> OrderedDict[str, str]:
+    """ library: version mapping. Always includes `libzim`"""
+    versions = zim.getVersions()
+    return OrderedDict({
+        library.decode("UTF-8"): version.decode("UTF-8")
+        for library, version in versions
+    })
+
+def get_libzim_version() -> str:
+    """libzim version string"""
+    return get_versions()["libzim"]
+
+version_public_objects = [
+    get_libzim_version,
+    get_versions,
+    print_versions,
+]
+version_module_name = f"{__name__}.version"
+version = create_module(version_module_name, version_module_doc, version_public_objects)
 
 
 class ModuleLoader(importlib.abc.Loader):
@@ -1253,7 +1295,8 @@ class ModuleLoader(importlib.abc.Loader):
             'libzim.writer': writer,
             'libzim.reader': reader,
             'libzim.search': search,
-            'libzim.suggestion': suggestion
+            'libzim.suggestion': suggestion,
+            'libzim.version': version 
         }.get(spec.name, None)
 
     @staticmethod
@@ -1272,5 +1315,5 @@ class ModuleFinder(importlib.abc.MetaPathFinder):
 # register finder for our submodules
 sys.meta_path.insert(0, ModuleFinder())
 
-__all__ = ["writer", "reader", "search", "suggestion"]
+__all__ = ["writer", "reader", "search", "suggestion", "version"]
 
