@@ -135,12 +135,6 @@ def test_imports():
     assert libzim.writer.Creator  # noqa
 
 
-def test_pascalize():
-    assert libzim.writer.pascalize("title") == "Title"
-    assert libzim.writer.pascalize("my man") == "My Man"
-    assert libzim.writer.pascalize("THATisBAD") == "Thatisbad"
-
-
 def test_creator_filename(fpath):
     with Creator(fpath) as c:
         assert c.filename == fpath
