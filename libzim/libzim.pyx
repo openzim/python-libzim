@@ -547,13 +547,6 @@ class BaseWritingItem:
         )
 
 
-def pascalize(keyword: str):
-    """Converts python case to pascal case.
-
-    example: long_description -> LongDescription"""
-    return "".join(keyword.title().split("_"))
-
-
 class Creator(_Creator):
     __module__ = writer_module_name
     def config_compression(self, compression: Compression):
@@ -565,7 +558,6 @@ class Creator(_Creator):
         self, name: str, content: Union[str, bytes, datetime.date, datetime.datetime],
         mimetype: str = "text/plain;charset=UTF-8"
     ):
-        name = pascalize(name)
         if name == "Date" and isinstance(content, (datetime.date, datetime.datetime)):
             content = content.strftime("%Y-%m-%d").encode("UTF-8")
         if isinstance(content, str):
@@ -600,8 +592,7 @@ writer_public_objects = [
     ContentProvider,
     FileProvider,
     StringProvider,
-    IndexData,
-    pascalize
+    IndexData
 ]
 writer = create_module(writer_module_name, writer_module_doc, writer_public_objects)
 
