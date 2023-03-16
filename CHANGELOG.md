@@ -14,6 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * `version.print_versions()` print it on stdout (or another fd)
   * `version.get_libzim_version()` returns the libzim version only
 
+### Changed
+
+* `Creator.add_metadata` no longer transforms (~pascalize) name (#161)
+
+### Removed
+
+* `writer.pascalize` function
+
 ## [2.1.0] - 2022-12-06
 
 ### Added
