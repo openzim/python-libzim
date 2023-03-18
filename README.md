@@ -18,14 +18,14 @@ It is primarily used in [openZIM](https://github.com/openzim/) scrapers like [`s
 pip install libzim
 ```
 
-The [PyPI package](https://pypi.org/project/libzim/) is available for x86_64 macOS and GNU/Linux only. It bundles a [recent release](http://download.openzim.org/release/libzim/) of the C++ libzim.
+The [PyPI package](https://pypi.org/project/libzim/) is available for x86_64 macOS and GNU/Linux only. It bundles a [recent release](https://download.openzim.org/release/libzim/) of the C++ libzim.
 
 On other platforms, you'd have to [compile C++ libzim from
 source](https://github.com/openzim/libzim) first then build this one, adjusting `LD_LIBRARY_PATH`.
 
 ## Contributions
 
-``` sh
+```sh
 git clone git@github.com:openzim/python-libzim.git && cd python-libzim
 # python -m venv env && source env/bin/activate
 pip install -U setuptools invoke
@@ -95,7 +95,7 @@ class MyItem(Item):
         if self.fpath is not None:
             return FileProvider(self.fpath)
         return StringProvider(self.content)
-       
+
     def get_hints(self):
         return {Hint.FRONT_ARTICLE: True}
 
