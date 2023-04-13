@@ -1,107 +1,262 @@
 #!/usr/bin/env python3
-"""
-python-libzim (the openzim/libzim bindings for Python)
+
+"""python-libzim (openZIM/libzim binding for Python)
 
 The project is compiled in two steps:
 
  1. Cython: compile the cython format files (.pyx, .pyd) to C++ (.cpp and .h)
  2. Cythonize: compile the generated C++ to a python-importable binary extension .so
 
-The Cython and Cythonize compilation is done automatically with setup.py:
-
- $ python3 setup.py build_ext
- $ python3 setup.py sdist bdist_wheel
-
-
-To compile or run this project, you must first get the libzim headers & binary:
-
- - Compile and install libzim from source : https://github.com/openzim/libzim
- - Download a full prebuilt release (if one exists for your platform):
-   https://download.openzim.org/release/libzim/
- - Installed a packaged version of libzim :
-   . `apt-get install libzim-devel`
-   . `dnf install libzim-dev`
-
-Either place the `libzim.so` and `zim/*.h` files in `./lib/` and `./include/`,
-   or set these environment variables to use custom libzim header and dylib paths:
-
- $ export CFLAGS="-I/tmp/libzim_linux-x86_64-6.1.1/include"
- $ export LDFLAGS="-L/tmp/libzim_linux-x86_64-6.1.1/lib/x86_64-linux-gnu"
- $ export LD_LIBRARY_PATH+=":/tmp/libzim_linux-x86_64-6.1.1/lib/x86_64-linux-gnu"
-
-If you have installed libzim from the packages, you probably don't have anything to do
-on environment variables side.
-"""
+The Cython and Cythonize compilation is done automatically by the build backend"""
 
 import os
-import platform
+import pathlib
+import platform as sysplatform
+import re
+import shutil
+import subprocess
 import sys
+import urllib.request
 from ctypes.util import find_library
 from pathlib import Path
+from typing import Tuple
 
 from Cython.Build import cythonize
 from Cython.Distutils.build_ext import new_build_ext as build_ext
-from setuptools import Extension, setup
-
-# Avoid running cythonize on `setup.py clean` and similar
-SKIP_BUILD_CMDS = ["clean", "--help", "egg_info", "--version"]
-
-base_dir = Path(__file__).parent
-
-# Check if we need profiling (env var PROFILE set to `1`, used for coverage reporting)
-compiler_directives = {"language_level": "3"}
-if os.getenv("PROFILE", "") == "1":
-    define_macros = [("CYTHON_TRACE", "1"), ("CYTHON_TRACE_NOGIL", "1")]
-    compiler_directives.update(linetrace=True)
-else:
-    define_macros = []
-
-if platform.system() == "Darwin":
-
-    class fixed_build_ext(build_ext):
-        """Workaround for rpath bug in distutils for OSX."""
-
-        def finalize_options(self):
-            super().finalize_options()
-            # Special treatment of rpath in case of OSX, to work around python
-            # distutils bug 36353. This constructs proper rpath arguments for clang.
-            # See https://bugs.python.org/issue36353
-            for path in self.rpath:
-                for ext in self.extensions:
-                    ext.extra_link_args.append("-Wl,-rpath," + path)
-            self.rpath[:] = []
-
-    cmdclass = {"build_ext": fixed_build_ext}
-else:
-    cmdclass = {"build_ext": build_ext}
+from setuptools import Command, Extension, setup
 
 
-def cython_ext_module():
-    dyn_lib_ext = "dylib" if platform.system() == "Darwin" else "so"
-    include_dirs = ["libzim"]
-    library_dirs = []
-    # Check for the CPP Libzim library headers in expected directory
-    header_file = base_dir / "include" / "zim" / "zim.h"
-    lib_file = base_dir / "lib" / f"libzim.{dyn_lib_ext}"
-    if header_file.exists() and lib_file.exists():
-        print(
-            "Found lizim library and headers in local directory. "
-            "Will use them to compile python-libzim.\n"
-            "Hint : If you don't want to use them "
-            "(and use “system” installed one), remove them."
+class Config:
+    libzim_dl_version: str = os.getenv("LIBZIM_DL_VERSION", "8.1.1")
+    use_system_libzim: bool = bool(os.getenv("USE_SYSTEM_LIBZIM", False))
+    download_libzim: bool = not bool(os.getenv("DONT_DOWNLOAD_LIBZIM", False))
+
+    # toggle profiling for coverage report in Cython
+    profiling: bool = os.getenv("PROFILE", "") == "1"
+
+    # macOS signing
+    should_sign_apple: bool = bool(os.getenv("SIGN_APPLE", False))
+    apple_signing_identity: str = os.getenv("APPLE_SIGNING_IDENTITY")
+    apple_signing_keychain: str = os.getenv("APPLE_SIGNING_KEYCHAIN_PATH")
+    apple_signing_keychain_profile: str = os.getenv("APPLE_SIGNING_KEYCHAIN_PROFILE")
+
+    supported_platforms = {
+        "Darwin": ["x86_64", "arm64"],
+        "Linux": ["x86_64", "aarch64"],
+        "Linux-musl": ["x86_64", "aarch64"],
+    }
+
+    base_dir: pathlib.Path = Path(__file__).parent
+
+    # Avoid running cythonize on `setup.py clean` and similar
+    buildless_commands: Tuple[str] = (
+        "clean",
+        "--help",
+        "egg_info",
+        "--version",
+        "download_libzim",
+    )
+
+    @property
+    def libzim_major(self) -> str:
+        # assuming nightlies are for version 8.x
+        return 8 if self.is_nightly else self.libzim_dl_version[0]
+
+    @property
+    def found_libzim(self) -> str:
+        return find_library("zim")
+
+    @property
+    def is_nightly(self) -> bool:
+        return re.match(r"\d{4}-\d{2}-\d{2}", self.libzim_dl_version)
+
+    @property
+    def platform(self) -> str:
+        """Platform building for: Darwin, Linux"""
+        # import json
+
+        # with open("environ.txt", "w") as fh:
+        #     json.dump(dict(os.environ), fh, indent=4)
+        return sysplatform.system()
+
+    @property
+    def platform_libc(self) -> str:
+        """Platform adjusted for libc variant: Darwin, Linux, Linux-musl"""
+        if self.platform == "Linux" and self.is_musl:
+            return "Linux-musl"
+        return self.platform
+
+    @property
+    def arch(self) -> str:
+        # macOS x86_64|arm64 - linux x86_64|aarch64
+
+        # when using cibuildwheel on macOS to cross-compile, `PLAT` contains
+        # a platform string like macosx-11.0-arm64
+        # we extract the cross-compile arch from it
+        return os.getenv("PLAT", "").rsplit("-", 1)[-1] or sysplatform.machine()
+
+    def check_platform(self):
+        if (
+            self.platform_libc not in self.supported_platforms
+            or self.arch not in self.supported_platforms[self.platform_libc]
+        ):
+            raise NotImplementedError(
+                f"Platform {self.platform_libc}/{self.arch} is not supported."
+            )
+
+    @property
+    def libzim_fname(self):
+        """binary libzim dynamic library fname (platform dependent)"""
+        # assuming we'll always link to same major
+
+        return {
+            "Darwin": f"libzim.{self.libzim_major}.dylib",
+            "Linux": f"libzim.so.{self.libzim_major}",
+        }[self.platform]
+
+    @property
+    def is_musl(self) -> bool:
+        """whether running on a musl system (Alpine)"""
+        ps = subprocess.run(["ldd", "--version"], capture_output=True, text=True)
+        try:
+            return "musl libc" in ps.stdout.readlines()[0]
+        except Exception:
+            return False
+
+    @property
+    def download_filename(self) -> str:
+        """filename to download to get binary libzim for platform/arch"""
+        lzplatform = {"Darwin": "macos", "Linux": "linux"}.get(self.platform)
+        if lzplatform == "linux" and self.is_musl:
+            lzplatform = "linux_musl"
+
+        return pathlib.Path(
+            f"libzim_{lzplatform}-{self.arch}-{self.libzim_dl_version}.tar.gz"
+        ).name
+
+    def download_to_dest(self):
+        """download expected libzim binary into libzim/ and libzim/include/ folders"""
+        libzim_dir = self.base_dir / "libzim"
+        fpath = self.base_dir / self.download_filename
+        source_url = "http://download.openzim.org/release/libzim"
+        if self.is_nightly:
+            source_url = f"http://download.openzim.org/nightly/{self.libzim_dl_version}"
+        url = f"{source_url}/{fpath.name}"
+
+        # download a local copy if none present
+        if not fpath.exists():
+            print(f"> from {url}")
+            with urllib.request.urlopen(url) as response, open(
+                fpath, "wb"
+            ) as fh:  # nosec
+                fh.write(response.read())
+        else:
+            print(f"> reusing local file {fpath}")
+
+        print("> extracting archive")
+        # extract into current folder (all files are inside an in-tar folder)
+        shutil.unpack_archive(fpath, self.base_dir, "gztar")
+        folder = fpath.with_name(fpath.name.replace(".tar.gz", ""))
+
+        # remove existing headers if present
+        self.base_dir.joinpath("include").mkdir(parents=True, exist_ok=True)
+        shutil.rmtree(self.base_dir / "include" / "zim", ignore_errors=True)
+
+        # copy new zim headers
+        shutil.move(folder / "include" / "zim", self.base_dir / "include" / "zim")
+
+        # copy new libs
+        for fpath in folder.joinpath("lib").rglob("libzim.*"):
+            os.replace(fpath, libzim_dir / fpath.name)
+
+        # remove temp folder
+        shutil.rmtree(folder, ignore_errors=True)
+        assert self.base_dir.joinpath("include", "zim", "zim.h").exists()
+
+        if config.platform == "Darwin":
+            print("> ensure libzim is notarized")
+            spctl = subprocess.run(
+                [
+                    "spctl",
+                    "-a",
+                    "-v",
+                    "-t",
+                    "install",
+                    str(self.base_dir / "libzim" / config.libzim_fname),
+                ],
+                check=False,
+            )
+            if spctl.returncode != 0:
+                print(
+                    "libzim binary is not notarized! Not an official release?",
+                    file=sys.stderr,
+                )
+
+    @property
+    def header_file(self) -> pathlib.Path:
+        return self.base_dir / "include" / "zim" / "zim.h"
+
+    @property
+    def dylib_file(self) -> pathlib.Path:
+        return self.base_dir / "libzim" / self.libzim_fname
+
+    @property
+    def can_sign_apple(self) -> bool:
+        return all(
+            [
+                self.platform == "Darwin",
+                self.apple_signing_identity,
+                self.apple_signing_keychain,
+                self.apple_signing_keychain_profile,
+                self.should_sign_apple,
+            ]
         )
-        include_dirs.append("include")
-        library_dirs = ["lib"]
-    elif "clean" not in sys.argv:
-        # Check for library.
-        if not find_library("zim"):
-            print(
+
+
+config = Config()
+
+
+def get_cython_extension():
+    define_macros = []
+    compiler_directives = {"language_level": "3"}
+
+    if config.profiling:
+        define_macros += [("CYTHON_TRACE", "1"), ("CYTHON_TRACE_NOGIL", "1")]
+        compiler_directives.update(linetrace=True)
+
+    include_dirs = []
+    library_dirs = []
+    runtime_library_dirs = []
+
+    if config.use_system_libzim:
+        if not config.found_libzim:
+            raise EnvironmentError(
                 "[!] The libzim library cannot be found.\n"
                 "Please verify it is correctly installed and can be found."
             )
-            sys.exit(1)
         print(
-            "Using system installed library; Assuming CFLAGS/LDFLAGS are correctly set."
+            "Using found library at {config.found_libzim}. "
+            "Adjust CFLAGS/LDFLAGS if needed"
+        )
+    else:
+        if config.download_libzim:
+            print("Downloading libzim. Set `DONT_DOWNLOAD_LIBZIM` not to.")
+            config.download_to_dest()
+
+        # Check for the CPP Libzim library headers in expected directory
+        if not config.header_file.exists() or not config.dylib_file.exists():
+            raise EnvironmentError(
+                "Unable to find a local copy of libzim "
+                f"at {config.header_file} and {config.dylib_file}"
+            )
+
+        print("Using local libzim binary. Set `USE_SYSTEM_LIBZIM` otherwise.")
+        include_dirs.append("include")
+        library_dirs = ["libzim"]
+        runtime_library_dirs = (
+            [f"@loader_path/libzim/{config.libzim_fname}"]
+            if sysplatform == "Darwin"
+            else ["$ORIGIN/libzim/"]
         )
 
     wrapper_extension = Extension(
@@ -110,6 +265,7 @@ def cython_ext_module():
         include_dirs=include_dirs,
         libraries=["zim"],
         library_dirs=library_dirs,
+        runtime_library_dirs=runtime_library_dirs,
         extra_compile_args=["-std=c++11", "-Wall", "-Wextra"],
         language="c++",
         define_macros=define_macros,
@@ -117,13 +273,123 @@ def cython_ext_module():
     return cythonize([wrapper_extension], compiler_directives=compiler_directives)
 
 
-if len(sys.argv) == 2 and sys.argv[1] in SKIP_BUILD_CMDS:
+class LibzimBuildExt(build_ext):
+    def finalize_options(self):
+        """Workaround for rpath bug in distutils for macOS"""
+        super().finalize_options()
+
+        if config.platform == "Darwin":
+            # Special treatment of rpath in case of OSX, to work around python
+            # distutils bug 36353. This constructs proper rpath arguments for clang.
+            # See https://bugs.python.org/issue36353
+            for path in self.rpath:
+                for ext in self.extensions:
+                    ext.extra_link_args.append("-Wl,-rpath," + path)
+            self.rpath[:] = []
+
+    def build_extension(self, ext):
+        """Properly set rpath on macOS and optionaly trigger macOS signing"""
+        super().build_extension(ext)
+
+        if config.platform == "Darwin" and not config.use_system_libzim:
+            # use install_name_tool to properly set the rpath on the wrapper
+            # so it finds libzim in a subfolder
+            # for ext in self.extensions:
+            fpath = self.get_ext_fullpath(ext.name)
+
+            subprocess.run(
+                [
+                    "install_name_tool",
+                    "-change",
+                    config.libzim_fname,
+                    f"@loader_path/libzim/{config.libzim_fname}",
+                    str(fpath),
+                ],
+                check=True,
+            )
+
+        if config.platform == "Darwin" and config.should_sign_apple:
+            self.sign_extension_macos(ext)
+
+    def sign_extension_macos(self, ext):
+        """sign and notarize extension on macOS"""
+        print("Signing & Notarization of the extension")
+
+        if not config.can_sign_apple:
+            raise EnvironmentError("Can't sign for apple. Missing information")
+
+        ext_fpath = self.get_ext_fullpath(ext.name)
+
+        print("> signing the extension")
+        subprocess.run(
+            [
+                "codesign",
+                "--force",
+                "--sign",
+                config.apple_signing_identity,
+                str(ext_fpath),
+                "--deep",
+                "--timestamp",
+            ],
+            check=True,
+        )
+
+        print("> create ZIP package for notarization request")
+        ext_zip = ext_fpath.with_name(f"{ext_fpath.name}.zip")
+        subprocess.run(
+            ["ditto", "-c", "-k", "--keepParent", str(ext_fpath), str(ext_zip)]
+        )
+
+        print("> request notarization")
+        # security unlock-keychain -p mysecretpassword $(pwd)/build.keychain
+        subprocess.run(
+            [
+                "xcrun",
+                "notarytool",
+                "submit",
+                "--keychain",
+                config.apple_signing_keychain,
+                "--keychain-profile",
+                config.apple_signing_keychain_profile,
+                "--wait",
+                ext_zip,
+            ],
+            check=True,
+        )
+
+        print("> removing zip file")
+        ext_zip.unlink()
+
+        print("> displaying request status (should be rejected)")
+        subprocess.run(
+            ["spctl", "--assess", "-vv", "--type", "install", str(ext_fpath)],
+            check=False,
+        )
+
+
+class DownloadLibzim(Command):
+    """dedicated command to solely download libzim binary"""
+
+    user_options = []
+
+    def initialize_options(self):
+        ...
+
+    def finalize_options(self):
+        ...
+
+    def run(self):
+        config.check_platform()
+        config.download_to_dest()
+
+
+if len(sys.argv) == 2 and sys.argv[1] in config.buildless_commands:
     ext_modules = None
 else:
-    ext_modules = cython_ext_module()
+    config.check_platform()
+    ext_modules = get_cython_extension()
 
 setup(
-    # Content
-    cmdclass=cmdclass,
+    cmdclass={"build_ext": LibzimBuildExt, "download_libzim": DownloadLibzim},
     ext_modules=ext_modules,
 )
