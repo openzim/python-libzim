@@ -18,10 +18,16 @@ It is primarily used in [openZIM](https://github.com/openzim/) scrapers like [`s
 pip install libzim
 ```
 
-The [PyPI package](https://pypi.org/project/libzim/) is available for x86_64 macOS and GNU/Linux only. It bundles a [recent release](https://download.openzim.org/release/libzim/) of the C++ libzim.
+Our [PyPI wheels](https://pypi.org/project/libzim/) bundle a [recent release](https://download.openzim.org/release/libzim/) of the C++ libzim and are available for the following platforms:
 
-On other platforms, you'd have to [compile C++ libzim from
-source](https://github.com/openzim/libzim) first then build this one, adjusting `LD_LIBRARY_PATH`.
+- macOS for `x86_64` and `arm64`
+- GNU/Linux for `x86_64`, `armhf` and `aarch64`
+- Linux+musl for `x86_64` and `aarch64`
+
+Wheels are available for both CPython and PyPy.
+
+Users on other platforms can install the source distribution (see [Building](#Building) below). 
+
 
 ## Contributions
 
@@ -120,6 +126,51 @@ with Creator("test.zim").config_indexing(True, "eng") as creator:
 
         creator.add_metadata(name.title(), value)
 ```
+
+## Building
+
+`libzim` package building offers different behaviors via environment variables
+
+| Variable                         | Example                                  | Use case |
+| -------------------------------- | ---------------------------------------- | -------- |
+| `LIBZIM_DL_VERSION`              | `8.1.1` or `2023-04-14`                     | Specify the C++ libzim binary version to download and bundle. Either a release version string or a date, in which case it downloads a nightly |
+| `USE_SYSTEM_LIBZIM`              | `1`                                      | Uses `LDFLAG` and `CFLAGS` to find the libzim to link against. Resulting wheel won't bundle C++ libzim. |
+| `DONT_DOWNLOAD_LIBZIM`           | `1`                                      | Disable downloading of C++ libzim. Place headers in `include/` and libzim dylib/so in `libzim/` if no using system libzim. It will be bundled in wheel. |
+| `PROFILE`                        | `1`                                      | Enable profile tracing in Cython extension. Required for Cython code coverage reporting. |
+| `SIGN_APPLE`                     | `1`                                      | Set to sign and notarize the extension for macOS. Requires following informations |
+| `APPLE_SIGNING_IDENTITY`         | `Developer ID Application: OrgName (ID)` | Required for signing on macOS |
+| `APPLE_SIGNING_KEYCHAIN_PATH`    | `/tmp/build.keychain`                    | Path to the Keychain containing the certificate to sign for macOS with |
+| `APPLE_SIGNING_KEYCHAIN_PROFILE` | `build`                                  | Name of the profile in the specified Keychain |
+
+### Examples
+
+##### Default: downloading and bundling most appropriate libzim release binary
+
+```sh
+python3 -m build
+```
+
+#### Using system libzim (brew, debian or manually installed) - not bundled
+
+```sh
+# using system-installed C++ libzim
+brew install libzim  # macOS
+apt-get install libzim-devel  # debian
+dnf install libzim-dev  # fedora
+USE_SYSTEM_LIBZIM=1 python3 -m build --wheel
+
+# using a specific C++ libzim
+USE_SYSTEM_LIBZIM=1 \
+CFLAGS="-I/usr/local/include" \
+LDFLAGS="-L/usr/local/lib"
+DYLD_LIBRARY_PATH="/usr/local/lib" \
+LD_LIBRARY_PATH="/usr/local/lib" \
+python3 -m build --wheel
+```
+
+#### Other platforms
+
+On platforms for which there is no [official binary](https://download.openzim.org/release/libzim/) available, you'd have to [compile C++ libzim from source](https://github.com/openzim/libzim) first then either use `DONT_DOWNLOAD_LIBZIM` or `USE_SYSTEM_LIBZIM`.
 
 
 ## License
