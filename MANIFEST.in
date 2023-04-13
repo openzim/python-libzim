@@ -5,12 +5,13 @@ include pyproject.toml
 include setup.cfg
 include requirements-dev.txt
 include tasks.py
-include lib/libzim.8.dylib
-include lib/libzim.so.8
-include libzim/*.cxx
+include libzim/*.cpp
 include libzim/*.h
 include libzim/*.py
 include libzim/*.pxd
 include libzim/*.pyx
 global-exclude __pycache__/*
 exclude *.egg-info/*
+exclude libzim/*.dylib
+exclude libzim/*.so
+exclude libzim/*.so.*
