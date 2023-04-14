@@ -4,7 +4,6 @@ on: [push]
 env:
   # TODO: use a release (once available)
   CIBW_ENVIRONMENT: "LIBZIM_DL_VERSION=2023-04-14"
-  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
 jobs:
   lint:
@@ -55,6 +54,6 @@ jobs:
 
       - name: Upload coverage report to codecov
         if: matrix.os == 'ubuntu-22.04' && matrix.python == '3.11'
-        run: |
-          pip install codecov
-          codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
