@@ -23,7 +23,7 @@ def download_libzim(c, version=""):
 
 @task
 def build_ext(c):
-    """ build extension to use locally (devel, tests)"""
+    """build extension to use locally (devel, tests)"""
     c.run("PROFILE=1 python setup.py build_ext -i")
 
 
