@@ -17,6 +17,11 @@ skip = "pp* *musllinux* *-win*"
 test-requires = ["pytest"]
 test-command = "py.test {project}/tests/"
 
+manylinux-x86_64-image = "manylinux_2_28"
+manylinux-aarch64-image = "manylinux_2_28"
+manylinux-pypy_x86_64-image = "manylinux_2_28"
+manylinux-pypy_aarch64-image = "manylinux_2_28"
+
 [tool.cibuildwheel.linux]
 archs = ["x86_64", "aarch64"]
 
