@@ -3,6 +3,7 @@
 import base64
 import datetime
 import itertools
+import os
 import pathlib
 import subprocess
 import sys
@@ -774,9 +775,10 @@ def test_virtualmethods_int_exc(fpath):
 
 
 def test_creator_badfilename(tmpdir):
-    # lack of perm
-    with pytest.raises(IOError):
-        Creator("/root/test.zim")
+    if os.getuid() != 0:
+        # lack of perm
+        with pytest.raises(IOError):
+            Creator("/root/test.zim")
 
     # forward slash points to non-existing folder
     with pytest.raises(IOError):
