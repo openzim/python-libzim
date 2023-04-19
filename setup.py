@@ -136,11 +136,13 @@ class Config:
         arch = arch or self.arch
 
         lzplatform = {"Darwin": "macos", "Linux": "linux"}.get(self.platform)
-        if lzplatform == "linux" and self.is_musl:
-            lzplatform = "linux_musl"
+
+        variant = ""
+        if self.platform == "Linux":
+            variant = "-musl" if self.is_musl else "-bionic"
 
         return pathlib.Path(
-            f"libzim_{lzplatform}-{arch}-{self.libzim_dl_version}.tar.gz"
+            f"libzim_{lzplatform}-{arch}{variant}-{self.libzim_dl_version}.tar.gz"
         ).name
 
     def download_to_dest(self):
@@ -193,6 +195,9 @@ class Config:
         source_url = "http://download.openzim.org/release/libzim"
         if self.is_nightly:
             source_url = f"http://download.openzim.org/nightly/{self.libzim_dl_version}"
+        # TODO: remove after 2023-04-20
+        if "bionic" in fpath.name:
+            source_url = "https://tmp.kiwix.org/ci/libzim_bionic"
         url = f"{source_url}/{fpath.name}"
 
         # download a local copy if none present
