@@ -16,10 +16,11 @@ import re
 import shutil
 import subprocess
 import sys
+import sysconfig
 import urllib.request
 from ctypes.util import find_library
 from pathlib import Path
-from typing import Tuple
+from typing import Optional, Tuple
 
 from Cython.Build import cythonize
 from Cython.Distutils.build_ext import new_build_ext as build_ext
@@ -73,10 +74,6 @@ class Config:
     @property
     def platform(self) -> str:
         """Platform building for: Darwin, Linux"""
-        # import json
-
-        # with open("environ.txt", "w") as fh:
-        #     json.dump(dict(os.environ), fh, indent=4)
         return sysplatform.system()
 
     @property
@@ -90,10 +87,14 @@ class Config:
     def arch(self) -> str:
         # macOS x86_64|arm64 - linux x86_64|aarch64
 
-        # when using cibuildwheel on macOS to cross-compile, `PLAT` contains
+        # when using cibuildwheel on macOS to cross-compile,
+        # `_PYTHON_HOST_PLATFORM` contains
         # a platform string like macosx-11.0-arm64
         # we extract the cross-compile arch from it
-        return os.getenv("PLAT", "").rsplit("-", 1)[-1] or sysplatform.machine()
+        return (
+            os.getenv("_PYTHON_HOST_PLATFORM", "").rsplit("-", 1)[-1]
+            or sysplatform.machine()
+        )
 
     def check_platform(self):
         if (
@@ -124,20 +125,71 @@ class Config:
             return False
 
     @property
-    def download_filename(self) -> str:
+    def wants_universal(self) -> bool:
+        """whether requesting a macOS universal build"""
+        return self.platform == "Darwin" and sysconfig.get_platform().endswith(
+            "universal2"
+        )
+
+    def get_download_filename(self, arch: Optional[str] = None) -> str:
         """filename to download to get binary libzim for platform/arch"""
+        arch = arch or self.arch
+
         lzplatform = {"Darwin": "macos", "Linux": "linux"}.get(self.platform)
         if lzplatform == "linux" and self.is_musl:
             lzplatform = "linux_musl"
 
         return pathlib.Path(
-            f"libzim_{lzplatform}-{self.arch}-{self.libzim_dl_version}.tar.gz"
+            f"libzim_{lzplatform}-{arch}-{self.libzim_dl_version}.tar.gz"
         ).name
 
     def download_to_dest(self):
         """download expected libzim binary into libzim/ and libzim/include/ folders"""
-        libzim_dir = self.base_dir / "libzim"
-        fpath = self.base_dir / self.download_filename
+        if self.wants_universal:
+            folders = {}
+            for arch in self.supported_platforms["Darwin"]:
+                folders[arch] = self._download_and_extract(
+                    self.get_download_filename(arch)
+                )
+
+            try:
+                # duplicate x86_64 tree as placeholder (removing first)
+                folder = folders["x86_64"].with_name(
+                    folders["x86_64"].name.replace("x86_64", "universal")
+                )
+                shutil.rmtree(folder, ignore_errors=True)
+                shutil.copytree(
+                    folders["x86_64"],
+                    folder,
+                    symlinks=True,
+                    ignore_dangling_symlinks=True,
+                )
+                # delete libzim from copied tree
+                dest = folder / "lib" / self.libzim_fname
+                dest.unlink()
+                # create universal from all archs
+                subprocess.run(
+                    ["lipo"]
+                    + [
+                        str(folder / "lib" / self.libzim_fname)
+                        for folder in folders.values()
+                    ]
+                    + ["-output", str(dest), "-create"],
+                    check=True,
+                )
+            finally:
+                # clean-up temp folders
+                for _folder in folders.values():
+                    shutil.rmtree(_folder, ignore_errors=True)
+        else:
+            folder = self._download_and_extract(self.get_download_filename())
+
+        self._install_from(folder)
+
+    def _download_and_extract(self, filename: str) -> pathlib.Path:
+        """folder it downloaded and extracted libzim dist to"""
+
+        fpath = self.base_dir / filename
         source_url = "http://download.openzim.org/release/libzim"
         if self.is_nightly:
             source_url = f"http://download.openzim.org/nightly/{self.libzim_dl_version}"
@@ -158,6 +210,12 @@ class Config:
         shutil.unpack_archive(fpath, self.base_dir, "gztar")
         folder = fpath.with_name(fpath.name.replace(".tar.gz", ""))
 
+        return folder
+
+    def _install_from(self, folder: pathlib.Path):
+        """move headers and libzim binary from dist folder to expected location"""
+        libzim_dir = self.base_dir / "libzim"
+
         # remove existing headers if present
         self.base_dir.joinpath("include").mkdir(parents=True, exist_ok=True)
         shutil.rmtree(self.base_dir / "include" / "zim", ignore_errors=True)
@@ -167,6 +225,7 @@ class Config:
 
         # copy new libs
         for fpath in folder.joinpath("lib").rglob("libzim.*"):
+            print(f"{fpath} -> {libzim_dir / fpath.name}")
             os.replace(fpath, libzim_dir / fpath.name)
 
         # remove temp folder
