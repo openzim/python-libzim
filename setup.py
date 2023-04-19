@@ -196,7 +196,7 @@ class Config:
         if self.is_nightly:
             source_url = f"http://download.openzim.org/nightly/{self.libzim_dl_version}"
         # TODO: remove after 2023-04-20
-        if "bionic" in fpath.name:
+        if "bionic" in fpath.name and "x86_64" in fpath.name:
             source_url = "https://tmp.kiwix.org/ci/libzim_bionic"
         url = f"{source_url}/{fpath.name}"
 
