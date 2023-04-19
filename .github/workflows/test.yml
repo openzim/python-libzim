@@ -3,7 +3,7 @@ on: [push]
 
 env:
   # TODO: use a release (once available)
-  CIBW_ENVIRONMENT: "LIBZIM_DL_VERSION=2023-04-14"
+  CIBW_ENVIRONMENT: "LIBZIM_DL_VERSION=2023-04-19"
 
 jobs:
   lint:
