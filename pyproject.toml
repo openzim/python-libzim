@@ -27,13 +27,12 @@ manylinux-pypy_aarch64-image = "manylinux_2_28"
 
 [tool.cibuildwheel.linux]
 archs = ["x86_64", "aarch64"]
-# disabling repair as not possible to since libzim is built
-# on Ubuntu focal (20.04) with glic 2.31 while the manylinux images on which we
-# build the wheels are only avail up to 2.28
-# https://github.com/kiwix/kiwix-build/issues/595
-repair-wheel-command = ""
-# disabling tests as well as unrepaired wheels cant be tested
-test-command = ""
 
 [tool.cibuildwheel.macos]
 archs = ["x86_64", "arm64"]
+# macOS arm64 is cross-compiled and can not be tested.
+# cibuildwheel skips it already. *_arm64 this removes the warning
+# skipping tests on cp <=3.9 as the wheels we produce are on unexpected combinations
+# because those python versions were released before our building host version
+# > requires changing wheel names
+test-skip = "*_arm64 cp39* cp38* cp37*"
