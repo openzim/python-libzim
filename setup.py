@@ -141,10 +141,6 @@ class Config:
         if self.platform == "Linux":
             variant = "-musl" if self.is_musl else "-bionic"
 
-        # TODO: remove once fixed online
-        if arch == "aarch64":
-            variant = ""  # will allow build but fail repair and tests
-
         return pathlib.Path(
             f"libzim_{lzplatform}-{arch}{variant}-{self.libzim_dl_version}.tar.gz"
         ).name
