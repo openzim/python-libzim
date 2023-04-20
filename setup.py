@@ -141,6 +141,10 @@ class Config:
         if self.platform == "Linux":
             variant = "-musl" if self.is_musl else "-bionic"
 
+        # TODO: remove once fixed online
+        if arch == "aarch64":
+            variant = ""  # will allow build but fail repair and tests
+
         return pathlib.Path(
             f"libzim_{lzplatform}-{arch}{variant}-{self.libzim_dl_version}.tar.gz"
         ).name
@@ -195,9 +199,8 @@ class Config:
         source_url = "http://download.openzim.org/release/libzim"
         if self.is_nightly:
             source_url = f"http://download.openzim.org/nightly/{self.libzim_dl_version}"
-        # TODO: remove after 2023-04-20
-        if "bionic" in fpath.name and "x86_64" in fpath.name:
-            source_url = "https://tmp.kiwix.org/ci/libzim_bionic"
+        # TODO: remove once merged
+        source_url = "https://tmp.kiwix.org/ci/libzim_bionic"
         url = f"{source_url}/{fpath.name}"
 
         # download a local copy if none present
