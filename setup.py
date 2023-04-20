@@ -200,7 +200,8 @@ class Config:
         if self.is_nightly:
             source_url = f"http://download.openzim.org/nightly/{self.libzim_dl_version}"
         # TODO: remove once merged
-        source_url = "https://tmp.kiwix.org/ci/libzim_bionic"
+        if "bionic" in fpath.name:
+            source_url = "https://tmp.kiwix.org/ci/libzim_bionic"
         url = f"{source_url}/{fpath.name}"
 
         # download a local copy if none present
