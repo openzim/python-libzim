@@ -35,7 +35,7 @@ jobs:
         with:
           platforms: all
 
-       - name: Prepare Apple Keychain for Signing
+      - name: Prepare Apple Keychain for Signing
         if: matrix.os == 'macos-12'
         shell: bash
         run: |
