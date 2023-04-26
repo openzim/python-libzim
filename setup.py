@@ -118,7 +118,9 @@ class Config:
     @property
     def is_musl(self) -> bool:
         """whether running on a musl system (Alpine)"""
-        ps = subprocess.run(["ldd", "--version"], capture_output=True, text=True)
+        ps = subprocess.run(
+            ["/usr/bin/env", "ldd", "--version"], capture_output=True, text=True
+        )
         try:
             return "musl libc" in ps.stdout.readlines()[0]
         except Exception:
@@ -171,7 +173,7 @@ class Config:
                 dest.unlink()
                 # create universal from all archs
                 subprocess.run(
-                    ["lipo"]
+                    ["/usr/bin/env", "lipo"]
                     + [
                         str(folder / "lib" / self.libzim_fname)
                         for folder in folders.values()
@@ -203,7 +205,7 @@ class Config:
         # download a local copy if none present
         if not fpath.exists():
             print(f"> from {url}")
-            with urllib.request.urlopen(url) as response, open(
+            with urllib.request.urlopen(url) as response, open(  # nosec
                 fpath, "wb"
             ) as fh:  # nosec
                 fh.write(response.read())
@@ -241,6 +243,7 @@ class Config:
             print("> ensure libzim is notarized")
             spctl = subprocess.run(
                 [
+                    "/usr/bin/env",
                     "spctl",
                     "-a",
                     "-v",
@@ -363,6 +366,7 @@ class LibzimBuildExt(build_ext):
 
             subprocess.run(
                 [
+                    "/usr/bin/env",
                     "install_name_tool",
                     "-change",
                     config.libzim_fname,
@@ -387,6 +391,7 @@ class LibzimBuildExt(build_ext):
         print("> signing the extension")
         subprocess.run(
             [
+                "/usr/bin/env",
                 "codesign",
                 "--force",
                 "--sign",
@@ -401,13 +406,22 @@ class LibzimBuildExt(build_ext):
         print("> create ZIP package for notarization request")
         ext_zip = ext_fpath.with_name(f"{ext_fpath.name}.zip")
         subprocess.run(
-            ["ditto", "-c", "-k", "--keepParent", str(ext_fpath), str(ext_zip)]
+            [
+                "/usr/bin/env",
+                "ditto",
+                "-c",
+                "-k",
+                "--keepParent",
+                str(ext_fpath),
+                str(ext_zip),
+            ]
         )
 
         print("> request notarization")
         # security unlock-keychain -p mysecretpassword $(pwd)/build.keychain
         subprocess.run(
             [
+                "/usr/bin/env",
                 "xcrun",
                 "notarytool",
                 "submit",
@@ -426,7 +440,15 @@ class LibzimBuildExt(build_ext):
 
         print("> displaying request status (should be rejected)")
         subprocess.run(
-            ["spctl", "--assess", "-vv", "--type", "install", str(ext_fpath)],
+            [
+                "/usr/bin/env",
+                "spctl",
+                "--assess",
+                "-vv",
+                "--type",
+                "install",
+                str(ext_fpath),
+            ],
             check=False,
         )
 
