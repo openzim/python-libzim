@@ -3,7 +3,7 @@ on: [push]
 
 env:
   # TODO: use a release (once available)
-  LIBZIM_DL_VERSION: "2023-04-25"
+  LIBZIM_DL_VERSION: "2023-04-26"
 
 jobs:
   lint:

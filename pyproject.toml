@@ -26,8 +26,7 @@ manylinux-pypy_x86_64-image = "manylinux_2_28"
 manylinux-pypy_aarch64-image = "manylinux_2_28"
 
 [tool.cibuildwheel.linux]
-# TEMP: dont build on aarch64 as we dont have bionic builds yet
-archs = ["x86_64"]  #, "aarch64"]
+archs = ["x86_64", "aarch64"]
 
 [tool.cibuildwheel.macos]
 archs = ["x86_64", "arm64"]
