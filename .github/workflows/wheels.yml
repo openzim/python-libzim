@@ -12,6 +12,10 @@ env:
   LIBZIM_DL_VERSION: "2023-04-19"
   MACOSX_DEPLOYMENT_TARGET: "11.0"
   CIBW_ENVIRONMENT_PASS_LINUX: "LIBZIM_DL_VERSION"
+  # APPLE_SIGNING_KEYCHAIN_PATH set in prepare keychain step
+  APPLE_SIGNING_KEYCHAIN_PROFILE: "build-profile"
+  APPLE_SIGNING_IDENTITY: "${{ secrets.APPLE_SIGNING_IDENTITY }}"
+  SIGN_APPLE: yes
 
 
 jobs:
@@ -31,8 +35,49 @@ jobs:
         with:
           platforms: all
 
+       - name: Prepare Apple Keychain for Signing
+        if: matrix.os == 'macos-12'
+        shell: bash
+        run: |
+          # store certificate on filesystem
+          CERTIFICATE="$(mktemp -d)/wmch-devid.p12"
+          echo "${{ secrets.APPLE_SIGNING_CERTIFICATE }}" | base64 --decode -o $CERTIFICATE
+
+          # create a dedicated keychain
+          APPLE_SIGNING_KEYCHAIN_PATH="$(mktemp -d)/build.keychain"
+          echo "APPLE_SIGNING_KEYCHAIN_PATH=${APPLE_SIGNING_KEYCHAIN_PATH}" >> "$GITHUB_ENV"
+          security create-keychain -p mysecretpassword ${APPLE_SIGNING_KEYCHAIN_PATH}
+          security default-keychain -s ${APPLE_SIGNING_KEYCHAIN_PATH}
+          security unlock-keychain -p mysecretpassword ${APPLE_SIGNING_KEYCHAIN_PATH}
+
+          # import certificate into keychain then remove from filesystem
+          security import $CERTIFICATE -k ${APPLE_SIGNING_KEYCHAIN_PATH} -P "${{ secrets.APPLE_SIGNING_P12_PASSWORD }}" -A
+          rm $CERTIFICATE
+
+          # store signing credentials into the keychain
+          security set-key-partition-list -S "apple-tool:,apple:" -s -k mysecretpassword ${APPLE_SIGNING_KEYCHAIN_PATH}
+          security find-identity -v
+          xcrun notarytool store-credentials \
+            --apple-id "${{ secrets.APPLE_SIGNING_ALTOOL_USERNAME }}" \
+            --password "${{ secrets.APPLE_SIGNING_ALTOOL_PASSWORD }}" \
+            --team-id "${{ secrets.APPLE_SIGNING_TEAM }}" \
+            --validate \
+            --keychain ${APPLE_SIGNING_KEYCHAIN_PATH} \
+            ${APPLE_SIGNING_KEYCHAIN_PROFILE}
+
+          # unlock the keychain so build-step doesn't need to know its password
+          security unlock-keychain -p mysecretpassword ${APPLE_SIGNING_KEYCHAIN_PATH}
+
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.12.1
+
+      - name: Cleanup Apple Keychain
+        if: matrix.os == 'macos-12'
+        shell: bash
+        run: |
+          security lock-keychain ${APPLE_SIGNING_KEYCHAIN_PATH}
+          security delete-keychain ${APPLE_SIGNING_KEYCHAIN_PATH}
+          rm -f ${APPLE_SIGNING_KEYCHAIN_PATH}
 
       - uses: actions/upload-artifact@v3
         with:
