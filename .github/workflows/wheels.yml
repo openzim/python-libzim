@@ -66,6 +66,10 @@ jobs:
             --keychain ${APPLE_SIGNING_KEYCHAIN_PATH} \
             ${APPLE_SIGNING_KEYCHAIN_PROFILE}
 
+          # disable auto-locking of keychain
+          security set-keychain-settings ${APPLE_SIGNING_KEYCHAIN_PATH}
+          security unlock-keychain -p mysecretpassword ${APPLE_SIGNING_KEYCHAIN_PATH}
+
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.12.1
 
