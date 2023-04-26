@@ -15,7 +15,7 @@ env:
   # APPLE_SIGNING_KEYCHAIN_PATH set in prepare keychain step
   APPLE_SIGNING_KEYCHAIN_PROFILE: "build-profile"
   APPLE_SIGNING_IDENTITY: "${{ secrets.APPLE_SIGNING_IDENTITY }}"
-  SIGN_APPLE: yes
+  SIGN_APPLE: "yes"
 
 
 jobs:
