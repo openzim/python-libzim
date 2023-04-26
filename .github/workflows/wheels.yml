@@ -20,6 +20,7 @@ env:
 
 jobs:
   build_wheels:
+    environment: release
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
