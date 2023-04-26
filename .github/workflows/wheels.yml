@@ -42,21 +42,28 @@ jobs:
           # store certificate on filesystem
           export CERTIFICATE="$(mktemp -d)/wmch-devid.p12"
           echo "${{ secrets.APPLE_SIGNING_CERTIFICATE }}" | base64 --decode -o $CERTIFICATE
+          echo "extracted"
 
           # create a dedicated keychain
           export APPLE_SIGNING_KEYCHAIN_PATH="$(mktemp -d)/build.keychain"
           echo "APPLE_SIGNING_KEYCHAIN_PATH=${APPLE_SIGNING_KEYCHAIN_PATH}" >> "$GITHUB_ENV"
           security create-keychain -p mysecretpassword ${APPLE_SIGNING_KEYCHAIN_PATH}
+          echo "created"
           security default-keychain -s ${APPLE_SIGNING_KEYCHAIN_PATH}
+          echo "set dfault"
           security unlock-keychain -p mysecretpassword ${APPLE_SIGNING_KEYCHAIN_PATH}
+          echo "unlocked"
 
           # import certificate into keychain then remove from filesystem
           security import $CERTIFICATE -k ${APPLE_SIGNING_KEYCHAIN_PATH} -P "${{ secrets.APPLE_SIGNING_P12_PASSWORD }}" -A
+          echo "imported"
           rm $CERTIFICATE
 
           # store signing credentials into the keychain
           security set-key-partition-list -S "apple-tool:,apple:" -s -k mysecretpassword ${APPLE_SIGNING_KEYCHAIN_PATH}
+          echo "partitioned"
           security find-identity -v
+          echo "found"
           xcrun notarytool store-credentials \
             --apple-id "${{ secrets.APPLE_SIGNING_ALTOOL_USERNAME }}" \
             --password "${{ secrets.APPLE_SIGNING_ALTOOL_PASSWORD }}" \
@@ -64,6 +71,7 @@ jobs:
             --validate \
             --keychain ${APPLE_SIGNING_KEYCHAIN_PATH} \
             ${APPLE_SIGNING_KEYCHAIN_PROFILE}
+          echo "stored"
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.12.1
