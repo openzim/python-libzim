@@ -386,7 +386,7 @@ class LibzimBuildExt(build_ext):
         if not config.can_sign_apple:
             raise EnvironmentError("Can't sign for apple. Missing information")
 
-        ext_fpath = self.get_ext_fullpath(ext.name)
+        ext_fpath = pathlib.Path(self.get_ext_fullpath(ext.name))
 
         print("> signing the extension")
         subprocess.run(
