@@ -40,11 +40,11 @@ jobs:
         shell: bash
         run: |
           # store certificate on filesystem
-          CERTIFICATE="$(mktemp -d)/wmch-devid.p12"
+          export CERTIFICATE="$(mktemp -d)/wmch-devid.p12"
           echo "${{ secrets.APPLE_SIGNING_CERTIFICATE }}" | base64 --decode -o $CERTIFICATE
 
           # create a dedicated keychain
-          APPLE_SIGNING_KEYCHAIN_PATH="$(mktemp -d)/build.keychain"
+          export APPLE_SIGNING_KEYCHAIN_PATH="$(mktemp -d)/build.keychain"
           echo "APPLE_SIGNING_KEYCHAIN_PATH=${APPLE_SIGNING_KEYCHAIN_PATH}" >> "$GITHUB_ENV"
           security create-keychain -p mysecretpassword ${APPLE_SIGNING_KEYCHAIN_PATH}
           security default-keychain -s ${APPLE_SIGNING_KEYCHAIN_PATH}
