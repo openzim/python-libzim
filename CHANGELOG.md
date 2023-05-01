@@ -9,7 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Revamped setup to create proper wheel and sdist out-of-the-box (`python3 -m build`)
+- Revamped setup to create proper wheels and sdist out-of-the-box (`python3 -m build`)
+  - Build can now sign + notarize for macOS
+  - Build can now create macOS universal wheels
+  - Added cibuildwheel config
+- Build with (and target) libzim 8.2.0
 
 ## [3.0.0] - 2023-03-16
 

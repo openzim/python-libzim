@@ -28,7 +28,7 @@ from setuptools import Command, Extension, setup
 
 
 class Config:
-    libzim_dl_version: str = os.getenv("LIBZIM_DL_VERSION", "8.1.1")
+    libzim_dl_version: str = os.getenv("LIBZIM_DL_VERSION", "8.2.0")
     use_system_libzim: bool = bool(os.getenv("USE_SYSTEM_LIBZIM", False))
     download_libzim: bool = not bool(os.getenv("DONT_DOWNLOAD_LIBZIM", False))
 
@@ -197,9 +197,6 @@ class Config:
         source_url = "http://download.openzim.org/release/libzim"
         if self.is_nightly:
             source_url = f"http://download.openzim.org/nightly/{self.libzim_dl_version}"
-        # TODO: remove once merged
-        if "bionic" in fpath.name:
-            source_url = "https://tmp.kiwix.org/ci/libzim_bionic"
         url = f"{source_url}/{fpath.name}"
 
         # download a local copy if none present
