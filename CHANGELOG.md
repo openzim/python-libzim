@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Revamped setup to create proper wheels and sdist out-of-the-box (`python3 -m build`)
+  - Build can now sign + notarize for macOS
+  - Build can now create macOS universal wheels
+  - Added cibuildwheel config
+- Build with (and target) libzim 8.2.0
+
 ## [3.0.0] - 2023-03-16
 
 ### Added
