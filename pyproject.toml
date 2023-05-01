@@ -1,11 +1,38 @@
 [build-system]
-requires = [ "setuptools >= 35.0.2", "wheel >= 0.29.0", "twine", "cython >= 0.29.32,<3.0" ]
+requires = [ "setuptools >= 35.0.2", "wheel >= 0.29.0", "cython >= 0.29.34,<3.0" ]
 build-backend = "setuptools.build_meta"
 
 [tool.black]
-target-version = ['py36', 'py37', 'py38', 'py39', 'py310', 'py311']
+target-version = ['py37', 'py38', 'py39', 'py310', 'py311']
 
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+
+[tool.cibuildwheel]
+build = "*"
+# disabling musllinux until https://github.com/kiwix/kiwix-build/issues/585
+# disabling windows until hhttps://github.com/kiwix/kiwix-build/issues/466
+# disabling PyPy due to 2 failing tests
+skip = "pp* *musllinux* *-win*"
+
+test-requires = ["pytest"]
+test-command = "py.test {project}/tests/"
+
+manylinux-x86_64-image = "manylinux_2_28"
+manylinux-aarch64-image = "manylinux_2_28"
+manylinux-pypy_x86_64-image = "manylinux_2_28"
+manylinux-pypy_aarch64-image = "manylinux_2_28"
+
+[tool.cibuildwheel.linux]
+archs = ["x86_64", "aarch64"]
+
+[tool.cibuildwheel.macos]
+archs = ["x86_64", "arm64"]
+# macOS arm64 is cross-compiled and can not be tested.
+# cibuildwheel skips it already. *_arm64 this removes the warning
+# skipping tests on cp <=3.9 as the wheels we produce are on unexpected combinations
+# because those python versions were released before our building host version
+# > requires changing wheel names
+test-skip = "*_arm64 cp39* cp38* cp37*"
