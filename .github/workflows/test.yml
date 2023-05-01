@@ -2,10 +2,7 @@ name: test
 on: [push]
 
 env:
-  LIBZIM_VERSION: 8.1.0
-  LIBZIM_INCLUDE_PATH: include/zim
-  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-  PROFILE: 1
+  LIBZIM_DL_VERSION: "8.2.0"
 
 jobs:
   lint:
@@ -16,7 +13,7 @@ jobs:
       - name: Set up Python ${{ matrix.python }}
         uses: actions/setup-python@v4.2.0
         with:
-          python-version: "3.10"
+          python-version: "3.11"
           architecture: x64
 
       - name: Check formatting and linting
@@ -29,8 +26,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, macos-12]
-        python: ["3.6.15", "3.7", "3.8", "3.9", "3.10", "3.11"]
+        os: [ubuntu-22.04, macos-12]
+        python: ["3.7", "3.8", "3.9", "3.10", "3.11"]
 
     steps:
       - uses: actions/checkout@v3.1.0
@@ -41,60 +38,21 @@ jobs:
           python-version: ${{ matrix.python }}
           architecture: x64
 
-      - name: set macOS environ
-        if: matrix.os == 'macos-12'
-        run: |
-          echo LIBZIM_EXT=dylib >> $GITHUB_ENV
-          echo LIBZIM_RELEASE=libzim_macos-x86_64-$LIBZIM_VERSION >> $GITHUB_ENV
-          echo LIBZIM_LIBRARY_PATH=lib/libzim.8.dylib >> $GITHUB_ENV
+      - name: Installing dependencies
+        run: pip install -U pip setuptools build
 
-      - name: set linux environ
-        if: matrix.os == 'ubuntu-20.04'
-        run: |
-          echo LIBZIM_EXT=so >> $GITHUB_ENV
-          echo LIBZIM_RELEASE=libzim_linux-x86_64-$LIBZIM_VERSION >> $GITHUB_ENV
-          echo LIBZIM_LIBRARY_PATH=lib/x86_64-linux-gnu/libzim.so.$LIBZIM_VERSION >> $GITHUB_ENV
+      - name: Building & installing for tests (with profiling)
+        env:
+          PROFILE: 1
+        run: pip install -e .
 
-      - name: Cache libzim dylib & headers
-        uses: actions/cache@v3.0.11
-        id: cache-libzim
-        with:
-          path: libzim_dist
-          key: ${{ env.LIBZIM_RELEASE }}-libzim-cache
-
-      - name: Download libzim dylib & headers from OpenZIM.org releases
-        if: steps.cache-libzim.outputs.cache-hit != 'true'
+      - name: Testing
         run: |
-          wget -q https://download.openzim.org/release/libzim/$LIBZIM_RELEASE.tar.gz
-          tar --extract --file=$LIBZIM_RELEASE.tar.gz
-          mv $LIBZIM_RELEASE libzim_dist
-
-      - name: Link libzim dylib & headers into workspace lib and include folders
-        run: |
-          cp -p $GITHUB_WORKSPACE/libzim_dist/$LIBZIM_LIBRARY_PATH lib/libzim.$LIBZIM_EXT
-          cp -p $GITHUB_WORKSPACE/libzim_dist/$LIBZIM_LIBRARY_PATH lib/
-          ln -s $GITHUB_WORKSPACE/libzim_dist/$LIBZIM_INCLUDE_PATH include/zim
-          export LD_LIBRARY_PATH="$PWD/lib:$LD_LIBRARY_PATH"
-
-      - name: update Linux shared objects cache
-        if: matrix.os == 'ubuntu-20.04'
-        run: |
-          sudo ldconfig $PWD/lib
-
-      - name: Build cython, sdist, and bdist_wheel
-        run: |
-          pip install --upgrade pip install "cython>=0.29.32,<3.0" setuptools pip wheel
-          python3 setup.py build_ext --inplace
-          python3 setup.py sdist bdist_wheel
-
-      - name: Test built package with pytest
-        run: |
-          pip install pytest pytest-cov
-          pip install -e .
-          export DYLD_LIBRARY_PATH="$PWD:$PWD/lib:$DYLD_LIBRARY_PATH"
-          pytest --cov=libzim --cov-report=term --cov-report term-missing .
+          pip install pytest pytest-cov cython
+          py.test --cov=libzim --cov-report=term --cov-report term-missing .
 
       - name: Upload coverage report to codecov
-        run: |
-          pip install codecov
-          codecov
+        if: matrix.os == 'ubuntu-22.04' && matrix.python == '3.11'
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
