@@ -2,8 +2,7 @@ name: test
 on: [push]
 
 env:
-  # TODO: use a release (once available)
-  LIBZIM_DL_VERSION: "2023-04-26"
+  LIBZIM_DL_VERSION: "8.2.0"
 
 jobs:
   lint:
