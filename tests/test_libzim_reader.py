@@ -358,7 +358,6 @@ def test_reader_archive(all_zims, filename, filesize, new_ns, mutlipart, zim_uui
 def test_reader_metadata(
     all_zims, filename, metadata_keys, test_metadata, test_metadata_value
 ):
-
     zim = Archive(all_zims / filename)
 
     # make sure metadata_keys is empty

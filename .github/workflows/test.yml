@@ -48,7 +48,7 @@ jobs:
 
       - name: Testing
         run: |
-          pip install pytest pytest-cov cython
+          pip install -U coverage pytest pytest-cov cython
           py.test --cov=libzim --cov-report=term --cov-report term-missing .
 
       - name: Upload coverage report to codecov
