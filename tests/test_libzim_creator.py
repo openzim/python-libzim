@@ -783,3 +783,46 @@ def test_creator_badfilename(tmpdir):
     # forward slash points to non-existing folder
     with pytest.raises(IOError):
         Creator(tmpdir / "test/test.zim")
+
+
+def test_accented_search_from_libzim(fpath):
+    """copy of libzim accented search test
+
+    https://github.com/openzim/libzim/blob/main/test/search.cpp#L290 (88543b00)"""
+
+    with Creator(fpath).config_verbose(True).config_indexing(True, "eng") as creator:
+        creator.add_item(
+            StaticItem(
+                path="path0",
+                title="Test Article0",
+                content="This is a tèst articlé. temp0",
+                mimetype="text/html",
+            )
+        )
+
+        creator.add_item(
+            StaticItem(
+                path="path1",
+                title="Test Article1",
+                content="This is another test article. For article1.",
+                mimetype="text/html",
+            )
+        )
+
+    zim = Archive(fpath)
+
+    assert zim.entry_count == 2
+    assert zim.article_count == 2
+    assert zim.all_entry_count == 7
+
+    ascii_query = Query().set_query("test article")
+    ascii_searcher = Searcher(zim)
+    ascii_search = ascii_searcher.search(ascii_query)
+    assert ascii_search.getEstimatedMatches() == zim.article_count
+    assert list(ascii_search.getResults(0, zim.article_count)) == ["path0", "path1"]
+
+    accented_query = Query().set_query("test àrticlé")
+    accented_searcher = Searcher(zim)
+    accented_search = accented_searcher.search(accented_query)
+    assert accented_search.getEstimatedMatches() == zim.article_count
+    assert list(accented_search.getResults(0, zim.article_count)) == ["path0", "path1"]
