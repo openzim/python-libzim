@@ -2,7 +2,7 @@ name: test
 on: [push]
 
 env:
-  LIBZIM_DL_VERSION: "8.2.0"
+  LIBZIM_DL_VERSION: "2023-07-13"
 
 jobs:
   lint:
