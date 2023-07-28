@@ -7,7 +7,7 @@ on:
       - main
 
 env:
-  LIBZIM_DL_VERSION: "2023-07-13"
+  LIBZIM_DL_VERSION: "8.2.1"
   MACOSX_DEPLOYMENT_TARGET: "11.0"
   CIBW_ENVIRONMENT_PASS_LINUX: "LIBZIM_DL_VERSION"
 
@@ -30,7 +30,7 @@ jobs:
           platforms: all
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.12.1
+        uses: pypa/cibuildwheel@v2.14
 
       - uses: actions/upload-artifact@v3
         with:

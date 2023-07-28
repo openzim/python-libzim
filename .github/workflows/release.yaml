@@ -6,7 +6,7 @@ on:
       - published
 
 env:
-  LIBZIM_DL_VERSION: "8.2.0"
+  LIBZIM_DL_VERSION: "8.2.1"
   MACOSX_DEPLOYMENT_TARGET: "11.0"
   CIBW_ENVIRONMENT_PASS_LINUX: "LIBZIM_DL_VERSION"
   # APPLE_SIGNING_KEYCHAIN_PATH set in prepare keychain step
@@ -68,7 +68,7 @@ jobs:
           security unlock-keychain -p mysecretpassword ${APPLE_SIGNING_KEYCHAIN_PATH}
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.12.1
+        uses: pypa/cibuildwheel@v2.14
 
       - name: Cleanup Apple Keychain
         if: matrix.os == 'macos-12'
