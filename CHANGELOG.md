@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Build with (and target) libzim 8.2.1
 
+## Removed
+
+- Support for Python 3.7 (EOL)
+
 ## [3.1.0] - 2023-05-01
 
 ### Changed

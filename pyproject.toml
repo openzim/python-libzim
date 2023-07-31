@@ -3,7 +3,7 @@ requires = [ "setuptools >= 35.0.2", "wheel >= 0.29.0", "cython >= 0.29.34,<3.0"
 build-backend = "setuptools.build_meta"
 
 [tool.black]
-target-version = ['py37', 'py38', 'py39', 'py310', 'py311']
+target-version = ['py38', 'py39', 'py310', 'py311']
 
 
 [tool.pytest.ini_options]
@@ -35,4 +35,4 @@ archs = ["x86_64", "arm64"]
 # skipping tests on cp <=3.9 as the wheels we produce are on unexpected combinations
 # because those python versions were released before our building host version
 # > requires changing wheel names
-test-skip = "*_arm64 cp39* cp38* cp37*"
+test-skip = "*_arm64 cp39* cp38*"
