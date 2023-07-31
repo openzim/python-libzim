@@ -197,6 +197,9 @@ class Config:
         source_url = "http://download.openzim.org/release/libzim"
         if self.is_nightly:
             source_url = f"http://download.openzim.org/nightly/{self.libzim_dl_version}"
+        # temp hack
+        if self.arch == "aarch64" and self.platform == "Linux" and not self.is_musl:
+            source_url = "http://tmp.kiwix.org/ci"
         url = f"{source_url}/{fpath.name}"
 
         # download a local copy if none present
