@@ -259,6 +259,19 @@ class Config:
                     file=sys.stderr,
                 )
 
+    def cleanup(self):
+        """ removes created files to prevent re-run issues"""
+        # we downloaded libzim, so we must remove it
+        if self.download_libzim:
+            print("removing downloaded libraries")
+            for fpath in self.dylib_file.parent.glob("*.[dylib|so]*"):
+                print(">", fpath)
+                fpath.unlink(missing_ok=True)
+            if self.header_file.parent.exists():
+                print("removing downloaded headers")
+                shutil.rmtree(self.header_file.parent, ignore_errors=True)
+
+
     @property
     def header_file(self) -> pathlib.Path:
         return self.base_dir / "include" / "zim" / "zim.h"
@@ -475,7 +488,12 @@ else:
     config.check_platform()
     ext_modules = get_cython_extension()
 
-setup(
-    cmdclass={"build_ext": LibzimBuildExt, "download_libzim": DownloadLibzim},
-    ext_modules=ext_modules,
-)
+try:
+    setup(
+        cmdclass={"build_ext": LibzimBuildExt, "download_libzim": DownloadLibzim},
+        ext_modules=ext_modules,
+    )
+except Exception as exc:
+    raise exc
+finally:
+    config.cleanup()
