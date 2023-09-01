@@ -478,18 +478,30 @@ class DownloadLibzim(Command):
         config.download_to_dest()
 
 
+class LibzimClean(Command):
+    user_options = []
+
+    def initialize_options(self):
+        ...
+
+    def finalize_options(self):
+        ...
+
+    def run(self):
+        config.cleanup()
+
+
 if len(sys.argv) == 2 and sys.argv[1] in config.buildless_commands:
     ext_modules = None
 else:
     config.check_platform()
     ext_modules = get_cython_extension()
 
-try:
-    setup(
-        cmdclass={"build_ext": LibzimBuildExt, "download_libzim": DownloadLibzim},
-        ext_modules=ext_modules,
-    )
-except Exception as exc:
-    raise exc
-finally:
-    config.cleanup()
+setup(
+    cmdclass={
+        "build_ext": LibzimBuildExt,
+        "download_libzim": DownloadLibzim,
+        "clean": LibzimClean,
+    },
+    ext_modules=ext_modules,
+)
