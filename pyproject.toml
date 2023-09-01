@@ -25,7 +25,7 @@ manylinux-pypy_x86_64-image = "manylinux_2_28"
 manylinux-pypy_aarch64-image = "manylinux_2_28"
 
 [tool.cibuildwheel.linux]
-archs = ["x86_64", "aarch64"]
+archs = ["aarch64"]
 
 [tool.cibuildwheel.macos]
 archs = ["x86_64", "arm64"]
