@@ -2,16 +2,16 @@ name: test
 on: [push]
 
 env:
-  LIBZIM_DL_VERSION: "2023-07-13"
+  LIBZIM_DL_VERSION: "8.2.1-1"
 
 jobs:
   lint:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3.1.0
+      - uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v4.2.0
+        uses: actions/setup-python@v4
         with:
           python-version: "3.11"
           architecture: x64
@@ -27,13 +27,13 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04, macos-12]
-        python: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+        python: ["3.8", "3.9", "3.10", "3.11"]
 
     steps:
-      - uses: actions/checkout@v3.1.0
+      - uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v4.2.0
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
           architecture: x64

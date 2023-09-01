@@ -28,7 +28,7 @@ from setuptools import Command, Extension, setup
 
 
 class Config:
-    libzim_dl_version: str = os.getenv("LIBZIM_DL_VERSION", "8.2.0")
+    libzim_dl_version: str = os.getenv("LIBZIM_DL_VERSION", "8.2.1-1")
     use_system_libzim: bool = bool(os.getenv("USE_SYSTEM_LIBZIM", False))
     download_libzim: bool = not bool(os.getenv("DONT_DOWNLOAD_LIBZIM", False))
 
@@ -256,6 +256,18 @@ class Config:
                     file=sys.stderr,
                 )
 
+    def cleanup(self):
+        """removes created files to prevent re-run issues"""
+        # we downloaded libzim, so we must remove it
+        if self.download_libzim:
+            print("removing downloaded libraries")
+            for fpath in self.dylib_file.parent.glob("*.[dylib|so]*"):
+                print(">", fpath)
+                fpath.unlink(missing_ok=True)
+            if self.header_file.parent.exists():
+                print("removing downloaded headers")
+                shutil.rmtree(self.header_file.parent, ignore_errors=True)
+
     @property
     def header_file(self) -> pathlib.Path:
         return self.base_dir / "include" / "zim" / "zim.h"
@@ -466,6 +478,19 @@ class DownloadLibzim(Command):
         config.download_to_dest()
 
 
+class LibzimClean(Command):
+    user_options = []
+
+    def initialize_options(self):
+        ...
+
+    def finalize_options(self):
+        ...
+
+    def run(self):
+        config.cleanup()
+
+
 if len(sys.argv) == 2 and sys.argv[1] in config.buildless_commands:
     ext_modules = None
 else:
@@ -473,6 +498,10 @@ else:
     ext_modules = get_cython_extension()
 
 setup(
-    cmdclass={"build_ext": LibzimBuildExt, "download_libzim": DownloadLibzim},
+    cmdclass={
+        "build_ext": LibzimBuildExt,
+        "download_libzim": DownloadLibzim,
+        "clean": LibzimClean,
+    },
     ext_modules=ext_modules,
 )
