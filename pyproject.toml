@@ -11,11 +11,10 @@ testpaths = ["tests"]
 pythonpath = ["."]
 
 [tool.cibuildwheel]
-build = "*"
-# disabling musllinux until https://github.com/kiwix/kiwix-build/issues/585
+build = "*musllinux*"
 # disabling windows until hhttps://github.com/kiwix/kiwix-build/issues/466
 # disabling PyPy due to 2 failing tests
-skip = "pp* *musllinux* *-win*"
+skip = "pp* *-win*"
 
 test-requires = ["pytest"]
 test-command = "py.test {project}/tests/"
