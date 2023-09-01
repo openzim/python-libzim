@@ -197,9 +197,6 @@ class Config:
         source_url = "http://download.openzim.org/release/libzim"
         if self.is_nightly:
             source_url = f"http://download.openzim.org/nightly/{self.libzim_dl_version}"
-        # temp hack
-        if self.arch == "aarch64" and self.platform == "Linux" and not self.is_musl:
-            source_url = "http://tmp.kiwix.org/ci"
         url = f"{source_url}/{fpath.name}"
 
         # download a local copy if none present
@@ -260,7 +257,7 @@ class Config:
                 )
 
     def cleanup(self):
-        """ removes created files to prevent re-run issues"""
+        """removes created files to prevent re-run issues"""
         # we downloaded libzim, so we must remove it
         if self.download_libzim:
             print("removing downloaded libraries")
@@ -270,7 +267,6 @@ class Config:
             if self.header_file.parent.exists():
                 print("removing downloaded headers")
                 shutil.rmtree(self.header_file.parent, ignore_errors=True)
-
 
     @property
     def header_file(self) -> pathlib.Path:
