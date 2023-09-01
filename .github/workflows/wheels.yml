@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - musl
 
 env:
   LIBZIM_DL_VERSION: "8.2.1-1"
