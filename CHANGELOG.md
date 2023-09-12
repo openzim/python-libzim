@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Build with (and target) libzim 8.2.1
+- Fixed setup checking download platform even when using own libzim (not downloading)
 
 ## Removed
 
