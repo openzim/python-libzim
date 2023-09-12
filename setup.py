@@ -149,6 +149,7 @@ class Config:
 
     def download_to_dest(self):
         """download expected libzim binary into libzim/ and libzim/include/ folders"""
+        self.check_platform()
         if self.wants_universal:
             folders = {}
             for arch in self.supported_platforms["Darwin"]:
@@ -474,7 +475,6 @@ class DownloadLibzim(Command):
         ...
 
     def run(self):
-        config.check_platform()
         config.download_to_dest()
 
 
@@ -494,7 +494,6 @@ class LibzimClean(Command):
 if len(sys.argv) == 2 and sys.argv[1] in config.buildless_commands:
     ext_modules = None
 else:
-    config.check_platform()
     ext_modules = get_cython_extension()
 
 setup(
