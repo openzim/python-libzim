@@ -70,6 +70,7 @@ cdef extern from "zim/writer/creator.h" namespace "zim::writer":
         void addItem(shared_ptr[WriterItem] item) nogil except +
         void addMetadata(string name, string content, string mimetype) nogil except +
         void addRedirection(string path, string title, string targetpath, map[HintKeys, uint64_t] hints) nogil except +
+        void addClone(string path, string title, string targetpath, map[HintKeys, uint64_t] hints) nogil except +
         void finishZimCreation() nogil except +
         void setMainPath(string mainPath)
         void addIllustration(unsigned int size, string content) nogil except +

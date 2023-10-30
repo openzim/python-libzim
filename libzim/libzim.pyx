@@ -395,6 +395,24 @@ cdef class _Creator:
         with nogil:
             self.c_creator.addRedirection(_path, _title, _targetPath, _hints)
 
+    def add_clone(self, str path: str, str title: str, str targetPath: str, dict hints: Dict[Hint, pyint]):
+        """Clone the (existing) entry `targetPath` into a new entry `path`.
+
+            Raises
+            ------
+                RuntimeError
+                    If `targetPath` entry doesn't exist.
+            """
+        if not self._started:
+            raise RuntimeError("Creator not started")
+
+        cdef string _path = path.encode('UTF-8')
+        cdef string _title = title.encode('UTF-8')
+        cdef string _targetPath = targetPath.encode('UTF-8')
+        cdef map[zim.HintKeys, uint64_t] _hints = convertToCppHints(hints)
+        with nogil:
+            self.c_creator.addClone(_path, _title, _targetPath, _hints)
+
     def __enter__(self):
         cdef string _path = str(self._filename).encode('UTF-8')
         with nogil:
@@ -1287,7 +1305,7 @@ class ModuleLoader(importlib.abc.Loader):
             'libzim.reader': reader,
             'libzim.search': search,
             'libzim.suggestion': suggestion,
-            'libzim.version': version 
+            'libzim.version': version
         }.get(spec.name, None)
 
     @staticmethod
