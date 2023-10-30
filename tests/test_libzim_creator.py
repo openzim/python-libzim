@@ -467,6 +467,28 @@ def test_creator_redirection(fpath, lipsum_item):
         sugg_bonjour.getResults(0, sugg_hello.getEstimatedMatches())
     )
 
+def test_creator_clone(fpath, lipsum_item):
+    # ensure we can't add if not started
+    c = Creator(fpath)
+    with pytest.raises(RuntimeError, match="not started"):
+        c.add_redirection("home", "hello", HOME_PATH, {Hint.FRONT_ARTICLE: True})
+    del c
+
+    with Creator(fpath) as c:
+        c.add_item(lipsum_item)
+        c.add_clone("home", "hello", HOME_PATH, {Hint.FRONT_ARTICLE: True})
+        with pytest.raises(RuntimeError, match="doesn't exist"):
+            c.add_clone("accueil", "bonjour", HOME_PATH+"_no_existitant", {Hint.FRONT_ARTICLE: True})
+
+    zim = Archive(fpath)
+    assert zim.entry_count == 2
+    assert zim.has_entry_by_path("home") is True
+    assert zim.has_entry_by_path("accueil") is False
+    assert not zim.get_entry_by_path("home").is_redirect
+    assert (
+        zim.get_entry_by_path("home").get_item().content == zim.get_entry_by_path(HOME_PATH).get_item().content
+    )
+
 
 def test_item_notimplemented(fpath, lipsum_item):
     item = Item()
