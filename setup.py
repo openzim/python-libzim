@@ -122,7 +122,7 @@ class Config:
             ["/usr/bin/env", "ldd", "--version"], capture_output=True, text=True
         )
         try:
-            return "musl libc" in ps.stdout.readlines()[0]
+            return "musl libc" in ps.stderr.splitlines()[0]
         except Exception:
             return False
 
