@@ -362,7 +362,7 @@ def test_creator_additem(fpath, lipsum_item):
             c.add_item(None)
         with pytest.raises(RuntimeError):
             c.add_item("hello")
-        with pytest.raises(TypeError, match="takes no keyword arguments"):
+        with pytest.raises(TypeError, match="takes exactly 1 positional argument"):
             c.add_item(mimetype="text/html")
 
 
