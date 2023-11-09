@@ -17,6 +17,7 @@ import shutil
 import subprocess
 import sys
 import sysconfig
+import tarfile
 import urllib.request
 from ctypes.util import find_library
 from pathlib import Path
@@ -68,8 +69,15 @@ class Config:
         return find_library("zim")
 
     @property
+    def is_latest_nightly(self) -> bool:
+        """will use redirect to latest available nightly"""
+        return self.libzim_dl_version == "nightly"
+
+    @property
     def is_nightly(self) -> bool:
-        return re.match(r"\d{4}-\d{2}-\d{2}", self.libzim_dl_version)
+        return self.is_latest_nightly or re.match(
+            r"\d{4}-\d{2}-\d{2}", self.libzim_dl_version
+        )
 
     @property
     def platform(self) -> str:
@@ -122,7 +130,7 @@ class Config:
             ["/usr/bin/env", "ldd", "--version"], capture_output=True, text=True
         )
         try:
-            return "musl libc" in ps.stdout.readlines()[0]
+            return "musl libc" in ps.stderr.splitlines()[0]
         except Exception:
             return False
 
@@ -143,8 +151,13 @@ class Config:
         if self.platform == "Linux":
             variant = "-musl" if self.is_musl else "-bionic"
 
+        if self.is_latest_nightly:
+            version_suffix = ""
+        else:
+            version_suffix = f"-{self.libzim_dl_version}"
+
         return pathlib.Path(
-            f"libzim_{lzplatform}-{arch}{variant}-{self.libzim_dl_version}.tar.gz"
+            f"libzim_{lzplatform}-{arch}{variant}{version_suffix}.tar.gz"
         ).name
 
     def download_to_dest(self):
@@ -196,7 +209,9 @@ class Config:
 
         fpath = self.base_dir / filename
         source_url = "http://download.openzim.org/release/libzim"
-        if self.is_nightly:
+        if self.is_latest_nightly:
+            source_url = "http://download.openzim.org/nightly"
+        elif self.is_nightly:
             source_url = f"http://download.openzim.org/nightly/{self.libzim_dl_version}"
         url = f"{source_url}/{fpath.name}"
 
@@ -213,7 +228,14 @@ class Config:
         print("> extracting archive")
         # extract into current folder (all files are inside an in-tar folder)
         shutil.unpack_archive(fpath, self.base_dir, "gztar")
-        folder = fpath.with_name(fpath.name.replace(".tar.gz", ""))
+
+        # nightly have different download name and extracted folder name as it
+        # uses a redirect
+        if self.is_latest_nightly:
+            tar = tarfile.open(fpath)
+            folder = pathlib.Path(pathlib.Path(tar.firstmember.name).parts[0])
+        else:
+            folder = fpath.with_name(fpath.name.replace(".tar.gz", ""))
 
         return folder
 
