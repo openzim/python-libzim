@@ -7,8 +7,8 @@ on:
       - main
 
 env:
-  LIBZIM_DL_VERSION: "nightly"
-  MACOSX_DEPLOYMENT_TARGET: "11.0"
+  LIBZIM_DL_VERSION: "9.0.0"
+  MACOSX_DEPLOYMENT_TARGET: "12.0"
   CIBW_ENVIRONMENT_PASS_LINUX: "LIBZIM_DL_VERSION"
   CIBW_BUILD_VERBOSITY: "3"
 
@@ -19,7 +19,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, macos-12]  # macos-11, windows-2019
+        os: [ubuntu-20.04, macos-13]  # windows-2019
 
     steps:
       - uses: actions/checkout@v3
@@ -31,7 +31,7 @@ jobs:
           platforms: all
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.14
+        uses: pypa/cibuildwheel@v2.16
 
       - uses: actions/upload-artifact@v3
         with:
