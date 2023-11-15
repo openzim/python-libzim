@@ -29,7 +29,7 @@ from setuptools import Command, Extension, setup
 
 
 class Config:
-    libzim_dl_version: str = os.getenv("LIBZIM_DL_VERSION", "8.2.1-1")
+    libzim_dl_version: str = os.getenv("LIBZIM_DL_VERSION", "9.0.0")
     use_system_libzim: bool = bool(os.getenv("USE_SYSTEM_LIBZIM", False))
     download_libzim: bool = not bool(os.getenv("DONT_DOWNLOAD_LIBZIM", False))
 
@@ -62,7 +62,7 @@ class Config:
     @property
     def libzim_major(self) -> str:
         # assuming nightlies are for version 8.x
-        return 8 if self.is_nightly else self.libzim_dl_version[0]
+        return 9 if self.is_nightly else self.libzim_dl_version[0]
 
     @property
     def found_libzim(self) -> str:

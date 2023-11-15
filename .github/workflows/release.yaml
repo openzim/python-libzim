@@ -6,8 +6,8 @@ on:
       - published
 
 env:
-  LIBZIM_DL_VERSION: "8.2.1-1"
-  MACOSX_DEPLOYMENT_TARGET: "11.0"
+  LIBZIM_DL_VERSION: "9.0.0"
+  MACOSX_DEPLOYMENT_TARGET: "12.0"
   CIBW_ENVIRONMENT_PASS_LINUX: "LIBZIM_DL_VERSION"
   # APPLE_SIGNING_KEYCHAIN_PATH set in prepare keychain step
   APPLE_SIGNING_KEYCHAIN_PROFILE: "build-profile"
@@ -22,19 +22,19 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, macos-12]  # macos-11, windows-2019
+        os: [ubuntu-20.04, macos-13]  # windows-2019
 
     steps:
       - uses: actions/checkout@v3
 
       - name: Set up QEMU
         if: runner.os == 'Linux'
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
         with:
           platforms: all
 
       - name: Prepare Apple Keychain for Signing
-        if: matrix.os == 'macos-12'
+        if: matrix.os == 'macos-13'
         shell: bash
         run: |
           # store certificate on filesystem
@@ -68,10 +68,10 @@ jobs:
           security unlock-keychain -p mysecretpassword ${APPLE_SIGNING_KEYCHAIN_PATH}
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.14
+        uses: pypa/cibuildwheel@v2.16
 
       - name: Cleanup Apple Keychain
-        if: matrix.os == 'macos-12'
+        if: matrix.os == 'macos-13'
         shell: bash
         run: |
           security lock-keychain ${APPLE_SIGNING_KEYCHAIN_PATH}
@@ -107,7 +107,7 @@ jobs:
           name: artifact
           path: dist
 
-      - uses: pypa/gh-action-pypi-publish@v1.5.0
+      - uses: pypa/gh-action-pypi-publish@v1.8.10
         with:
           user: __token__
           # password: ${{ secrets.PYPI_TEST_API_TOKEN }}
