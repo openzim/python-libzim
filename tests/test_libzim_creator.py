@@ -476,9 +476,9 @@ def test_creator_clone(fpath, lipsum_item):
 
     with Creator(fpath) as c:
         c.add_item(lipsum_item)
-        c.add_clone("home", "hello", HOME_PATH, {Hint.FRONT_ARTICLE: True})
+        c.add_alias("home", "hello", HOME_PATH, {Hint.FRONT_ARTICLE: True})
         with pytest.raises(RuntimeError, match="doesn't exist"):
-            c.add_clone("accueil", "bonjour", HOME_PATH+"_no_existitant", {Hint.FRONT_ARTICLE: True})
+            c.add_alias("accueil", "bonjour", HOME_PATH+"_no_existitant", {Hint.FRONT_ARTICLE: True})
 
     zim = Archive(fpath)
     assert zim.entry_count == 2
