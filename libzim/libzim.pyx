@@ -395,8 +395,8 @@ cdef class _Creator:
         with nogil:
             self.c_creator.addRedirection(_path, _title, _targetPath, _hints)
 
-    def add_clone(self, str path: str, str title: str, str targetPath: str, dict hints: Dict[Hint, pyint]):
-        """Clone the (existing) entry `targetPath` into a new entry `path`.
+    def add_alias(self, str path: str, str title: str, str targetPath: str, dict hints: Dict[Hint, pyint]):
+        """Alias the (existing) entry `targetPath` as a new entry `path`.
 
             Raises
             ------
@@ -411,7 +411,7 @@ cdef class _Creator:
         cdef string _targetPath = targetPath.encode('UTF-8')
         cdef map[zim.HintKeys, uint64_t] _hints = convertToCppHints(hints)
         with nogil:
-            self.c_creator.addClone(_path, _title, _targetPath, _hints)
+            self.c_creator.addAlias(_path, _title, _targetPath, _hints)
 
     def __enter__(self):
         cdef string _path = str(self._filename).encode('UTF-8')
