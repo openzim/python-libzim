@@ -467,7 +467,7 @@ def test_creator_redirection(fpath, lipsum_item):
         sugg_bonjour.getResults(0, sugg_hello.getEstimatedMatches())
     )
 
-def test_creator_clone(fpath, lipsum_item):
+def test_creator_alias(fpath, lipsum_item):
     # ensure we can't add if not started
     c = Creator(fpath)
     with pytest.raises(RuntimeError, match="not started"):
@@ -478,7 +478,7 @@ def test_creator_clone(fpath, lipsum_item):
         c.add_item(lipsum_item)
         c.add_alias("home", "hello", HOME_PATH, {Hint.FRONT_ARTICLE: True})
         with pytest.raises(RuntimeError, match="doesn't exist"):
-            c.add_alias("accueil", "bonjour", HOME_PATH+"_no_existitant", {Hint.FRONT_ARTICLE: True})
+            c.add_alias("accueil", "bonjour", HOME_PATH+"_non_existent", {Hint.FRONT_ARTICLE: True})
 
     zim = Archive(fpath)
     assert zim.entry_count == 2
