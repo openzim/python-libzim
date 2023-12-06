@@ -1128,9 +1128,9 @@ Usage:
 
 archive = libzim.reader.Archive(fpath)
 searcher = Searcher(archive)
-query = Query().setQuery("foo")
+query = Query().set_query("foo")
 search = searcher.search(query)
-for path in search.getResult(10, 10) # get result from 10 to 20 (10 results)
+for path in search.getResults(10, 10) # get result from 10 to 20 (10 results)
     print(path, archive.get_entry_by_path(path).title)"""
 search_public_objects = [
     Searcher,
@@ -1228,7 +1228,7 @@ Usage:
 archive = Archive(fpath)
 suggestion_searcher = SuggestionSearcher(archive)
 suggestions = suggestion_searcher.suggest("foo")
-for path in suggestion.getResult(10, 10) # get result from 10 to 20 (10 results)
+for path in suggestion.getResults(10, 10) # get result from 10 to 20 (10 results)
     print(path, archive.get_entry_by_path(path).title)"""
 suggestion_public_objects = [
     SuggestionSearcher
