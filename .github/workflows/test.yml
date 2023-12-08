@@ -2,7 +2,7 @@ name: test
 on: [push]
 
 env:
-  LIBZIM_DL_VERSION: "9.0.0"
+  LIBZIM_DL_VERSION: "2023-12-04"
   MACOSX_DEPLOYMENT_TARGET: "12.0"
 
 jobs:
