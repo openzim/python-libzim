@@ -6,7 +6,7 @@ on:
       - published
 
 env:
-  LIBZIM_DL_VERSION: "9.0.0"
+  LIBZIM_DL_VERSION: "9.1.0"
   MACOSX_DEPLOYMENT_TARGET: "12.0"
   CIBW_ENVIRONMENT_PASS_LINUX: "LIBZIM_DL_VERSION"
   # APPLE_SIGNING_KEYCHAIN_PATH set in prepare keychain step
