@@ -127,6 +127,25 @@ with Creator("test.zim").config_indexing(True, "eng") as creator:
         creator.add_metadata(name.title(), value)
 ```
 
+#### Thread safety
+
+> The reading part of the libzim is most of the time thread safe. Searching and creating part are not. [libzim documentation](https://libzim.readthedocs.io/en/latest/usage.html#introduction)
+
+`python-libzim` disables the [GIL](https://wiki.python.org/moin/GlobalInterpreterLock) on most of C++ libzim calls. You **must prevent concurrent access** yourself. This is easily done by wrapping all creator calls with a [`threading.Lock()`](https://docs.python.org/3/library/threading.html#lock-objects)
+
+```py
+lock = threading.Lock()
+creator = Creator("test.zim")
+
+# Thread #1
+with lock:
+    creator.add_item(item1)
+
+# Thread #2
+with lock:
+    creator.add_item(item2)
+```
+
 ## Building
 
 `libzim` package building offers different behaviors via environment variables
