@@ -135,15 +135,15 @@ with Creator("test.zim").config_indexing(True, "eng") as creator:
 
 ```py
 lock = threading.Lock()
-creator = Creator("test.zim")
+with Creator("test.zim") as creator:
 
-# Thread #1
-with lock:
-    creator.add_item(item1)
+    # Thread #1
+    with lock:
+        creator.add_item(item1)
 
-# Thread #2
-with lock:
-    creator.add_item(item2)
+    # Thread #2
+    with lock:
+        creator.add_item(item2)
 ```
 
 ## Building
