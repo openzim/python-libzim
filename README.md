@@ -10,6 +10,7 @@ It is primarily used in [openZIM](https://github.com/openzim/) scrapers like [`s
 [![CodeFactor](https://www.codefactor.io/repository/github/openzim/python-libzim/badge)](https://www.codefactor.io/repository/github/openzim/python-libzim)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![PyPI version shields.io](https://img.shields.io/pypi/v/libzim.svg)](https://pypi.org/project/libzim/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/libzim.svg)](https://pypi.org/project/libzim)
 [![codecov](https://codecov.io/gh/openzim/python-libzim/branch/main/graph/badge.svg)](https://codecov.io/gh/openzim/python-libzim)
 
 ## Installation
