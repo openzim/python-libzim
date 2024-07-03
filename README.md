@@ -117,12 +117,16 @@ with Creator("test.zim").config_indexing(True, "eng") as creator:
     creator.set_mainpath("home")
     creator.add_item(item)
     creator.add_item(item2)
+    illustration = pathlib.Path("icon48x48.png").read_bytes()
+    creator.add_illustration(48, illustration)
     for name, value in {
         "creator": "python-libzim",
         "description": "Created in python",
         "name": "my-zim",
         "publisher": "You",
         "title": "Test ZIM",
+        "language": "eng",
+        "date": "2024-06-30"
     }.items():
 
         creator.add_metadata(name.title(), value)
