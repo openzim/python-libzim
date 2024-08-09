@@ -573,11 +573,9 @@ class Creator(_Creator):
         return super().config_compression(compression)
 
     def add_metadata(
-        self, name: str, content: Union[str, bytes, datetime.date, datetime.datetime],
+        self, name: str, content: Union[str, bytes],
         mimetype: str = "text/plain;charset=UTF-8"
     ):
-        if name == "Date" and isinstance(content, (datetime.date, datetime.datetime)):
-            content = content.strftime("%Y-%m-%d").encode("UTF-8")
         if isinstance(content, str):
             content = content.encode("UTF-8")
         super().add_metadata(name=name, content=content, mimetype=mimetype)
