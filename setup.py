@@ -46,6 +46,7 @@ class Config:
         "Darwin": ["x86_64", "arm64"],
         "Linux": ["x86_64", "aarch64"],
         "Linux-musl": ["x86_64", "aarch64"],
+        "Windows": ["amd64"],
     }
 
     base_dir: pathlib.Path = Path(__file__).parent
@@ -101,7 +102,7 @@ class Config:
         # we extract the cross-compile arch from it
         return (
             os.getenv("_PYTHON_HOST_PLATFORM", "").rsplit("-", 1)[-1]
-            or sysplatform.machine()
+            or sysplatform.machine().lower()
         )
 
     def check_platform(self):
@@ -121,7 +122,18 @@ class Config:
         return {
             "Darwin": f"libzim.{self.libzim_major}.dylib",
             "Linux": f"libzim.so.{self.libzim_major}",
+            "Windows": f"zim-{self.libzim_major}.dll",
         }[self.platform]
+
+    @property
+    def archive_suffix(self):
+        if self.platform == "Windows":
+            return ".zip"
+        return ".tar.gz"
+
+    @property
+    def archive_format(self):
+        return {".zip": "zip", ".tar.gz": "gztar"}.get(self.archive_suffix)
 
     @property
     def is_musl(self) -> bool:
@@ -145,7 +157,13 @@ class Config:
         """filename to download to get binary libzim for platform/arch"""
         arch = arch or self.arch
 
-        lzplatform = {"Darwin": "macos", "Linux": "linux"}.get(self.platform)
+        # believe this is incorrect naming at openZIM ; will open ticket
+        if self.platform == "Windows" and arch == "amd64":
+            arch = "x86_64"
+
+        lzplatform = {"Darwin": "macos", "Linux": "linux", "Windows": "win"}.get(
+            self.platform
+        )
 
         variant = ""
         if self.platform == "Linux":
@@ -157,7 +175,7 @@ class Config:
             version_suffix = f"-{self.libzim_dl_version}"
 
         return pathlib.Path(
-            f"libzim_{lzplatform}-{arch}{variant}{version_suffix}.tar.gz"
+            f"libzim_{lzplatform}-{arch}{variant}{version_suffix}{self.archive_suffix}"
         ).name
 
     def download_to_dest(self):
@@ -227,15 +245,16 @@ class Config:
 
         print("> extracting archive")
         # extract into current folder (all files are inside an in-tar folder)
-        shutil.unpack_archive(fpath, self.base_dir, "gztar")
+        shutil.unpack_archive(fpath, self.base_dir, self.archive_format)
 
         # nightly have different download name and extracted folder name as it
         # uses a redirect
+        # TODO: FIX for zip
         if self.is_latest_nightly:
             tar = tarfile.open(fpath)
             folder = pathlib.Path(pathlib.Path(tar.firstmember.name).parts[0])
         else:
-            folder = fpath.with_name(fpath.name.replace(".tar.gz", ""))
+            folder = fpath.with_name(fpath.name.replace(self.archive_suffix, ""))
 
         return folder
 
@@ -252,6 +271,14 @@ class Config:
 
         # copy new libs
         for fpath in folder.joinpath("lib").rglob("libzim.*"):
+            print(f"{fpath} -> {libzim_dir / fpath.name}")
+            os.replace(fpath, libzim_dir / fpath.name)
+        # windows has different folder and name
+        for fpath in folder.joinpath("bin").rglob("zim-*.dll"):
+            print(f"{fpath} -> {libzim_dir / fpath.name}")
+            os.replace(fpath, libzim_dir / fpath.name)
+        # windows again, not sure its required at all
+        for fpath in folder.joinpath("lib").rglob("zim.lib"):
             print(f"{fpath} -> {libzim_dir / fpath.name}")
             os.replace(fpath, libzim_dir / fpath.name)
 
@@ -284,7 +311,7 @@ class Config:
         # we downloaded libzim, so we must remove it
         if self.download_libzim:
             print("removing downloaded libraries")
-            for fpath in self.dylib_file.parent.glob("*.[dylib|so]*"):
+            for fpath in self.dylib_file.parent.glob("*.[dylib|so|dll|lib]*"):
                 print(">", fpath)
                 fpath.unlink(missing_ok=True)
             if self.header_file.parent.exists():
@@ -490,11 +517,9 @@ class DownloadLibzim(Command):
 
     user_options = []
 
-    def initialize_options(self):
-        ...
+    def initialize_options(self): ...
 
-    def finalize_options(self):
-        ...
+    def finalize_options(self): ...
 
     def run(self):
         config.download_to_dest()
@@ -503,11 +528,9 @@ class DownloadLibzim(Command):
 class LibzimClean(Command):
     user_options = []
 
-    def initialize_options(self):
-        ...
+    def initialize_options(self): ...
 
-    def finalize_options(self):
-        ...
+    def finalize_options(self): ...
 
     def run(self):
         config.cleanup()
