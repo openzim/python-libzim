@@ -14,7 +14,7 @@ pythonpath = ["."]
 build = "cp312-win_amd64"
 # disabling windows until hhttps://github.com/kiwix/kiwix-build/issues/466
 # disabling PyPy due to 2 failing tests
-skip = "pp* *-win*"
+# skip = "pp* *-win*"
 
 test-requires = ["pytest"]
 test-command = "py.test {project}/tests/"
