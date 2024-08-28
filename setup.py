@@ -387,6 +387,10 @@ def get_cython_extension():
             else ["$ORIGIN/libzim/"]
         )
 
+    extra_compile_args = ["-std=c++11", "-Wall"]
+    if config.platform != "Windows":
+        extra_compile_args.append("-Wextra")
+
     wrapper_extension = Extension(
         name="libzim",
         sources=["libzim/libzim.pyx", "libzim/libwrapper.cpp"],
@@ -394,7 +398,7 @@ def get_cython_extension():
         libraries=["zim"],
         library_dirs=library_dirs,
         runtime_library_dirs=runtime_library_dirs,
-        extra_compile_args=["-std=c++11", "-Wall", "-Wextra"],
+        extra_compile_args=extra_compile_args,
         language="c++",
         define_macros=define_macros,
     )
