@@ -244,8 +244,6 @@ class Config:
             print(f"> reusing local file {fpath}")
 
         print("> extracting archive")
-        # extract into current folder (all files are inside an in-tar folder)
-        shutil.unpack_archive(fpath, self.base_dir, self.archive_format)
 
         # nightly have different download name and extracted folder name as it
         # uses a redirect
@@ -255,6 +253,9 @@ class Config:
             folder = pathlib.Path(pathlib.Path(tar.firstmember.name).parts[0])
         else:
             folder = fpath.with_name(fpath.name.replace(self.archive_suffix, ""))
+        # unless for ZIP, extract to current folder (all files inside an in-tar folder)
+        extract_to = folder if self.archive_format == "zip" else self.base_dir
+        shutil.unpack_archive(fpath, extract_to, self.archive_format)
 
         return folder
 
@@ -267,6 +268,7 @@ class Config:
         shutil.rmtree(self.base_dir / "include" / "zim", ignore_errors=True)
 
         # copy new zim headers
+        (self.base_dir / "include").mkdir(exist_ok=True, parents=True)
         shutil.move(folder / "include" / "zim", self.base_dir / "include" / "zim")
 
         # copy new libs
