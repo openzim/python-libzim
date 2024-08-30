@@ -9,6 +9,8 @@ The project is compiled in two steps:
 
 The Cython and Cythonize compilation is done automatically by the build backend"""
 
+from __future__ import annotations
+
 import os
 import pathlib
 import platform as sysplatform
@@ -21,10 +23,10 @@ import tarfile
 import urllib.request
 from ctypes.util import find_library
 from pathlib import Path
-from typing import Optional, Tuple
 
 from Cython.Build import cythonize
 from Cython.Distutils.build_ext import new_build_ext as build_ext
+from delocate.wheeltools import InWheel
 from setuptools import Command, Extension, setup
 
 
@@ -42,7 +44,10 @@ class Config:
     apple_signing_keychain: str = os.getenv("APPLE_SIGNING_KEYCHAIN_PATH")
     apple_signing_keychain_profile: str = os.getenv("APPLE_SIGNING_KEYCHAIN_PROFILE")
 
-    supported_platforms = {
+    # windows
+    _msvc_debug: bool = bool(os.getenv("MSVC_DEBUG"))
+
+    supported_platforms = {  # noqa: RUF012
         "Darwin": ["x86_64", "arm64"],
         "Linux": ["x86_64", "aarch64"],
         "Linux-musl": ["x86_64", "aarch64"],
@@ -52,8 +57,9 @@ class Config:
     base_dir: pathlib.Path = Path(__file__).parent
 
     # Avoid running cythonize on `setup.py clean` and similar
-    buildless_commands: Tuple[str] = (
+    buildless_commands: tuple[str, ...] = (
         "clean",
+        "repair_win_wheel",
         "--help",
         "egg_info",
         "--version",
@@ -153,7 +159,15 @@ class Config:
             "universal2"
         )
 
-    def get_download_filename(self, arch: Optional[str] = None) -> str:
+    @property
+    def use_msvc_debug(self) -> bool:
+        """whether to add _DEBUG define to compilation
+
+        requires having python debug binaries installed.
+        mandatory for compiling against libzim nighlies"""
+        return self._msvc_debug or self.is_nightly
+
+    def get_download_filename(self, arch: str | None = None) -> str:
         """filename to download to get binary libzim for platform/arch"""
         arch = arch or self.arch
 
@@ -276,11 +290,11 @@ class Config:
             print(f"{fpath} -> {libzim_dir / fpath.name}")
             os.replace(fpath, libzim_dir / fpath.name)
         # windows has different folder and name
-        for fpath in folder.joinpath("bin").rglob("zim-*.dll"):
-            print(f"{fpath} -> {libzim_dir / fpath.name}")
-            os.replace(fpath, libzim_dir / fpath.name)
-        # windows again, not sure its required at all
-        for fpath in folder.joinpath("lib").rglob("zim.lib"):
+        for fpath in (
+            list(folder.joinpath("bin").rglob("zim-*.dll"))
+            + list(folder.joinpath("bin").rglob("icu*.dll"))
+            + list(folder.joinpath("lib").rglob("zim.lib"))
+        ):
             print(f"{fpath} -> {libzim_dir / fpath.name}")
             os.replace(fpath, libzim_dir / fpath.name)
 
@@ -319,6 +333,18 @@ class Config:
             if self.header_file.parent.exists():
                 print("removing downloaded headers")
                 shutil.rmtree(self.header_file.parent, ignore_errors=True)
+
+    def repair_windows_wheel(self, wheel: Path, dest_dir: Path):
+        """opens windows wheels in target folder and moves all DLLs files inside
+        subdirectories of the wheel to the root one (where wrapper is expected)"""
+
+        dest_wheel = dest_dir / wheel.name
+        with InWheel(str(wheel), str(dest_wheel)) as wheel_dir_path:
+            print(f"repairing {wheel.name} for Windows (DLLs next to wrapper)")
+            wheel_dir = Path(wheel_dir_path)
+            for dll in wheel_dir.joinpath("libzim").rglob("*.dll"):
+                print(f"> moving {dll} using {dll.relative_to(wheel_dir).parent}")
+                dll.replace(wheel_dir / dll.name)
 
     @property
     def header_file(self) -> pathlib.Path:
@@ -381,14 +407,19 @@ def get_cython_extension():
         print("Using local libzim binary. Set `USE_SYSTEM_LIBZIM` otherwise.")
         include_dirs.append("include")
         library_dirs = ["libzim"]
-        runtime_library_dirs = (
-            [f"@loader_path/libzim/{config.libzim_fname}"]
-            if sysplatform == "Darwin"
-            else ["$ORIGIN/libzim/"]
-        )
+
+        if config.platform != "Windows":
+            runtime_library_dirs = (
+                [f"@loader_path/libzim/{config.libzim_fname}"]
+                if sysplatform == "Darwin"
+                else ["$ORIGIN/libzim/"]
+            )
 
     extra_compile_args = ["-std=c++11", "-Wall"]
-    if config.platform != "Windows":
+    if config.platform == "Windows":
+        extra_compile_args.append("/MDd" if config.use_msvc_debug else "/MD")
+        ...
+    else:
         extra_compile_args.append("-Wextra")
 
     wrapper_extension = Extension(
@@ -542,7 +573,29 @@ class LibzimClean(Command):
         config.cleanup()
 
 
-if len(sys.argv) == 2 and sys.argv[1] in config.buildless_commands:
+class RepairWindowsWheel(Command):
+    user_options = [  # noqa: RUF012
+        ("wheel=", None, "Wheel to repair"),
+        ("destdir=", None, "Destination folder for repaired wheels"),
+    ]
+
+    def initialize_options(self):
+        self.wheel = None
+        self.destdir = None
+
+    def finalize_options(self):
+        assert Path(self.wheel).exists(), "wheel file does not exists"
+        assert (
+            Path(self.destdir).exists() and Path(self.destdir).is_dir()
+        ), "dest_dir does not exists"
+
+    def run(self):
+        config.repair_windows_wheel(wheel=Path(self.wheel), dest_dir=Path(self.destdir))
+
+
+if len(sys.argv) == 1 or (
+    len(sys.argv) == 2 and sys.argv[1] in config.buildless_commands
+):
     ext_modules = None
 else:
     ext_modules = get_cython_extension()
@@ -552,6 +605,7 @@ setup(
         "build_ext": LibzimBuildExt,
         "download_libzim": DownloadLibzim,
         "clean": LibzimClean,
+        "repair_win_wheel": RepairWindowsWheel,
     },
     ext_modules=ext_modules,
 )

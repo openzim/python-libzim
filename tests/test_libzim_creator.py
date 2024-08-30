@@ -168,7 +168,7 @@ with Creator("{fpath}").config_verbose({verbose}) as creator:
     return ps.stdout
 
 
-@pytest.mark.parametrize("verbose", [(True, False)])
+@pytest.mark.parametrize("verbose", [True, False])
 def test_creator_verbose(fpath, verbose):
     output = get_creator_output(fpath, verbose).strip()
     lines = output.splitlines()
