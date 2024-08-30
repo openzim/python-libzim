@@ -1,5 +1,5 @@
 [build-system]
-requires = [ "setuptools == 68.2.2", "wheel == 0.41.3", "cython == 3.0.5" ]
+requires = [ "setuptools == 68.2.2", "wheel == 0.41.3", "cython == 3.0.5", "delocate==0.12.0" ]
 build-backend = "setuptools.build_meta"
 
 [tool.black]
@@ -23,6 +23,9 @@ manylinux-x86_64-image = "manylinux_2_28"
 manylinux-aarch64-image = "manylinux_2_28"
 manylinux-pypy_x86_64-image = "manylinux_2_28"
 manylinux-pypy_aarch64-image = "manylinux_2_28"
+
+[tool.cibuildwheel.windows]
+repair-wheel-command = "python.exe setup.py repair_win_wheel --destdir={dest_dir} --wheel={wheel}"
 
 [tool.cibuildwheel.linux]
 archs = ["x86_64", "aarch64"]
