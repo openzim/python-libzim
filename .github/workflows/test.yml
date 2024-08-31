@@ -47,6 +47,10 @@ jobs:
           PROFILE: 1
         run: pip install -e .
 
+      - name: move DLLs next to wrapper
+        if: matrix.os == 'windows-latest'
+        run: move libzim\*.dll %cd%\
+
       - name: Testing
         run: |
           pip install pytest pytest-cov cython
