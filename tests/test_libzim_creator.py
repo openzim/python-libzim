@@ -323,6 +323,7 @@ def test_creator_mainpath(fpath, lipsum_item):
     assert zim.has_main_entry is True
     assert zim.main_entry.path == "mainPage"
     assert zim.main_entry.get_item().path == main_path
+    del zim
 
     fpath.unlink()
 
