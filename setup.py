@@ -568,9 +568,11 @@ class DownloadLibzim(Command):
 
     user_options = []  # noqa: RUF012
 
-    def initialize_options(self): ...
+    def initialize_options(self):
+        ...
 
-    def finalize_options(self): ...
+    def finalize_options(self):
+        ...
 
     def run(self):
         config.download_to_dest()
@@ -579,9 +581,11 @@ class DownloadLibzim(Command):
 class LibzimClean(Command):
     user_options = []  # noqa: RUF012
 
-    def initialize_options(self): ...
+    def initialize_options(self):
+        ...
 
-    def finalize_options(self): ...
+    def finalize_options(self):
+        ...
 
     def run(self):
         config.cleanup()
