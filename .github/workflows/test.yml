@@ -27,8 +27,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest]
-        python: ["3.12"]
+        os: [ubuntu-22.04, macos-13, windows-2022]
+        python: ["3.8", "3.9", "3.10", "3.11", "3.12"]
 
     steps:
       - uses: actions/checkout@v3
@@ -48,7 +48,7 @@ jobs:
         run: pip install -e .
 
       - name: move DLLs next to wrapper
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2022'
         run: |
           dir
           Move-Item -Force -Path .\libzim\*.dll -Destination .\
