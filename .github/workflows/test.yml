@@ -49,9 +49,7 @@ jobs:
 
       - name: move DLLs next to wrapper
         if: matrix.os == 'windows-2022'
-        run: |
-          dir
-          Move-Item -Force -Path .\libzim\*.dll -Destination .\
+        run: Move-Item -Force -Path .\libzim\*.dll -Destination .\
 
       - name: Testing
         run: |
