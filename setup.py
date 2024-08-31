@@ -610,7 +610,7 @@ if len(sys.argv) == 1 or (
 ):
     ext_modules = []
 else:
-    ext_modules = [get_cython_extension()]
+    ext_modules = get_cython_extension()
 
 setup(
     cmdclass={
