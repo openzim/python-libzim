@@ -1,17 +1,17 @@
 #!/usr/bin/env python
+from __future__ import annotations
 
 import base64
 import datetime
 import itertools
 import os
 import pathlib
+import platform
 import subprocess
 import sys
-from typing import Dict
-
-import pytest
 
 import libzim.writer
+import pytest
 from libzim.reader import Archive
 from libzim.search import Query, Searcher
 from libzim.suggestion import SuggestionSearcher
@@ -49,7 +49,7 @@ class StaticItem(libzim.writer.Item):
             return FileProvider(filepath=self.filepath)
         return StringProvider(content=getattr(self, "content", ""))
 
-    def get_hints(self) -> Dict[Hint, int]:
+    def get_hints(self) -> dict[Hint, int]:
         return getattr(self, "hints", {Hint.FRONT_ARTICLE: True})
 
 
@@ -805,7 +805,7 @@ def test_virtualmethods_int_exc(fpath):
 
 
 def test_creator_badfilename(tmpdir):
-    if os.getuid() != 0:
+    if platform.system() != "Windows" and os.getuid() != 0:
         # lack of perm
         with pytest.raises(IOError):
             Creator("/root/test.zim")
