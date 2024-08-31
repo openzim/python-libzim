@@ -151,7 +151,7 @@ def get_creator_output(fpath, verbose):
     """run creator with configVerbose(verbose) and return its stdout as str"""
     code = """
 from libzim.writer import Creator
-with Creator("{fpath}").config_verbose({verbose}) as creator:
+with Creator(r"{fpath}").config_verbose({verbose}) as creator:
     pass
 """.replace(
         "{fpath}", str(fpath)
@@ -162,7 +162,7 @@ with Creator("{fpath}").config_verbose({verbose}) as creator:
         [sys.executable, "-c", code],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        universal_newlines=True,
+        text=True,
     )
     assert ps.returncode == 0
     return ps.stdout
