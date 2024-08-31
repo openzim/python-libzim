@@ -49,7 +49,9 @@ jobs:
 
       - name: move DLLs next to wrapper
         if: matrix.os == 'windows-latest'
-        run: move libzim\*.dll %cd%\
+        run: |
+          dir
+          move libzim\*.dll %cd%\
 
       - name: Testing
         run: |
