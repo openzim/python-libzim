@@ -32,17 +32,19 @@ from setuptools import Command, Extension, setup
 
 class Config:
     libzim_dl_version: str = os.getenv("LIBZIM_DL_VERSION", "9.1.0")
-    use_system_libzim: bool = bool(os.getenv("USE_SYSTEM_LIBZIM", False))
-    download_libzim: bool = not bool(os.getenv("DONT_DOWNLOAD_LIBZIM", False))
+    use_system_libzim: bool = bool(os.getenv("USE_SYSTEM_LIBZIM") or False)
+    download_libzim: bool = not bool(os.getenv("DONT_DOWNLOAD_LIBZIM") or False)
 
     # toggle profiling for coverage report in Cython
     profiling: bool = os.getenv("PROFILE", "") == "1"
 
     # macOS signing
-    should_sign_apple: bool = bool(os.getenv("SIGN_APPLE", False))
-    apple_signing_identity: str = os.getenv("APPLE_SIGNING_IDENTITY")
-    apple_signing_keychain: str = os.getenv("APPLE_SIGNING_KEYCHAIN_PATH")
-    apple_signing_keychain_profile: str = os.getenv("APPLE_SIGNING_KEYCHAIN_PROFILE")
+    should_sign_apple: bool = bool(os.getenv("SIGN_APPLE") or False)
+    apple_signing_identity: str = os.getenv("APPLE_SIGNING_IDENTITY") or ""
+    apple_signing_keychain: str = os.getenv("APPLE_SIGNING_KEYCHAIN_PATH") or ""
+    apple_signing_keychain_profile: str = (
+        os.getenv("APPLE_SIGNING_KEYCHAIN_PROFILE") or ""
+    )
 
     # windows
     _msvc_debug: bool = bool(os.getenv("MSVC_DEBUG"))
@@ -69,11 +71,11 @@ class Config:
     @property
     def libzim_major(self) -> str:
         # assuming nightlies are for version 8.x
-        return 9 if self.is_nightly else self.libzim_dl_version[0]
+        return "9" if self.is_nightly else self.libzim_dl_version[0]
 
     @property
     def found_libzim(self) -> str:
-        return find_library("zim")
+        return find_library("zim") or ""
 
     @property
     def is_latest_nightly(self) -> bool:
@@ -82,8 +84,8 @@ class Config:
 
     @property
     def is_nightly(self) -> bool:
-        return self.is_latest_nightly or re.match(
-            r"\d{4}-\d{2}-\d{2}", self.libzim_dl_version
+        return self.is_latest_nightly or bool(
+            re.match(r"\d{4}-\d{2}-\d{2}", self.libzim_dl_version)
         )
 
     @property
@@ -145,7 +147,10 @@ class Config:
     def is_musl(self) -> bool:
         """whether running on a musl system (Alpine)"""
         ps = subprocess.run(
-            ["/usr/bin/env", "ldd", "--version"], capture_output=True, text=True
+            ["/usr/bin/env", "ldd", "--version"],
+            capture_output=True,
+            text=True,
+            check=False,
         )
         try:
             return "musl libc" in ps.stderr.splitlines()[0]
@@ -250,7 +255,7 @@ class Config:
         # download a local copy if none present
         if not fpath.exists():
             print(f"> from {url}")
-            with urllib.request.urlopen(url) as response, open(  # nosec
+            with urllib.request.urlopen(url) as response, open(  # nosec  # noqa: S310
                 fpath, "wb"
             ) as fh:  # nosec
                 fh.write(response.read())
@@ -264,7 +269,7 @@ class Config:
         # TODO: FIX for zip
         if self.is_latest_nightly:
             tar = tarfile.open(fpath)
-            folder = pathlib.Path(pathlib.Path(tar.firstmember.name).parts[0])
+            folder = pathlib.Path(pathlib.Path(tar.getmembers()[0].name).parts[0])
         else:
             folder = fpath.with_name(fpath.name.replace(self.archive_suffix, ""))
         # unless for ZIP, extract to current folder (all files inside an in-tar folder)
@@ -300,7 +305,7 @@ class Config:
 
         # remove temp folder
         shutil.rmtree(folder, ignore_errors=True)
-        assert self.base_dir.joinpath("include", "zim", "zim.h").exists()
+        assert self.base_dir.joinpath("include", "zim", "zim.h").exists()  # noqa: S101
 
         if config.platform == "Darwin":
             print("> ensure libzim is notarized")
@@ -370,13 +375,13 @@ class Config:
 config = Config()
 
 
-def get_cython_extension():
+def get_cython_extension() -> Extension:
     define_macros = []
     compiler_directives = {"language_level": "3"}
 
     if config.profiling:
         define_macros += [("CYTHON_TRACE", "1"), ("CYTHON_TRACE_NOGIL", "1")]
-        compiler_directives.update(linetrace=True)
+        compiler_directives.update(linetrace="true")
 
     include_dirs = []
     library_dirs = []
@@ -384,7 +389,7 @@ def get_cython_extension():
 
     if config.use_system_libzim:
         if not config.found_libzim:
-            raise EnvironmentError(
+            raise OSError(
                 "[!] The libzim library cannot be found.\n"
                 "Please verify it is correctly installed and can be found."
             )
@@ -399,7 +404,7 @@ def get_cython_extension():
 
         # Check for the CPP Libzim library headers in expected directory
         if not config.header_file.exists() or not config.dylib_file.exists():
-            raise EnvironmentError(
+            raise OSError(
                 "Unable to find a local copy of libzim "
                 f"at {config.header_file} and {config.dylib_file}"
             )
@@ -480,7 +485,7 @@ class LibzimBuildExt(build_ext):
         print("Signing & Notarization of the extension")
 
         if not config.can_sign_apple:
-            raise EnvironmentError("Can't sign for apple. Missing information")
+            raise OSError("Can't sign for apple. Missing information")
 
         ext_fpath = pathlib.Path(self.get_ext_fullpath(ext.name))
 
@@ -510,7 +515,8 @@ class LibzimBuildExt(build_ext):
                 "--keepParent",
                 str(ext_fpath),
                 str(ext_zip),
-            ]
+            ],
+            check=True,
         )
 
         print("> request notarization")
@@ -552,7 +558,7 @@ class LibzimBuildExt(build_ext):
 class DownloadLibzim(Command):
     """dedicated command to solely download libzim binary"""
 
-    user_options = []
+    user_options = []  # noqa: RUF012
 
     def initialize_options(self): ...
 
@@ -563,7 +569,7 @@ class DownloadLibzim(Command):
 
 
 class LibzimClean(Command):
-    user_options = []
+    user_options = []  # noqa: RUF012
 
     def initialize_options(self): ...
 
@@ -580,12 +586,14 @@ class RepairWindowsWheel(Command):
     ]
 
     def initialize_options(self):
-        self.wheel = None
-        self.destdir = None
+        self.wheel: str = ""
+        self.destdir: str = ""
 
     def finalize_options(self):
-        assert Path(self.wheel).exists(), "wheel file does not exists"
-        assert (
+        assert (  # noqa: S101
+            self.wheel and Path(self.wheel).exists()
+        ), "wheel file does not exists"
+        assert self.destdir and (  # noqa: S101
             Path(self.destdir).exists() and Path(self.destdir).is_dir()
         ), "dest_dir does not exists"
 
@@ -594,11 +602,11 @@ class RepairWindowsWheel(Command):
 
 
 if len(sys.argv) == 1 or (
-    len(sys.argv) == 2 and sys.argv[1] in config.buildless_commands
+    len(sys.argv) == 2 and sys.argv[1] in config.buildless_commands  # noqa: PLR2004
 ):
-    ext_modules = None
+    ext_modules = []
 else:
-    ext_modules = get_cython_extension()
+    ext_modules = [get_cython_extension()]
 
 setup(
     cmdclass={
