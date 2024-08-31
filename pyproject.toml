@@ -13,7 +13,7 @@ pythonpath = ["."]
 [tool.cibuildwheel]
 build = "*"
 # disabling PyPy due to 2 failing tests
-skip = "pp*"
+skip = "pp* *win32*"
 
 test-requires = ["pytest"]
 test-command = "py.test {project}/tests/"
