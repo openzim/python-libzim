@@ -25,6 +25,7 @@ manylinux-pypy_x86_64-image = "manylinux_2_28"
 manylinux-pypy_aarch64-image = "manylinux_2_28"
 
 [tool.cibuildwheel.windows]
+before-build = "pip install setuptools cython delocate"
 repair-wheel-command = "python.exe setup.py repair_win_wheel --destdir={dest_dir} --wheel={wheel}"
 
 [tool.cibuildwheel.linux]
