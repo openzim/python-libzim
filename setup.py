@@ -21,6 +21,7 @@ import sys
 import sysconfig
 import tarfile
 import urllib.request
+import zipfile
 from ctypes.util import find_library
 from pathlib import Path
 
@@ -266,12 +267,15 @@ class Config:
 
         # nightly have different download name and extracted folder name as it
         # uses a redirect
-        # TODO: FIX for zip
         if self.is_latest_nightly:
-            tar = tarfile.open(fpath)
-            folder = pathlib.Path(pathlib.Path(tar.getmembers()[0].name).parts[0])
+            if self.archive_format == "zip":
+                zf = zipfile.ZipFile(fpath)
+                folder = pathlib.Path(pathlib.Path(zf.namelist()[0]).stem)
+            else:
+                tf = tarfile.open(fpath)
+                folder = pathlib.Path(pathlib.Path(tf.getmembers()[0].name).stem)
         else:
-            folder = fpath.with_name(fpath.name.replace(self.archive_suffix, ""))
+            folder = fpath.with_name(fpath.stem)
         # unless for ZIP, extract to current folder (all files inside an in-tar folder)
         extract_to = folder if self.archive_format == "zip" else self.base_dir
         shutil.unpack_archive(fpath, extract_to, self.archive_format)
