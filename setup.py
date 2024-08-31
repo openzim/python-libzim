@@ -187,7 +187,7 @@ class Config:
 
         variant = ""
         if self.platform == "Linux":
-            variant = "-musl" if self.is_musl else "-bionic"
+            variant = "-musl" if self.is_musl else "-manylinux"
 
         if self.is_latest_nightly:
             version_suffix = ""
