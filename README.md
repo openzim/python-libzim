@@ -166,6 +166,25 @@ with Creator("test.zim") as creator:
 | `APPLE_SIGNING_KEYCHAIN_PATH`    | `/tmp/build.keychain`                    | Path to the Keychain containing the certificate to sign for macOS with |
 | `APPLE_SIGNING_KEYCHAIN_PROFILE` | `build`                                  | Name of the profile in the specified Keychain |
 
+
+### Building on Windows
+
+On Windows, built wheels needs to be fixed post-build to move the bundled DLLs (libzim and libicu)
+next to the wrapper (Windows does not support runtime path).
+
+After building you wheel, run
+
+```ps
+python setup.py repair_win_wheel --wheel=dist/xxx.whl --destdir wheels\
+```
+
+Similarily, if you install as editable (`pip install -e .`), you need to place those DLLs at the root
+of the repo.
+
+```ps
+Move-Item -Force -Path .\libzim\*.dll -Destination .\
+```
+
 ### Examples
 
 ##### Default: downloading and bundling most appropriate libzim release binary
