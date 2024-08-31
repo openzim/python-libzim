@@ -67,6 +67,8 @@ class Config:
         "egg_info",
         "--version",
         "download_libzim",
+        "build_sdist",
+        "sdist",
     )
 
     @property
@@ -383,7 +385,7 @@ class Config:
 config = Config()
 
 
-def get_cython_extension() -> Extension:
+def get_cython_extension() -> list[Extension]:
     define_macros = []
     compiler_directives = {"language_level": "3"}
 
@@ -614,7 +616,7 @@ class RepairWindowsWheel(Command):
 
 
 if len(sys.argv) == 1 or (
-    len(sys.argv) == 2 and sys.argv[1] in config.buildless_commands  # noqa: PLR2004
+    len(sys.argv) >= 2 and sys.argv[1] in config.buildless_commands  # noqa: PLR2004
 ):
     ext_modules = []
 else:
