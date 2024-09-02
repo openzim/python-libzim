@@ -296,8 +296,8 @@ class Config:
         (self.base_dir / "include").mkdir(exist_ok=True, parents=True)
         shutil.move(folder / "include" / "zim", self.base_dir / "include" / "zim")
 
-        # copy new libs
-        for fpath in folder.joinpath("lib").rglob("libzim.*"):
+        # copy new libs (from lib/, lib/<arch> or lib64/)
+        for fpath in folder.rglob("lib*/**/libzim.*"):
             print(f"{fpath} -> {libzim_dir / fpath.name}")
             os.replace(fpath, libzim_dir / fpath.name)
         # windows has different folder and name
