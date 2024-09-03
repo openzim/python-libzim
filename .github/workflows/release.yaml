@@ -6,7 +6,7 @@ on:
       - published
 
 env:
-  LIBZIM_DL_VERSION: "9.1.0"
+  LIBZIM_DL_VERSION: "9.2.3-2"
   MACOSX_DEPLOYMENT_TARGET: "12.0"
   CIBW_ENVIRONMENT_PASS_LINUX: "LIBZIM_DL_VERSION"
   # APPLE_SIGNING_KEYCHAIN_PATH set in prepare keychain step
@@ -22,10 +22,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, macos-13]  # windows-2019
+        os: [ubuntu-20.04, macos-13, windows-2022]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up QEMU
         if: runner.os == 'Linux'
@@ -68,7 +68,7 @@ jobs:
           security unlock-keychain -p mysecretpassword ${APPLE_SIGNING_KEYCHAIN_PATH}
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.16
+        uses: pypa/cibuildwheel@v2.20
 
       - name: Cleanup Apple Keychain
         if: matrix.os == 'macos-13'
@@ -78,21 +78,23 @@ jobs:
           security delete-keychain ${APPLE_SIGNING_KEYCHAIN_PATH}
           rm -f ${APPLE_SIGNING_KEYCHAIN_PATH}
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
+          name: wheels-${{ matrix.os }}
           path: ./wheelhouse/*.whl
 
   build_sdist:
     name: Build source distribution
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Build sdist
         run: pipx run build --sdist
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
+          name: sdist
           path: dist/*.tar.gz
 
   upload_pypi:
@@ -100,14 +102,25 @@ jobs:
     runs-on: ubuntu-latest
     environment: release
     steps:
-      - uses: actions/download-artifact@v3
+      # retrieve all artifacts
+      - uses: actions/download-artifact@v4
         with:
-          # unpacks default artifact into dist/
-          # if `name: artifact` is omitted, the action will create extra parent dir
-          name: artifact
+          name: sdist
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: wheels-ubuntu-20.04
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: wheels-macos-13
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: wheels-windows-2022
           path: dist
 
-      - uses: pypa/gh-action-pypi-publish@v1.8.10
+      - uses: pypa/gh-action-pypi-publish@v1.9.0
         with:
           user: __token__
           # password: ${{ secrets.PYPI_TEST_API_TOKEN }}
