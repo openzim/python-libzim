@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 
+from __future__ import annotations
+
 import base64
 import datetime
 import itertools
 import os
 import pathlib
+import platform
 import subprocess
 import sys
-from typing import Dict
 
 import pytest
 
@@ -49,7 +51,7 @@ class StaticItem(libzim.writer.Item):
             return FileProvider(filepath=self.filepath)
         return StringProvider(content=getattr(self, "content", ""))
 
-    def get_hints(self) -> Dict[Hint, int]:
+    def get_hints(self) -> dict[Hint, int]:
         return getattr(self, "hints", {Hint.FRONT_ARTICLE: True})
 
 
@@ -151,7 +153,7 @@ def get_creator_output(fpath, verbose):
     """run creator with configVerbose(verbose) and return its stdout as str"""
     code = """
 from libzim.writer import Creator
-with Creator("{fpath}").config_verbose({verbose}) as creator:
+with Creator(r"{fpath}").config_verbose({verbose}) as creator:
     pass
 """.replace(
         "{fpath}", str(fpath)
@@ -162,13 +164,13 @@ with Creator("{fpath}").config_verbose({verbose}) as creator:
         [sys.executable, "-c", code],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        universal_newlines=True,
+        text=True,
     )
     assert ps.returncode == 0
     return ps.stdout
 
 
-@pytest.mark.parametrize("verbose", [(True, False)])
+@pytest.mark.parametrize("verbose", [True, False])
 def test_creator_verbose(fpath, verbose):
     output = get_creator_output(fpath, verbose).strip()
     lines = output.splitlines()
@@ -323,6 +325,7 @@ def test_creator_mainpath(fpath, lipsum_item):
     assert zim.has_main_entry is True
     assert zim.main_entry.path == "mainPage"
     assert zim.main_entry.get_item().path == main_path
+    del zim
 
     fpath.unlink()
 
@@ -804,7 +807,7 @@ def test_virtualmethods_int_exc(fpath):
 
 
 def test_creator_badfilename(tmpdir):
-    if os.getuid() != 0:
+    if platform.system() != "Windows" and os.getuid() != 0:
         # lack of perm
         with pytest.raises(IOError):
             Creator("/root/test.zim")
