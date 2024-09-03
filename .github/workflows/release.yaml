@@ -78,8 +78,9 @@ jobs:
           security delete-keychain ${APPLE_SIGNING_KEYCHAIN_PATH}
           rm -f ${APPLE_SIGNING_KEYCHAIN_PATH}
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
+          name: wheels-${{ matrix.os }}
           path: ./wheelhouse/*.whl
 
   build_sdist:
@@ -91,8 +92,9 @@ jobs:
       - name: Build sdist
         run: pipx run build --sdist
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
+          name: sdist
           path: dist/*.tar.gz
 
   upload_pypi:
@@ -100,11 +102,22 @@ jobs:
     runs-on: ubuntu-latest
     environment: release
     steps:
+      # retrieve all artifacts
       - uses: actions/download-artifact@v4
         with:
-          # unpacks default artifact into dist/
-          # if `name: artifact` is omitted, the action will create extra parent dir
-          name: artifact
+          name: sdist
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: wheels-ubuntu-20.04
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: wheels-macos-13
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: wheels-windows-2022
           path: dist
 
       - uses: pypa/gh-action-pypi-publish@v1.9.0
