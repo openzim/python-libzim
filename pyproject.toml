@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "libzim"
 version = "3.4.0"
-requires-python = ">=3.8,<3.13"
+requires-python = ">=3.9,<3.13"
 description = "A python-facing API for creating and interacting with ZIM files"
 authors = [
     {name = "openZIM", email = "dev@kiwix.org"},
@@ -29,7 +29,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "Programming Language :: Cython",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -128,7 +127,7 @@ archs = ["x86_64", "arm64"]
 # skipping tests on cp <=3.9 as the wheels we produce are on unexpected combinations
 # because those python versions were released before our building host version
 # > requires changing wheel names
-test-skip = "*_arm64 cp39* cp38*"
+test-skip = "*_arm64 cp39*"
 
 [tool.hatch.build]
 exclude = [
@@ -153,7 +152,6 @@ features = ["scripts", "test"]
 [tool.hatch.envs.test.env-vars]
 PROFILE = "1"
 
-# not testing on 3.8 as setuptools cannot produce editable wheel
 [[tool.hatch.envs.test.matrix]]
 python = ["3.9", "3.10", "3.11", "3.12"]
 
