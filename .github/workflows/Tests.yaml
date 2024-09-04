@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         os: [macos-13, windows-2022, ubuntu-22.04]
-        python: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        python: ["3.9", "3.10", "3.11", "3.12"]
 
     steps:
       - uses: actions/checkout@v4
