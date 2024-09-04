@@ -24,8 +24,9 @@ Our [PyPI wheels](https://pypi.org/project/libzim/) bundle a [recent release](ht
 - macOS for `x86_64` and `arm64`
 - GNU/Linux for `x86_64`, `armhf` and `aarch64`
 - Linux+musl for `x86_64` and `aarch64`
+- Windows for `x64`
 
-Wheels are available for both CPython and PyPy.
+Wheels are available for CPython only (but can be built for Pypy).
 
 Users on other platforms can install the source distribution (see [Building](#Building) below). 
 
@@ -34,10 +35,7 @@ Users on other platforms can install the source distribution (see [Building](#Bu
 
 ```sh
 git clone git@github.com:openzim/python-libzim.git && cd python-libzim
-# python -m venv env && source env/bin/activate
-pip install -U setuptools invoke
-invoke download-libzim install-dev build-ext test
-# invoke --list for available development helpers
+# hatch run test:coverage
 ```
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for additional details then [Open a ticket](https://github.com/openzim/python-libzim/issues/new) or submit a Pull Request on Github 🤗!
@@ -160,7 +158,7 @@ with Creator("test.zim") as creator:
 | `LIBZIM_DL_VERSION`              | `8.1.1` or `2023-04-14`                     | Specify the C++ libzim binary version to download and bundle. Either a release version string or a date, in which case it downloads a nightly |
 | `USE_SYSTEM_LIBZIM`              | `1`                                      | Uses `LDFLAG` and `CFLAGS` to find the libzim to link against. Resulting wheel won't bundle C++ libzim. |
 | `DONT_DOWNLOAD_LIBZIM`           | `1`                                      | Disable downloading of C++ libzim. Place headers in `include/` and libzim dylib/so in `libzim/` if no using system libzim. It will be bundled in wheel. |
-| `PROFILE`                        | `1`                                      | Enable profile tracing in Cython extension. Required for Cython code coverage reporting. |
+| `PROFILE`                        | `0`                                      | Enable profile tracing in Cython extension. Required for Cython code coverage reporting. |
 | `SIGN_APPLE`                     | `1`                                      | Set to sign and notarize the extension for macOS. Requires following informations |
 | `APPLE_SIGNING_IDENTITY`         | `Developer ID Application: OrgName (ID)` | Required for signing on macOS |
 | `APPLE_SIGNING_KEYCHAIN_PATH`    | `/tmp/build.keychain`                    | Path to the Keychain containing the certificate to sign for macOS with |

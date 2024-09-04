@@ -129,14 +129,14 @@ ZIMS_DATA = {
         "suggestion_count": 1,
         "suggestion_result": [
             "FreedomBox for Communities_Offline Wikipedia "
-            + "- Wikibooks, open books for an open world.html"
+            "- Wikibooks, open books for an open world.html"
         ],
         "search_string": "main",
         "search_count": 2,
         "search_result": [
             "Wikibooks.html",
             "FreedomBox for Communities_Offline Wikipedia "
-            + "- Wikibooks, open books for an open world.html",
+            "- Wikibooks, open books for an open world.html",
         ],
         "test_path": "FreedomBox for Communities_Offline Wikipedia - Wikibooks, "
         "open books for an open world.html",
@@ -272,7 +272,7 @@ def all_zims(tmpdir_factory):
 
     # download libzim tests
     for url in libzim_urls:
-        urlretrieve(url, temp_dir / os.path.basename(url))  # nosec
+        urlretrieve(url, temp_dir / os.path.basename(url))  # noqa: S310  # nosec
 
     # create blank using pylibzim
     creator = libzim.writer.Creator(temp_dir / "blank.zim")
@@ -317,10 +317,10 @@ def test_content_ref_keep(all_zims):
         if not entry.is_redirect:
             _ = entry.get_item().content
     # Check everything is ok
-    assert len(content) == 3559
-    assert (
+    assert content and len(content) == 3559
+    assert content and (
         bytes(content[:100]) == b'<!DOCTYPE html>\n<html class="client-js"><head>\n  '
-        b'<meta charset="UTF-8">\n  <title>That Lucky Old Sun<'  # noqa
+        b'<meta charset="UTF-8">\n  <title>That Lucky Old Sun<'
     )
 
 

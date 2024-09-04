@@ -1,28 +1,13 @@
-name: test
+name: Tests
 on: [push]
 
 env:
   LIBZIM_DL_VERSION: "9.2.3-2"
   MACOSX_DEPLOYMENT_TARGET: "12.0"
+  # we want cython traces for coverage
+  PROFILE: "1"
 
 jobs:
-  lint:
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          architecture: x64
-
-      - name: Check formatting and linting
-        run: |
-          pip install -U invoke
-          invoke install-dev
-          invoke check
-
   test:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -39,25 +24,22 @@ jobs:
           python-version: ${{ matrix.python }}
           architecture: x64
 
-      - name: Installing dependencies
-        run: pip install -U pip setuptools build
 
-      - name: Building & installing for tests (with profiling)
-        env:
-          PROFILE: 1
-        run: pip install -e .
+      - name: Install dependencies (and project)
+        run: |
+          pip install -U pip
+          pip install -e .[test,scripts]
 
       - name: move DLLs next to wrapper
         if: matrix.os == 'windows-2022'
         run: Move-Item -Force -Path .\libzim\*.dll -Destination .\
 
-      - name: Testing
-        run: |
-          pip install pytest pytest-cov cython
-          py.test --cov=libzim --cov-report=term --cov-report term-missing .
+      - name: Run the tests
+        run: inv coverage --args "-vvv"
 
       - name: Upload coverage report to codecov
         if: matrix.os == 'ubuntu-22.04' && matrix.python == '3.11'
         uses: codecov/codecov-action@v4
         with:
+          fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
