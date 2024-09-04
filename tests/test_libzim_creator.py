@@ -64,7 +64,7 @@ def fpath(tmpdir):
 def favicon_data():
     return base64.b64decode(
         "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQ"
-        + "ImWO4ISn6HwAE2QIGKsd69QAAAABJRU5ErkJggg=="
+        "ImWO4ISn6HwAE2QIGKsd69QAAAABJRU5ErkJggg=="
     )
 
 
@@ -129,13 +129,13 @@ def lipsum_item(lipsum):
 
 
 def test_imports():
-    assert libzim.writer.Compression  # noqa
-    assert libzim.writer.Blob  # noqa
-    assert libzim.writer.Item  # noqa
-    assert libzim.writer.ContentProvider  # noqa
-    assert libzim.writer.FileProvider  # noqa
-    assert libzim.writer.StringProvider  # noqa
-    assert libzim.writer.Creator  # noqa
+    assert libzim.writer.Compression
+    assert libzim.writer.Blob
+    assert libzim.writer.Item
+    assert libzim.writer.ContentProvider
+    assert libzim.writer.FileProvider
+    assert libzim.writer.StringProvider
+    assert libzim.writer.Creator
 
 
 def test_creator_filename(fpath):
@@ -165,6 +165,7 @@ with Creator(r"{fpath}").config_verbose({verbose}) as creator:
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
+        check=False,
     )
     assert ps.returncode == 0
     return ps.stdout
@@ -251,9 +252,14 @@ def test_creator_nbworkers(fpath, lipsum_item, nb_workers):
 
 
 def test_creator_combine_config(fpath, lipsum_item):
-    with Creator(fpath).config_verbose(True).config_compression(
-        "zstd"
-    ).config_clustersize(1024).config_indexing(True, "eng").config_nbworkers(2) as c:
+    with (
+        Creator(fpath)
+        .config_verbose(True)
+        .config_compression("zstd")
+        .config_clustersize(1024)
+        .config_indexing(True, "eng")
+        .config_nbworkers(2) as c
+    ):
         c.add_item(lipsum_item)
 
 
@@ -407,7 +413,7 @@ def test_creator_metadata(fpath, lipsum_item):
                 continue
             c.add_metadata(name, value)
 
-        mdate = datetime.date(*[int(x) for x in metadata.get("Date").split("-")])
+        mdate = datetime.date(*[int(x) for x in metadata.get("Date", "").split("-")])
         c.add_metadata("Date", mdate)
 
     zim = Archive(fpath)

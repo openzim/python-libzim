@@ -37,7 +37,7 @@ class Config:
     download_libzim: bool = not bool(os.getenv("DONT_DOWNLOAD_LIBZIM") or False)
 
     # toggle profiling for coverage report in Cython
-    profiling: bool = os.getenv("PROFILE", "") == "1"
+    profiling: bool = os.getenv("PROFILE", "0") == "1"
 
     # macOS signing
     should_sign_apple: bool = bool(os.getenv("SIGN_APPLE") or False)
@@ -258,9 +258,10 @@ class Config:
         # download a local copy if none present
         if not fpath.exists():
             print(f"> from {url}")
-            with urllib.request.urlopen(url) as response, open(  # nosec  # noqa: S310
-                fpath, "wb"
-            ) as fh:  # nosec
+            with (
+                urllib.request.urlopen(url) as response,  # noqa: S310
+                open(fpath, "wb") as fh,  # nosec
+            ):  # nosec
                 fh.write(response.read())
         else:
             print(f"> reusing local file {fpath}")
@@ -386,16 +387,16 @@ config = Config()
 
 
 def get_cython_extension() -> list[Extension]:
-    define_macros = []
+    define_macros: list[tuple[str, str | None]] = []
     compiler_directives = {"language_level": "3"}
 
     if config.profiling:
         define_macros += [("CYTHON_TRACE", "1"), ("CYTHON_TRACE_NOGIL", "1")]
         compiler_directives.update(linetrace="true")
 
-    include_dirs = []
-    library_dirs = []
-    runtime_library_dirs = []
+    include_dirs: list[str] = []
+    library_dirs: list[str] = []
+    runtime_library_dirs: list[str] = []
 
     if config.use_system_libzim:
         if not config.found_libzim:
@@ -426,7 +427,7 @@ def get_cython_extension() -> list[Extension]:
         if config.platform != "Windows":
             runtime_library_dirs = (
                 [f"@loader_path/libzim/{config.libzim_fname}"]
-                if sysplatform == "Darwin"
+                if config.platform == "Darwin"
                 else ["$ORIGIN/libzim/"]
             )
 
@@ -570,11 +571,9 @@ class DownloadLibzim(Command):
 
     user_options = []  # noqa: RUF012
 
-    def initialize_options(self):
-        ...
+    def initialize_options(self): ...
 
-    def finalize_options(self):
-        ...
+    def finalize_options(self): ...
 
     def run(self):
         config.download_to_dest()
@@ -583,11 +582,9 @@ class DownloadLibzim(Command):
 class LibzimClean(Command):
     user_options = []  # noqa: RUF012
 
-    def initialize_options(self):
-        ...
+    def initialize_options(self): ...
 
-    def finalize_options(self):
-        ...
+    def finalize_options(self): ...
 
     def run(self):
         config.cleanup()
