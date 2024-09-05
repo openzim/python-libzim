@@ -41,7 +41,7 @@ import sys
 import traceback
 from collections import OrderedDict
 from types import ModuleType
-from typing import Dict, Generator, Iterator, List, Optional, Set, Tuple, Union
+from typing import Dict, Generator, Iterator, List, Optional, Set, TextIO, Tuple, Union
 from uuid import UUID
 
 from cpython.buffer cimport PyBUF_WRITABLE
@@ -216,7 +216,7 @@ cdef class WritingBlob:
             self.ref_content = content
         self.c_blob = move(zim.Blob(<char *> self.ref_content, len(self.ref_content)))
 
-    def size(self):
+    def size(self) -> pyint:
         return self.c_blob.size()
 
 
@@ -1151,8 +1151,10 @@ search = searcher.search(query)
 for path in search.getResults(10, 10) # get result from 10 to 20 (10 results)
     print(path, archive.get_entry_by_path(path).title)"""
 search_public_objects = [
+    Query,
+    SearchResultSet,
+    Search,
     Searcher,
-    Query
 ]
 search = create_module(search_module_name, search_module_doc, search_public_objects)
 
@@ -1268,7 +1270,7 @@ Usage:
     print_versions()"""
 
 
-def print_versions(out: Union[sys.stdout, sys.stderr] = sys.stdout):
+def print_versions(out: TextIO = sys.stdout):
     """print libzim and its dependencies list with their versions"""
     for library, version in get_versions().items():
         prefix = "" if library == "libzim" else "+ "
