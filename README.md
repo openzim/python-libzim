@@ -149,6 +149,12 @@ with Creator("test.zim") as creator:
         creator.add_item(item2)
 ```
 
+#### Type hints
+
+`libzim` being a binary extension, there is no Python source to provide types information. We provide them as type stub files. When using `pyright`, you would normally receive a warning when importing from `libzim` as there could be discrepencies between actual sources and the (manually crafted) stub files.
+
+You can disable the warning via `reportMissingModuleSource = "none"`.
+
 ## Building
 
 `libzim` package building offers different behaviors via environment variables
