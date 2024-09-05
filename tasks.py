@@ -1,84 +1,130 @@
-#!/usr/bin/env python3
+# pyright: strict, reportUntypedFunctionDecorator=false
+import os
 
+from invoke.context import Context
+from invoke.tasks import task  # pyright: ignore [reportUnknownVariableType]
 
-"""
-A description file for invoke (https://www.pyinvoke.org/)
-"""
-
-import inspect
-
-# temp local fix for https://github.com/pyinvoke/invoke/issues/891
-if not hasattr(inspect, "getargspec"):
-    inspect.getargspec = inspect.getfullargspec
-
-from invoke import task
+use_pty = not os.getenv("CI", "")
 
 
 @task
-def download_libzim(c, version=""):
+def clean(ctx: Context):
+    """download C++ libzim binary"""
+    ctx.run("python setup.py clean")
+
+
+@task
+def download_libzim(ctx: Context, version: str = ""):
     """download C++ libzim binary"""
     env = f"LIBZIM_DL_VERSION={version}" if version else ""
-    c.run(f"{env} python setup.py download_libzim")
+    ctx.run(f"{env} python setup.py download_libzim")
 
 
 @task
-def build_ext(c):
+def build_ext(ctx: Context):
     """build extension to use locally (devel, tests)"""
-    c.run("PROFILE=1 python setup.py build_ext -i")
+    ctx.run("PROFILE=1 python setup.py build_ext -i")
 
 
-@task
-def test(c):
-    """run test suite"""
-    c.run("python -m pytest --color=yes --ff -x .")
+@task(optional=["args"], help={"args": "pytest additional arguments"})
+def test(ctx: Context, args: str = ""):
+    """run tests (without coverage)"""
+    build_ext(ctx)
+    ctx.run(f"pytest {args}", pty=use_pty)
 
 
-@task
-def coverage(c):
-    """generate coverage report"""
-    c.run(
-        "python -m pytest --color=yes "
-        "--cov=libzim --cov-config=.coveragerc "
-        "--cov-report=term --cov-report term-missing ."
-    )
+@task(optional=["args"], help={"args": "pytest additional arguments"})
+def test_cov(ctx: Context, args: str = ""):
+    """run test vith coverage"""
+    ctx.run(f"coverage run -m pytest {args}", pty=use_pty)
 
 
-@task
-def clean(c):
-    """remove build folder and generated files"""
-    c.run("rm -rf build")
-    c.run("rm -f *.so")
-    c.run("rm -rf include")
-    c.run("rm -rf libzim/libzim.{so,dylib} libzim/libzim.so.* libzim/libzim.*.dylib")
+@task(optional=["html"], help={"html": "flag to export html report"})
+def report_cov(ctx: Context, *, html: bool = False):
+    """report coverage"""
+    ctx.run("coverage combine", warn=True, pty=use_pty)
+    ctx.run("coverage report --show-missing", pty=use_pty)
+    ctx.run("coverage xml", pty=use_pty)
+    if html:
+        ctx.run("coverage html", pty=use_pty)
 
 
-@task
-def install_dev(c):
-    """install dev requirements"""
-    c.run("pip install -r requirements-dev.txt")
+@task(
+    optional=["args", "html"],
+    help={
+        "args": "pytest additional arguments",
+        "html": "flag to export html report",
+    },
+)
+def coverage(ctx: Context, args: str = "", *, html: bool = False):
+    """run tests and report coverage"""
+    test_cov(ctx, args=args)
+    report_cov(ctx, html=html)
 
 
-@task
-def check(c):
-    """run Q/A checks"""
-    c.run("isort --check-only .")
-    c.run("black --check .")
-    c.run('echo "one pass for show-stopper syntax errors or undefined names"')
-    c.run("flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics")
-    c.run('echo "one pass for small stylistic things"')
-    c.run("flake8 . --count --statistics")
+@task(optional=["args"], help={"args": "black additional arguments"})
+def lint_black(ctx: Context, args: str = "."):
+    args = args or "."  # needed for hatch script
+    ctx.run("black --version", pty=use_pty)
+    ctx.run(f"black --check --diff {args}", pty=use_pty)
 
 
-@task
-def lint(c):
-    """Apply Q/A linting"""
-    c.run("isort .")
-    c.run("black .")
-    c.run("flake8 .")
+@task(optional=["args"], help={"args": "ruff additional arguments"})
+def lint_ruff(ctx: Context, args: str = "."):
+    args = args or "."  # needed for hatch script
+    ctx.run("ruff --version", pty=use_pty)
+    ctx.run(f"ruff check {args}", pty=use_pty)
 
 
-if __name__ == "__main__":
-    print(
-        "This file is not intended to be directly run.\n"
-        "Install invoke and run the `invoke` command line."
-    )
+@task(
+    optional=["args"],
+    help={
+        "args": "linting tools (black, ruff) additional arguments, typically a path",
+    },
+)
+def lintall(ctx: Context, args: str = "."):
+    """Check linting"""
+    args = args or "."  # needed for hatch script
+    lint_black(ctx, args)
+    lint_ruff(ctx, args)
+
+
+@task(optional=["args"], help={"args": "check tools (pyright) additional arguments"})
+def check_pyright(ctx: Context, args: str = ""):
+    """check static types with pyright"""
+    ctx.run("pyright --version")
+    ctx.run(f"pyright {args}", pty=use_pty)
+
+
+@task(optional=["args"], help={"args": "check tools (pyright) additional arguments"})
+def checkall(ctx: Context, args: str = ""):
+    """check static types"""
+    check_pyright(ctx, args)
+
+
+@task(optional=["args"], help={"args": "black additional arguments"})
+def fix_black(ctx: Context, args: str = "."):
+    """fix black formatting"""
+    args = args or "."  # needed for hatch script
+    ctx.run(f"black {args}", pty=use_pty)
+
+
+@task(optional=["args"], help={"args": "ruff additional arguments"})
+def fix_ruff(ctx: Context, args: str = "."):
+    """fix all ruff rules"""
+    args = args or "."  # needed for hatch script
+    ctx.run(f"ruff check --fix {args}", pty=use_pty)
+
+
+@task(
+    optional=["args"],
+    help={
+        "args": "linting tools (black, ruff) additional arguments, typically a path",
+    },
+)
+def fixall(ctx: Context, args: str = "."):
+    """Fix everything automatically"""
+    args = args or "."  # needed for hatch script
+    fix_black(ctx, args)
+    fix_ruff(ctx, args)
+    lintall(ctx, args)
