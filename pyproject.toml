@@ -1,14 +1,104 @@
 [build-system]
-requires = [ "setuptools == 68.2.2", "wheel == 0.41.3", "cython == 3.0.5", "delocate==0.12.0" ]
+requires = [
+  "setuptools == 74.1.1",
+  "wheel == 0.44.0",
+  "cython == 3.0.11",
+  "delocate==0.12.0",
+]
 build-backend = "setuptools.build_meta"
 
-[tool.black]
-target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
+[project]
+name = "libzim"
+version = "3.4.0"
+requires-python = ">=3.9,<3.13"
+description = "A python-facing API for creating and interacting with ZIM files"
+authors = [
+    {name = "openZIM", email = "dev@kiwix.org"},
+]
+readme = "README.md"
+license = {text = "GPL-3.0-or-later"}
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Topic :: Utilities",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Archiving",
+    "Topic :: System :: Archiving :: Compression",
+    "Topic :: System :: Archiving :: Mirroring",
+    "Topic :: System :: Archiving :: Backup",
+    "Intended Audience :: Developers",
+    "Programming Language :: Cython",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Typing :: Stubs Only",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX",
+]
 
+[project.urls]
+Homepage = "https://github.com/openzim/python-libzim"
+Donate = "https://www.kiwix.org/en/support-us/"
 
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-pythonpath = ["."]
+[project.optional-dependencies]
+scripts = [
+  "invoke==2.2.0",
+]
+lint = [
+  "black==24.8.0",
+  "ruff==0.6.3",
+  "libzim",
+  "libzim[build]",
+]
+check = [
+  "pyright==1.1.379",
+  "libzim",
+  "libzim[build]",
+  "libzim[test]",
+  "types-setuptools",
+]
+test = [
+  "pytest==8.3.2",
+  "coverage==7.6.1",
+  # for cython coverage plugin
+  "libzim[build]",
+]
+build = [
+  "setuptools == 74.1.1",
+  "wheel == 0.44.0",
+  "cython == 3.0.11",
+  "delocate==0.12.0",
+]
+dev = [
+  "pre-commit==3.8.0",
+  "ipython==8.27.0",
+  "types-setuptools",
+  "libzim[scripts]",
+  "libzim[lint]",
+  "libzim[test]",
+  "libzim[check]",
+  "libzim[build]",
+]
+
+[tool.setuptools]
+include-package-data = true
+zip-safe = false
+packages = [ "libzim" ]
+
+[tool.setuptools.package-data]
+libzim = [
+  "libzim.9.dylib",
+  "libzim.so.9",
+  "zim-9.dll",
+  "icuuc74.dll",
+  "icutu74.dll",
+  "icuio74.dll",
+  "icuin74.dll",
+  "icudt74.dll",
+]
 
 [tool.cibuildwheel]
 build = "*"
@@ -37,4 +127,193 @@ archs = ["x86_64", "arm64"]
 # skipping tests on cp <=3.9 as the wheels we produce are on unexpected combinations
 # because those python versions were released before our building host version
 # > requires changing wheel names
-test-skip = "*_arm64 cp39* cp38*"
+test-skip = "*_arm64 cp39*"
+
+[tool.hatch.build]
+exclude = [
+  "/.github",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["libzim"]
+
+
+[tool.hatch.envs.default]
+features = ["dev"]
+
+[tool.hatch.envs.default.scripts]
+download-libzim = "inv download-libzim"
+build-ext = "inv build-ext"
+clean = "inv clean"
+
+[tool.hatch.envs.test]
+features = ["scripts", "test"]
+
+[tool.hatch.envs.test.env-vars]
+PROFILE = "1"
+
+[[tool.hatch.envs.test.matrix]]
+python = ["3.9", "3.10", "3.11", "3.12"]
+
+[tool.hatch.envs.test.scripts]
+run = "inv test --args '{args}'"
+run-cov = "inv test-cov --args '{args}'"
+report-cov = "inv report-cov"
+coverage = "inv coverage --args '{args}'"
+html = "inv coverage --html --args '{args}'"
+
+[tool.hatch.envs.lint]
+template = "lint"
+skip-install = false
+features = ["scripts", "lint"]
+
+[tool.hatch.envs.lint.scripts]
+black = "inv lint-black --args '{args}'"
+ruff = "inv lint-ruff --args '{args}'"
+all = "inv lintall --args '{args}'"
+fix-black = "inv fix-black --args '{args}'"
+fix-ruff = "inv fix-ruff --args '{args}'"
+fixall = "inv fixall --args '{args}'"
+
+[tool.hatch.envs.check]
+features = ["scripts", "check"]
+
+[tool.hatch.envs.check.scripts]
+pyright = "inv check-pyright --args '{args}'"
+all = "inv checkall --args '{args}'"
+
+[tool.black]
+line-length = 88
+target-version = ['py312']
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+src = ["src"]
+
+[tool.ruff.lint]
+select = [
+  "A",  # flake8-builtins
+  # "ANN",  # flake8-annotations
+  "ARG",  # flake8-unused-arguments
+  # "ASYNC",  # flake8-async
+  "B",  # flake8-bugbear
+  # "BLE",  # flake8-blind-except
+  "C4",  # flake8-comprehensions
+  "C90",  # mccabe
+  # "COM",  # flake8-commas
+  # "D",  # pydocstyle
+  # "DJ",  # flake8-django
+  "DTZ",  # flake8-datetimez
+  "E",  # pycodestyle (default)
+  "EM",  # flake8-errmsg
+  # "ERA",  # eradicate
+  # "EXE",  # flake8-executable
+  "F",  # Pyflakes (default)
+  # "FA",  # flake8-future-annotations
+  "FBT",  # flake8-boolean-trap
+  # "FLY",  # flynt
+  # "G",  # flake8-logging-format
+  "I",  # isort
+  "ICN",  # flake8-import-conventions
+  # "INP",  # flake8-no-pep420
+  # "INT",  # flake8-gettext
+  "ISC",  # flake8-implicit-str-concat
+  "N",  # pep8-naming
+  # "NPY",  # NumPy-specific rules
+  # "PD",  # pandas-vet
+  # "PGH",  # pygrep-hooks
+  # "PIE",  # flake8-pie
+  # "PL",  # Pylint
+  "PLC",  # Pylint: Convention
+  "PLE",  # Pylint: Error
+  "PLR",  # Pylint: Refactor
+  "PLW",  # Pylint: Warning
+  # "PT",  # flake8-pytest-style
+  # "PTH",  # flake8-use-pathlib
+  # "PYI",  # flake8-pyi
+  "Q",  # flake8-quotes
+  # "RET",  # flake8-return
+  # "RSE",  # flake8-raise
+  "RUF",  # Ruff-specific rules
+  "S",  # flake8-bandit
+  # "SIM",  # flake8-simplify
+  # "SLF",  # flake8-self
+  "T10",  # flake8-debugger
+  "T20",  # flake8-print
+  # "TCH",  # flake8-type-checking
+  # "TD",  # flake8-todos
+  "TID",  # flake8-tidy-imports
+  # "TRY",  # tryceratops
+  "UP",  # pyupgrade
+  "W",  # pycodestyle
+  "YTT",  # flake8-2020
+]
+ignore = [
+  # Allow non-abstract empty methods in abstract base classes
+  "B027",
+  # Remove flake8-errmsg since we consider they bloat the code and provide limited value
+  "EM",
+  # Allow boolean positional values in function calls, like `dict.get(... True)`
+  "FBT003",
+  # Ignore checks for possible passwords
+  "S105", "S106", "S107",
+  # Ignore warnings on subprocess.run / popen
+  "S603",
+  # Ignore complexity
+  "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915",
+]
+unfixable = [
+  # Don't touch unused imports
+  "F401",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["libzim"]
+
+[tool.ruff.lint.flake8-bugbear]
+# add exceptions to B008 for fastapi.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.per-file-ignores]
+# Tests can use magic values, assertions, and relative imports, and print
+"tests/**/*" = ["PLR2004", "S101", "TID252", "T201", "ARG001", "ARG002", "N803"]
+"setup.py" = ["T201"]
+"libzim/*.pyi" = ["FBT001"]
+
+[tool.pytest.ini_options]
+minversion = "7.3"
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.coverage]
+plugins = "Cython.Coverage"
+
+[tool.coverage.paths]
+libzim = ["libzim"]
+tests = ["tests"]
+
+[tool.coverage.run]
+source_pkgs = ["libzim"]
+branch = true
+parallel = true
+omit = [
+  "libzim/__about__.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]
+
+[tool.pyright]
+include = ["libzim", "tests", "tasks.py"]
+exclude = [".env/**", ".venv/**", "libzim/libzim.pyi"]
+pythonVersion = "3.12"
+typeCheckingMode="basic"
+disableBytesTypePromotions = true

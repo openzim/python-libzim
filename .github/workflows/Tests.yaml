@@ -1,0 +1,45 @@
+name: Tests
+on: [push]
+
+env:
+  LIBZIM_DL_VERSION: "9.2.3-2"
+  MACOSX_DEPLOYMENT_TARGET: "12.0"
+  # we want cython traces for coverage
+  PROFILE: "1"
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-13, windows-2022, ubuntu-22.04]
+        python: ["3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          architecture: x64
+
+
+      - name: Install dependencies (and project)
+        run: |
+          pip install -U pip
+          pip install -e .[test,scripts]
+
+      - name: move DLLs next to wrapper
+        if: matrix.os == 'windows-2022'
+        run: Move-Item -Force -Path .\libzim\*.dll -Destination .\
+
+      - name: Run the tests
+        run: inv coverage --args "-vvv"
+
+      - name: Upload coverage report to codecov
+        if: matrix.os == 'ubuntu-22.04' && matrix.python == '3.11'
+        uses: codecov/codecov-action@v4
+        with:
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
