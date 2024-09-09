@@ -3,7 +3,7 @@ on: [push]
 
 env:
   LIBZIM_DL_VERSION: "9.2.3-2"
-  MACOSX_DEPLOYMENT_TARGET: "12.0"
+  MACOSX_DEPLOYMENT_TARGET: "13.0"
   # we want cython traces for coverage
   PROFILE: "1"
 
