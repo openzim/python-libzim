@@ -3,7 +3,7 @@ requires = [
   "setuptools == 74.1.1",
   "wheel == 0.44.0",
   "cython == 3.0.11",
-  "delocate==0.12.0",
+  "delocate==0.11.0",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -70,7 +70,7 @@ build = [
   "setuptools == 74.1.1",
   "wheel == 0.44.0",
   "cython == 3.0.11",
-  "delocate==0.12.0",
+  "delocate==0.11.0",
 ]
 dev = [
   "pre-commit==3.8.0",
