@@ -224,7 +224,11 @@ WriterItemWrapper::getContentProvider() const
 std::shared_ptr<zim::writer::IndexData>
 WriterItemWrapper::getIndexData() const
 {
+  // Item without method defined (should not happen on proper subclass)
   if (!obj_has_attribute(m_obj, "get_indexdata")) {
+    return zim::writer::Item::getIndexData();
+  }
+  if (method_is_none(m_obj, "get_indexdata")) {
     return zim::writer::Item::getIndexData();
   }
   return callMethodOnObj<std::shared_ptr<zim::writer::IndexData>>(m_obj, "get_indexdata");

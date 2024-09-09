@@ -88,6 +88,12 @@ cdef object call_method(object obj, string method):
 # object to the correct cpp type.
 # Will be used by cpp side to call python method.
 cdef public api:
+
+    # this tells whether a method/property is none or not
+    bool method_is_none(object obj, string method) with gil:
+        func = getattr(obj, method.decode('UTF-8'))
+        return func is None
+
     bool obj_has_attribute(object obj, string attribute) with gil:
         """Check if a object has a given attribute"""
         return hasattr(obj, attribute.decode('UTF-8'))
@@ -537,6 +543,7 @@ class BaseWritingItem:
 
     def __init__(self):
         self._blob = None
+        get_indexdata = None
 
     def get_path(self) -> str:
         """Full path of item"""
@@ -567,7 +574,7 @@ class BaseWritingItem:
 
 class Creator(_Creator):
     __module__ = writer_module_name
-    def config_compression(self, compression: Compression):
+    def config_compression(self, compression: Union[Compression, str]):
         if not isinstance(compression, Compression):
             compression = getattr(Compression, compression.lower())
         return super().config_compression(compression)
