@@ -242,3 +242,13 @@ libzim.*.dylib
 zim*.dll
 libicu*.dll
 zim.lib
+
+# pkg-config file
+*.pc
+
+# downloaded archives
+*.tar.gz
+*.zip
+
+# zim files
+*.zim
