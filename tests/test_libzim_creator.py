@@ -48,7 +48,7 @@ class StaticItem(libzim.writer.Item):
 
     def get_contentprovider(self) -> libzim.writer.ContentProvider:
         if getattr(self, "filepath", None):
-            return FileProvider(filepath=self.filepath)
+            return FileProvider(filepath=getattr(self, "filepath", ""))
         return StringProvider(content=getattr(self, "content", ""))
 
     def get_hints(self) -> dict[Hint, int]:
@@ -296,7 +296,7 @@ def test_creator_nocontext(fpath, lipsum_item):
     creator.__enter__()
     creator.add_item(lipsum_item)
     try:
-        creator.add_redirection("A", HOME_PATH)
+        creator.add_redirection("A", HOME_PATH)  # pyright: ignore [reportCallIssue]
     except Exception:
         exc_type, exc_val, exc_tb = sys.exc_info()
         with pytest.raises(TypeError):
@@ -368,11 +368,11 @@ def test_creator_additem(fpath, lipsum_item):
     with Creator(fpath) as c:
         c.add_item(lipsum_item)
         with pytest.raises(TypeError, match="must not be None"):
-            c.add_item(None)
+            c.add_item(None)  # pyright: ignore [reportCallIssue, reportArgumentType]
         with pytest.raises(RuntimeError):
-            c.add_item("hello")
+            c.add_item("hello")  # pyright: ignore [reportCallIssue, reportArgumentType]
         with pytest.raises(TypeError, match="takes exactly 1 positional argument"):
-            c.add_item(mimetype="text/html")
+            c.add_item(mimetype="text/html")  # pyright: ignore [reportCallIssue]
 
 
 def test_creator_metadata(fpath, lipsum_item):
@@ -403,7 +403,7 @@ def test_creator_metadata(fpath, lipsum_item):
     c = Creator(fpath)
     with pytest.raises(RuntimeError, match="not started"):
         key = next(iter(metadata.keys()))
-        c.add_metadata(key, metadata.get(key))
+        c.add_metadata(key, metadata[key])
     del c
 
     with Creator(fpath) as c:
@@ -589,7 +589,7 @@ def test_item_contentprovider_none(fpath):
 
     with Creator(fpath) as c:
         with pytest.raises(RuntimeError, match="ContentProvider is None"):
-            c.add_item(AnItem())
+            c.add_item(AnItem())  # pyright: ignore [reportArgumentType]
 
 
 def test_missing_contentprovider(fpath):
@@ -608,7 +608,7 @@ def test_missing_contentprovider(fpath):
 
     with Creator(fpath) as c:
         with pytest.raises(RuntimeError, match="has no attribute"):
-            c.add_item(AnItem())
+            c.add_item(AnItem())  # pyright: ignore [reportArgumentType]
 
 
 def test_missing_hints(fpath):
@@ -624,7 +624,7 @@ def test_missing_hints(fpath):
 
     with Creator(fpath) as c:
         with pytest.raises(RuntimeError, match="has no attribute 'get_hints'"):
-            c.add_item(AnItem())
+            c.add_item(AnItem())  # pyright: ignore [reportArgumentType]
 
         with pytest.raises(RuntimeError, match="must be implemented"):
             c.add_item(libzim.writer.Item())
@@ -636,7 +636,9 @@ def test_nondict_hints(fpath):
             c.add_item(StaticItem(path="1", title="", hints=1))
 
         with pytest.raises(TypeError, match="hints"):
-            c.add_redirection("a", "", "b", hints=1)
+            c.add_redirection(
+                "a", "", "b", hints=1  # pyright: ignore [reportArgumentType]
+            )
 
 
 def test_hints_values(fpath):
@@ -665,11 +667,22 @@ def test_hints_values(fpath):
 
         # non-existent Hint
         with pytest.raises(AttributeError, match="YOLO"):
-            c.add_item(StaticItem(path="0", title="", hints={Hint.YOLO: True}))
+            c.add_item(
+                StaticItem(
+                    path="0",
+                    title="",
+                    hints={
+                        Hint.YOLO: True  # pyright: ignore [reportAttributeAccessIssue]
+                    },
+                )
+            )
 
         with pytest.raises(AttributeError, match="YOLO"):
-            c.add_redirection(
-                path="5", title="", target_path="0", hints={Hint.YOLO: True}
+            c.add_redirection(  # pyright: ignore [reportCallIssue]
+                path="5",
+                title="",
+                targetPath="0",
+                hints={Hint.YOLO: True},  # pyright: ignore [reportAttributeAccessIssue]
             )
 
 
@@ -758,7 +771,7 @@ def test_reimpfeed(fpath):
             self.called = True
             return Blob("1")
 
-    class AnItem:
+    class AnItem(Item):
         def get_path(self):
             return "-"
 
@@ -791,7 +804,7 @@ def test_virtualmethods_int_exc(fpath):
         def feed(self):
             return Blob("")
 
-    class AnItem:
+    class AnItem(Item):
         def get_path(self):
             return ""
 
@@ -816,7 +829,7 @@ def test_creator_badfilename(tmpdir):
     if platform.system() != "Windows" and os.getuid() != 0:
         # lack of perm
         with pytest.raises(IOError):
-            Creator("/root/test.zim")
+            Creator(pathlib.Path("/root/test.zim"))
 
     # forward slash points to non-existing folder
     with pytest.raises(IOError):

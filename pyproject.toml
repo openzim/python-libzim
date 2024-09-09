@@ -90,6 +90,8 @@ packages = [ "libzim" ]
 
 [tool.setuptools.package-data]
 libzim = [
+  "py.typed",
+  "*.pyi",
   "libzim.9.dylib",
   "libzim.so.9",
   "zim-9.dll",
@@ -313,7 +315,7 @@ exclude_lines = [
 
 [tool.pyright]
 include = ["libzim", "tests", "tasks.py"]
-exclude = [".env/**", ".venv/**", "libzim/libzim.pyi"]
+exclude = [".env/**", ".venv/**"]
 pythonVersion = "3.12"
 typeCheckingMode="basic"
 disableBytesTypePromotions = true
