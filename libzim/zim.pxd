@@ -61,25 +61,25 @@ cdef extern from "zim/writer/contentProvider.h" namespace "zim::writer":
 
 cdef extern from "zim/writer/creator.h" namespace "zim::writer":
     cdef cppclass ZimCreator "zim::writer::Creator":
-        void configVerbose(bint verbose)
-        void configCompression(Compression compression)
-        void configClusterSize(int size)
-        void configIndexing(bint indexing, string language)
-        void configNbWorkers(int nbWorkers)
-        void startZimCreation(string filepath) nogil except +;
-        void addItem(shared_ptr[WriterItem] item) nogil except +
-        void addMetadata(string name, string content, string mimetype) nogil except +
-        void addRedirection(string path, string title, string targetpath, map[HintKeys, uint64_t] hints) nogil except +
-        void addAlias(string path, string title, string targetpath, map[HintKeys, uint64_t] hints) except + nogil
-        void finishZimCreation() nogil except +
-        void setMainPath(string mainPath)
-        void addIllustration(unsigned int size, string content) nogil except +
+        void config_verbose(bint verbose)
+        void config_compression(Compression compression)
+        void config_cluster_size(int size)
+        void config_indexing(bint indexing, string language)
+        void config_nb_workers(int nbWorkers)
+        void start_zim_creation(string filepath) nogil except +;
+        void add_item(shared_ptr[WriterItem] item) nogil except +
+        void add_metadata(string name, string content, string mimetype) nogil except +
+        void add_redirection(string path, string title, string targetpath, map[HintKeys, uint64_t] hints) nogil except +
+        void add_alias(string path, string title, string targetpath, map[HintKeys, uint64_t] hints) except + nogil
+        void finish_zim_creation() nogil except +
+        void set_main_path(string mainPath)
+        void add_illustration(unsigned int size, string content) nogil except +
 
 cdef extern from "zim/search.h" namespace "zim":
     cdef cppclass Query:
         Query()
-        Query& setQuery(string query)
-        Query& setGeorange(float latitude, float longitude, float distance)
+        Query& set_query(string query)
+        Query& set_georange(float latitude, float longitude, float distance)
 
 
 cdef extern from "zim/search_iterator.h" namespace "zim":
@@ -88,8 +88,8 @@ cdef extern from "zim/search_iterator.h" namespace "zim":
         SearchIterator operator++()
         bint operator==(SearchIterator)
         bint operator!=(SearchIterator)
-        string getPath()
-        string getTitle()
+        string get_path()
+        string get_title()
 
 
 # Import the python wrappers (ObjWrapper) from libwrapper.
@@ -117,64 +117,64 @@ cdef extern from "libwrapper.h" namespace "wrapper":
         uint64_t size() except +
 
     cdef cppclass Entry:
-        string getTitle()
-        string getPath() except +
+        string get_title()
+        string get_path() except +
 
-        bint isRedirect()
-        Item getItem(bint follow) except +
-        Item getRedirect() except +
-        Entry getRedirectEntry() except +
+        bint is_redirect()
+        Item get_item(bint follow) except +
+        Item get_redirect() except +
+        Entry get-redirect_entry() except +
 
-        int getIndex() except +
+        int get_index() except +
 
     cdef cppclass Item:
-        string getTitle() except +
-        string getPath() except +
-        string getMimetype() except +
+        string get_title() except +
+        string get_path() except +
+        string get_mimetype() except +
 
-        Blob getData(offset_type offset) except +
-        Blob getData(offset_type offset, size_type size) except +
-        size_type  getSize() except +
+        Blob get_data(offset_type offset) except +
+        Blob get_data(offset_type offset, size_type size) except +
+        size_type  get_size() except +
 
-        int getIndex() except +
+        int get_index() except +
 
     cdef cppclass Archive:
         Archive() except +
         Archive(string filename) except +
 
-        uint64_t getFilesize() except +
+        uint64_t get_filesize() except +
 
-        Entry getEntryByPath(string path) except +
-        Entry getEntryByPath(entry_index_type idx) except +
-        Entry getEntryByTitle(string title) except +
+        Entry get_entry_by_path(string path) except +
+        Entry get_entry_by_path(entry_index_type idx) except +
+        Entry get_entry_by_title(string title) except +
 
-        string getMetadata(string name) except +
-        Item getMetadataItem(string name) except +
-        vector[string] getMetadataKeys() except +
+        string get_metadata(string name) except +
+        Item get_metadata_item(string name) except +
+        vector[string] get_metadata_keys() except +
 
-        Entry getMainEntry() except +
-        Item getIllustrationItem() except +
-        Item getIllustrationItem(int size) except +
-        size_type getEntryCount() except +
-        size_type getAllEntryCount() except +
-        size_type getArticleCount() except +
-        size_type getMediaCount() except +
+        Entry get_main_entry() except +
+        Item get_illustration_item() except +
+        Item get_illustration_item(int size) except +
+        size_type get_entry_count() except +
+        size_type get_all_entry_count() except +
+        size_type get_article_count() except +
+        size_type get_media_count() except +
 
-        string getChecksum() except +
-        string getFilename() except +
-        string getUuid() except +
+        string get_checksum() except +
+        string get_filename() except +
+        string get_uuid() except +
 
         bool hasMainEntry() except +
-        bool hasIllustration() except +
-        bool hasIllustration(unsigned int size) except +
-        set[unsigned int] getIllustrationSizes() except +
-        bool hasEntryByPath(string path) except +
-        bool hasEntryByTitle(string title) except +
-        bool isMultiPart() except +
-        bool hasNewNamespaceScheme() except +
-        bool hasFulltextIndex() except +
-        bool hasTitleIndex() except +
-        bool hasChecksum() except +
+        bool has_illustration() except +
+        bool has_illustration(unsigned int size) except +
+        set[unsigned int] get_illustration_sizes() except +
+        bool has_entry_by_path(string path) except +
+        bool has_entry_by_title(string title) except +
+        bool is_multi_part() except +
+        bool has_new_namespace_scheme() except +
+        bool has_fulltext_index() except +
+        bool has_title_index() except +
+        bool has_checksum() except +
         bool check() except +
 
     cdef cppclass Searcher:
@@ -184,8 +184,8 @@ cdef extern from "libwrapper.h" namespace "wrapper":
         Search search(Query query) except +
 
     cdef cppclass Search:
-        int getEstimatedMatches() except +
-        SearchResultSet getResults(int start, int count) except +
+        int get_estimated_matches() except +
+        SearchResultSet get_results(int start, int count) except +
 
     cdef cppclass SearchResultSet:
         SearchIterator begin()
@@ -193,18 +193,18 @@ cdef extern from "libwrapper.h" namespace "wrapper":
         int size()
 
     cdef cppclass SuggestionItem:
-        string getPath()
-        string getTitle()
-        string getSnippet()
-        bool hasSnippet()
+        string get_path()
+        string get_title()
+        string get_snippet()
+        bool has_snippet()
 
     cdef cppclass SuggestionIterator:
         SuggestionIterator()
         SuggestionIterator operator++()
         bint operator==(SuggestionIterator)
         bint operator!=(SuggestionIterator)
-        SuggestionItem getSuggestionItem()
-        Entry getEntry()
+        SuggestionItem get_suggestion_item()
+        Entry get_entry()
 
     cdef cppclass SuggestionSearcher:
         SuggestionSearcher()
@@ -213,8 +213,8 @@ cdef extern from "libwrapper.h" namespace "wrapper":
         SuggestionSearch suggest(string query) except +
 
     cdef cppclass SuggestionSearch:
-        int getEstimatedMatches() except +
-        SuggestionResultSet getResults(int start, int count) except +
+        int get_estimated_matches() except +
+        SuggestionResultSet get_results(int start, int count) except +
 
     cdef cppclass SuggestionResultSet:
         SuggestionIterator begin()
