@@ -8,8 +8,8 @@ class SuggestionResultSet:
     def __iter__(self) -> Iterator[str]: ...
 
 class SuggestionSearch:
-    def getEstimatedMatches(self) -> int: ...  # noqa: N802
-    def getResults(  # noqa: N802
+    def get_estimated_matches(self) -> int: ...  # noqa: N802
+    def get_results(  # noqa: N802
         self, start: int, count: int
     ) -> SuggestionResultSet: ...
 

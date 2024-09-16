@@ -39,7 +39,6 @@ typedef _object PyObject;
 //  - Wrapping Python objects to pass it to the C++ world (mainly used by the creator).
 //
 
-
 // C++ wrapper side.
 // The main issue here is that libzim classes cannot be "default constructed".
 // libzim object are build by the libzim itself and are always "valid".
@@ -72,207 +71,213 @@ typedef _object PyObject;
 /**
  * A base wrapper for our structures
  */
-template<typename Base>
-class Wrapper {
-  public:
-    Wrapper() {}
-    ~Wrapper() = default;
-    Wrapper(const Base& base)
+template <typename Base>
+class Wrapper
+{
+public:
+  Wrapper() {}
+  ~Wrapper() = default;
+  Wrapper(const Base &base)
       : mp_base(new Base(base))
-    {}
-    Wrapper(Base&& base)
+  {
+  }
+  Wrapper(Base &&base)
       : mp_base(new Base(std::move(base)))
-    {}
-    Wrapper(Wrapper&& other) = default;
-    Wrapper& operator=(Wrapper&& other) = default;
-  protected:
-    std::unique_ptr<Base> mp_base;
+  {
+  }
+  Wrapper(Wrapper &&other) = default;
+  Wrapper &operator=(Wrapper &&other) = default;
+
+protected:
+  std::unique_ptr<Base> mp_base;
 };
 
-#define FORWARD(OUT, NAME) template<class... ARGS> OUT NAME(ARGS&&... args) const { return mp_base->NAME(std::forward<ARGS>(args)...); }
+#define FORWARD(OUT, NAME) \
+  template <class... ARGS> \
+  OUT NAME(ARGS &&...args) const { return mp_base->NAME(std::forward<ARGS>(args)...); }
 
-namespace wrapper {
-// Wrapping blob is not necessary as we can default construct a zim::Blob.
-// But it is nice to have for consistancy.
-class Blob : public Wrapper<zim::Blob>
+namespace wrapper
 {
+  // Wrapping blob is not necessary as we can default construct a zim::Blob.
+  // But it is nice to have for consistancy.
+  class Blob : public Wrapper<zim::Blob>
+  {
   public:
     Blob() = default;
-    Blob(const zim::Blob& o) : Wrapper(o) {}
-    Blob(const char* data, zim::size_type size) : Wrapper(zim::Blob(data, size)) {};
+    Blob(const zim::Blob &o) : Wrapper(o) {}
+    Blob(const char *data, zim::size_type size) : Wrapper(zim::Blob(data, size)) {};
     operator zim::Blob() { return *mp_base; }
-    FORWARD(const char*, data)
-    FORWARD(const char*, end)
+    FORWARD(const char *, data)
+    FORWARD(const char *, end)
     FORWARD(zim::size_type, size)
-};
+  };
 
-class Item : public Wrapper<zim::Item>
-{
+  class Item : public Wrapper<zim::Item>
+  {
   public:
     Item() = default;
-    Item(const zim::Item& o) : Wrapper(o) {}
-    FORWARD(std::string, getTitle)
-    FORWARD(std::string, getPath)
-    FORWARD(std::string, getMimetype)
-    FORWARD(wrapper::Blob, getData)
-    FORWARD(zim::size_type, getSize)
-    FORWARD(zim::entry_index_type, getIndex)
-};
+    Item(const zim::Item &o) : Wrapper(o) {}
+    FORWARD(std::string, get_title)
+    FORWARD(std::string, get_path)
+    FORWARD(std::string, get_mimetype)
+    FORWARD(wrapper::Blob, get_data)
+    FORWARD(zim::size_type, get_size)
+    FORWARD(zim::entry_index_type, get_index)
+  };
 
-class Entry : public Wrapper<zim::Entry>
-{
+  class Entry : public Wrapper<zim::Entry>
+  {
   public:
     Entry() = default;
-    Entry(const zim::Entry& o) : Wrapper(o) {}
-    FORWARD(std::string, getTitle)
-    FORWARD(std::string, getPath)
-    FORWARD(bool, isRedirect)
-    FORWARD(wrapper::Item, getItem)
-    FORWARD(wrapper::Item, getRedirect)
-    FORWARD(wrapper::Entry, getRedirectEntry)
-    FORWARD(zim::entry_index_type, getIndex)
-};
+    Entry(const zim::Entry &o) : Wrapper(o) {}
+    FORWARD(std::string, get_title)
+    FORWARD(std::string, get_path)
+    FORWARD(bool, is_redirect)
+    FORWARD(wrapper::Item, get_item)
+    FORWARD(wrapper::Item, get_redirect)
+    FORWARD(wrapper::Entry, get_redirect_entry)
+    FORWARD(zim::entry_index_type, get_index)
+  };
 
-class Archive : public Wrapper<zim::Archive>
-{
+  class Archive : public Wrapper<zim::Archive>
+  {
   public:
     Archive() = default;
-    Archive(const std::string& filename) : Wrapper(zim::Archive(filename)) {};
-    Archive(const zim::Archive& o) : Wrapper(o) {};
-    zim::Archive& operator*() const { return *mp_base; }
+    Archive(const std::string &filename) : Wrapper(zim::Archive(filename)) {};
+    Archive(const zim::Archive &o) : Wrapper(o) {};
+    zim::Archive &operator*() const { return *mp_base; }
 
-    FORWARD(wrapper::Entry, getEntryByPath)
-    FORWARD(wrapper::Entry, getEntryByTitle)
-    FORWARD(wrapper::Entry, getMainEntry)
-    FORWARD(wrapper::Item, getIllustrationItem)
-    FORWARD(std::set<unsigned int>, getIllustrationSizes)
-    std::string getUuid() const
-    { auto u = mp_base->getUuid();
+    FORWARD(wrapper::Entry, get_entry_by_path)
+    FORWARD(wrapper::Entry, get_entry_by_title)
+    FORWARD(wrapper::Entry, get_main_entry)
+    FORWARD(wrapper::Item, get_illustration_item)
+    FORWARD(std::set<unsigned int>, get_illustration_sizes)
+    std::string get_uuid() const
+    {
+      auto u = mp_base->get_uuid();
       std::string uuids(u.data, u.size());
       return uuids;
     }
-    FORWARD(zim::size_type, getFilesize)
-    FORWARD(std::string, getMetadata)
-    FORWARD(wrapper::Item, getMetadataItem)
-    FORWARD(std::vector<std::string>, getMetadataKeys)
-    FORWARD(zim::size_type, getEntryCount)
-    FORWARD(zim::size_type, getAllEntryCount)
-    FORWARD(zim::size_type, getArticleCount)
-    FORWARD(zim::size_type, getMediaCount)
-    FORWARD(std::string, getChecksum)
-    FORWARD(std::string, getFilename)
-    FORWARD(bool, hasMainEntry)
-    FORWARD(bool, hasIllustration)
-    FORWARD(bool, hasEntryByPath)
-    FORWARD(bool, hasEntryByTitle)
-    FORWARD(bool, isMultiPart)
-    FORWARD(bool, hasNewNamespaceScheme)
-    FORWARD(bool, hasFulltextIndex)
-    FORWARD(bool, hasTitleIndex)
-    FORWARD(bool, hasChecksum)
+    FORWARD(zim::size_type, get_filesize)
+    FORWARD(std::string, get_metadata)
+    FORWARD(wrapper::Item, get_metadata_item)
+    FORWARD(std::vector<std::string>, get_metadata_keys)
+    FORWARD(zim::size_type, get_entry_count)
+    FORWARD(zim::size_type, get_all_entry_count)
+    FORWARD(zim::size_type, get_article_count)
+    FORWARD(zim::size_type, get_media_count)
+    FORWARD(std::string, get_checksum)
+    FORWARD(std::string, get_filename)
+    FORWARD(bool, has_main_entry)
+    FORWARD(bool, has_illustration)
+    FORWARD(bool, has_entry_by_path)
+    FORWARD(bool, has_entry_by_title)
+    FORWARD(bool, is_multi_part)
+    FORWARD(bool, has_new_namespace_scheme)
+    FORWARD(bool, has_fulltext_index)
+    FORWARD(bool, has_title_index)
+    FORWARD(bool, has_checksum)
     FORWARD(bool, check)
-};
+  };
 
-class SearchResultSet : public Wrapper<zim::SearchResultSet>
-{
+  class SearchResultSet : public Wrapper<zim::SearchResultSet>
+  {
   public:
     SearchResultSet() = default;
-    SearchResultSet(const zim::SearchResultSet& o) : Wrapper(o) {};
-
+    SearchResultSet(const zim::SearchResultSet &o) : Wrapper(o) {};
 
     FORWARD(zim::SearchIterator, begin)
     FORWARD(zim::SearchIterator, end)
     FORWARD(int, size)
-};
+  };
 
-class Search : public Wrapper<zim::Search>
-{
+  class Search : public Wrapper<zim::Search>
+  {
   public:
     Search() = default;
-    Search(zim::Search&& s) : Wrapper(std::move(s)) {};
+    Search(zim::Search &&s) : Wrapper(std::move(s)) {};
 
-    FORWARD(int, getEstimatedMatches)
-    FORWARD(wrapper::SearchResultSet, getResults)
-};
+    FORWARD(int, get_estimated_matches)
+    FORWARD(wrapper::SearchResultSet, get_results)
+  };
 
-class Searcher : public Wrapper<zim::Searcher>
-{
+  class Searcher : public Wrapper<zim::Searcher>
+  {
   public:
     Searcher() = default;
-    Searcher(const wrapper::Archive& a) : Wrapper(zim::Searcher(*a)) {};
-    Searcher(const zim::Searcher& o) : Wrapper(o) {};
+    Searcher(const wrapper::Archive &a) : Wrapper(zim::Searcher(*a)) {};
+    Searcher(const zim::Searcher &o) : Wrapper(o) {};
 
-    FORWARD(void, setVerbose)
+    FORWARD(void, set_verbose)
     FORWARD(wrapper::Search, search)
-};
+  };
 
-class SuggestionItem : public Wrapper<zim::SuggestionItem>
-{
+  class SuggestionItem : public Wrapper<zim::SuggestionItem>
+  {
   public:
     SuggestionItem() = default;
-    SuggestionItem(const zim::SuggestionItem& o) : Wrapper(o) {};
+    SuggestionItem(const zim::SuggestionItem &o) : Wrapper(o) {};
 
-    FORWARD(std::string, getTitle)
-    FORWARD(std::string, getPath)
-    FORWARD(std::string, getSnippet)
-    FORWARD(bool, hasSnippet)
-};
+    FORWARD(std::string, get_title)
+    FORWARD(std::string, get_path)
+    FORWARD(std::string, get_snippet)
+    FORWARD(bool, has_snippet)
+  };
 
-class SuggestionIterator : public Wrapper<zim::SuggestionIterator>
-{
+  class SuggestionIterator : public Wrapper<zim::SuggestionIterator>
+  {
   public:
     SuggestionIterator() = default;
-    SuggestionIterator(const zim::SuggestionIterator& o) : Wrapper(o) {};
-    zim::SuggestionIterator& operator*() const { return *mp_base; }
+    SuggestionIterator(const zim::SuggestionIterator &o) : Wrapper(o) {};
+    zim::SuggestionIterator &operator*() const { return *mp_base; }
 
     FORWARD(bool, operator==)
-    bool operator!=(const wrapper::SuggestionIterator& it) const {
+    bool operator!=(const wrapper::SuggestionIterator &it) const
+    {
       return *mp_base != *it;
     }
     FORWARD(wrapper::SuggestionIterator, operator++)
-    SuggestionItem getSuggestionItem() const {
+    SuggestionItem get_suggestion_item() const
+    {
       return mp_base->operator*();
     }
-//    FORWARD(wrapper::SuggestionItem, operator*)
-    FORWARD(wrapper::Entry, getEntry)
-};
+    //    FORWARD(wrapper::SuggestionItem, operator*)
+    FORWARD(wrapper::Entry, get_entry)
+  };
 
-class SuggestionResultSet : public Wrapper<zim::SuggestionResultSet>
-{
+  class SuggestionResultSet : public Wrapper<zim::SuggestionResultSet>
+  {
   public:
     SuggestionResultSet() = default;
-    SuggestionResultSet(const zim::SuggestionResultSet& o) : Wrapper(o) {};
-
+    SuggestionResultSet(const zim::SuggestionResultSet &o) : Wrapper(o) {};
 
     FORWARD(wrapper::SuggestionIterator, begin)
     FORWARD(wrapper::SuggestionIterator, end)
     FORWARD(int, size)
-};
+  };
 
-
-class SuggestionSearch : public Wrapper<zim::SuggestionSearch>
-{
+  class SuggestionSearch : public Wrapper<zim::SuggestionSearch>
+  {
   public:
     SuggestionSearch() = default;
-    SuggestionSearch(zim::SuggestionSearch&& s) : Wrapper(std::move(s)) {};
+    SuggestionSearch(zim::SuggestionSearch &&s) : Wrapper(std::move(s)) {};
 
-    FORWARD(int, getEstimatedMatches)
-    FORWARD(wrapper::SuggestionResultSet, getResults)
-};
+    FORWARD(int, get_estimated_matches)
+    FORWARD(wrapper::SuggestionResultSet, get_results)
+  };
 
-class SuggestionSearcher : public Wrapper<zim::SuggestionSearcher>
-{
+  class SuggestionSearcher : public Wrapper<zim::SuggestionSearcher>
+  {
   public:
     SuggestionSearcher() = default;
-    SuggestionSearcher(const wrapper::Archive& a) : Wrapper(zim::SuggestionSearcher(*a)) {};
-    SuggestionSearcher(const zim::SuggestionSearcher& o) : Wrapper(o) {};
+    SuggestionSearcher(const wrapper::Archive &a) : Wrapper(zim::SuggestionSearcher(*a)) {};
+    SuggestionSearcher(const zim::SuggestionSearcher &o) : Wrapper(o) {};
 
-    FORWARD(void, setVerbose)
+    FORWARD(void, set_verbose)
     FORWARD(wrapper::SuggestionSearch, suggest)
-};
+  };
 } // namespace wrapper
 #undef FORWARD
-
 
 // Python wrapper
 //
@@ -285,53 +290,51 @@ class SuggestionSearcher : public Wrapper<zim::SuggestionSearcher>
 
 class ObjWrapper
 {
-  public:
-    ObjWrapper(PyObject* obj);
-    ObjWrapper(const ObjWrapper& other) = delete;
-    ObjWrapper(ObjWrapper&& other);
-    ~ObjWrapper();
-    ObjWrapper& operator=(ObjWrapper&& other);
+public:
+  ObjWrapper(PyObject *obj);
+  ObjWrapper(const ObjWrapper &other) = delete;
+  ObjWrapper(ObjWrapper &&other);
+  ~ObjWrapper();
+  ObjWrapper &operator=(ObjWrapper &&other);
 
-
-  protected:
-    PyObject* m_obj;
+protected:
+  PyObject *m_obj;
 };
 
 class WriterItemWrapper : public zim::writer::Item, private ObjWrapper
 {
-  public:
-    WriterItemWrapper(PyObject *obj) : ObjWrapper(obj) {};
-    ~WriterItemWrapper() = default;
-    std::string getPath() const override;
-    std::string getTitle() const override;
-    std::string getMimeType() const override;
-    std::unique_ptr<zim::writer::ContentProvider> getContentProvider() const override;
-    std::shared_ptr<zim::writer::IndexData> getIndexData() const override;
-    zim::writer::Hints getHints() const override;
+public:
+  WriterItemWrapper(PyObject *obj) : ObjWrapper(obj) {};
+  ~WriterItemWrapper() = default;
+  std::string get_path() const override;
+  std::string get_title() const override;
+  std::string get_mime_type() const override;
+  std::unique_ptr<zim::writer::ContentProvider> get_content_provider() const override;
+  std::shared_ptr<zim::writer::IndexData> get_index_data() const override;
+  zim::writer::Hints get_hints() const override;
 };
 
 class ContentProviderWrapper : public zim::writer::ContentProvider, private ObjWrapper
 {
-  public:
-    ContentProviderWrapper(PyObject *obj) : ObjWrapper(obj) {};
-    ~ContentProviderWrapper() = default;
-    zim::size_type getSize() const override;
-    zim::Blob feed() override;
+public:
+  ContentProviderWrapper(PyObject *obj) : ObjWrapper(obj) {};
+  ~ContentProviderWrapper() = default;
+  zim::size_type get_size() const override;
+  zim::Blob feed() override;
 };
 
-class IndexDataWrapper: public zim::writer::IndexData, private ObjWrapper
+class IndexDataWrapper : public zim::writer::IndexData, private ObjWrapper
 {
-  public:
-    IndexDataWrapper(PyObject *obj) : ObjWrapper(obj) {};
-    ~IndexDataWrapper() = default;
-    bool hasIndexData() const override;
-    std::string getTitle() const override;
-    std::string getContent() const override;
-    std::string getKeywords() const override;
-    uint32_t getWordCount() const override;
-    IndexData::GeoPosition getGeoPosition() const override;
+public:
+  IndexDataWrapper(PyObject *obj) : ObjWrapper(obj) {};
+  ~IndexDataWrapper() = default;
+  bool has_index_data() const override;
+  std::string get_title() const override;
+  std::string get_content() const override;
+  std::string get_keywords() const override;
+  uint32_t get_word_count() const override;
+  IndexData::GeoPosition get_geo_position() const override;
 };
-
 
 // Small helpers
 

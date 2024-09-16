@@ -1114,9 +1114,9 @@ cdef class Search:
         """Estimated number of results in Archive for the search"""
         return self.c_search.getEstimatedMatches()
 
-    def getResults(self, start: pyint, count: pyint) -> SearchResultSet:
+    def get_results(self, start: pyint, count: pyint) -> SearchResultSet:
         """Iterator over Entry paths found in Archive for the search"""
-        return SearchResultSet.from_resultset(move(self.c_search.getResults(start, count)))
+        return SearchResultSet.from_resultset(move(self.c_search.get_results(start, count)))
 
 
 cdef class Searcher:
@@ -1155,7 +1155,7 @@ archive = libzim.reader.Archive(fpath)
 searcher = Searcher(archive)
 query = Query().set_query("foo")
 search = searcher.search(query)
-for path in search.getResults(10, 10) # get result from 10 to 20 (10 results)
+for path in search.get_results(10, 10) # get result from 10 to 20 (10 results)
     print(path, archive.get_entry_by_path(path).title)"""
 search_public_objects = [
     Query,
@@ -1216,9 +1216,9 @@ cdef class SuggestionSearch:
         """Estimated number of results in Archive for the suggestion search"""
         return self.c_search.getEstimatedMatches()
 
-    def getResults(self, start: pyint, count: pyint) -> SuggestionResultSet:
+    def get_results(self, start: pyint, count: pyint) -> SuggestionResultSet:
         """Iterator over Entry paths found in Archive for the suggestion search"""
-        return SuggestionResultSet.from_resultset(move(self.c_search.getResults(start, count)))
+        return SuggestionResultSet.from_resultset(move(self.c_search.get_results(start, count)))
 
 
 cdef class SuggestionSearcher:
@@ -1255,7 +1255,7 @@ Usage:
 archive = Archive(fpath)
 suggestion_searcher = SuggestionSearcher(archive)
 suggestions = suggestion_searcher.suggest("foo")
-for path in suggestion.getResults(10, 10) # get result from 10 to 20 (10 results)
+for path in suggestion.get_results(10, 10) # get result from 10 to 20 (10 results)
     print(path, archive.get_entry_by_path(path).title)"""
 suggestion_public_objects = [
     SuggestionSearcher
