@@ -31,7 +31,7 @@
 #include <zim/writer/creator.h>
 
 
-ObjWrapper::ObjWrapper(PyObject* obj)
+obj_wrapper::obj_wrapper(PyObject* obj)
   : m_obj(obj)
 {
   if (import_libzim()) {
@@ -41,7 +41,7 @@ ObjWrapper::ObjWrapper(PyObject* obj)
   Py_XINCREF(m_obj);
 }
 
-ObjWrapper::ObjWrapper(ObjWrapper&& other)
+obj_wrapper::obj_wrapper(ObjWrapper&& other)
   : m_obj(other.m_obj)
 {
   other.m_obj = nullptr;
