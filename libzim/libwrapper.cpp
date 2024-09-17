@@ -30,6 +30,8 @@
 #include <zim/blob.h>
 #include <zim/writer/creator.h>
 
+
+
 ObjWrapper::ObjWrapper(PyObject *obj)
     : m_obj(obj)
 {
