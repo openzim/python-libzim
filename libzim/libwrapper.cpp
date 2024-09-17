@@ -31,9 +31,8 @@
 #include <zim/writer/creator.h>
 
 
-
-ObjWrapper::ObjWrapper(PyObject *obj)
-    : m_obj(obj)
+ObjWrapper::ObjWrapper(PyObject* obj)
+  : m_obj(obj)
 {
   if (import_libzim())
   {
