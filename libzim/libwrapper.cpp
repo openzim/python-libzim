@@ -57,14 +57,14 @@ ObjWrapper& ObjWrapper::operator=(ObjWrapper&& other)
 ObjWrapper::~ObjWrapper()
 {
   // We must decrement the ref of the python object.
-  if (m_obj != nullptr)
-  {
+  if (m_obj != nullptr) {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
     Py_XDECREF(this->m_obj);
     PyGILState_Release(gstate);
   }
 }
+
 
 // Just call the right (regarding the output) method.
 // No check or error handling.
