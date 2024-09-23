@@ -14,14 +14,14 @@ repos:
   rev: v0.6.3
   hooks:
   - id: ruff
-# - repo: https://github.com/RobertCraigie/pyright-python
-#   rev: v1.1.379
-#   hooks:
-#   - id: pyright
-#     name: pyright (system)
-#     description: 'pyright static type checker'
-#     entry: pyright
-#     language: system
-#     'types_or': [python, pyi]
-#     require_serial: true
-#     minimum_pre_commit_version: '2.9.2'
+- repo: https://github.com/RobertCraigie/pyright-python
+  rev: v1.1.381
+  hooks:
+  - id: pyright
+    name: pyright (system)
+    description: 'pyright static type checker'
+    entry: pyright
+    language: system
+    'types_or': [python, pyi]
+    require_serial: true
+    minimum_pre_commit_version: '2.9.2'
