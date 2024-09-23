@@ -1,7 +1,11 @@
 import re
 import sys
 
-from libzim.version import get_libzim_version, get_versions, print_versions
+from libzim.version import (  # pyright: ignore [reportMissingModuleSource]
+    get_libzim_version,
+    get_versions,
+    print_versions,
+)
 
 
 def test_version_print_version_with_stdout(capsys):
