@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- n/a
+### Changed
+
+- `delocate` dependency only required on Windows platform
 
 ## [3.5.0]
 

@@ -27,7 +27,6 @@ from pathlib import Path
 
 from Cython.Build import cythonize
 from Cython.Distutils.build_ext import new_build_ext as build_ext
-from delocate.wheeltools import InWheel
 from setuptools import Command, Extension, setup
 
 
@@ -349,6 +348,8 @@ class Config:
     def repair_windows_wheel(self, wheel: Path, dest_dir: Path):
         """opens windows wheels in target folder and moves all DLLs files inside
         subdirectories of the wheel to the root one (where wrapper is expected)"""
+
+        from delocate.wheeltools import InWheel
 
         # we're only interested in windows wheels
         if not re.match(r"libzim-.+-win_.+", wheel.stem):
