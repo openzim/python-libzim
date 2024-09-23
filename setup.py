@@ -405,7 +405,7 @@ def get_cython_extension() -> list[Extension]:
                 "Please verify it is correctly installed and can be found."
             )
         print(
-            "Using found library at {config.found_libzim}. "
+            f"Using found library at {config.found_libzim}. "
             "Adjust CFLAGS/LDFLAGS if needed"
         )
     else:
