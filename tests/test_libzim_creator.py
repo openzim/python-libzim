@@ -13,11 +13,13 @@ import sys
 
 import pytest
 
-import libzim.writer
-from libzim.reader import Archive
-from libzim.search import Query, Searcher
-from libzim.suggestion import SuggestionSearcher
-from libzim.writer import (
+import libzim.writer  # pyright: ignore [reportMissingModuleSource]
+from libzim.reader import Archive  # pyright: ignore [reportMissingModuleSource]
+from libzim.search import Query, Searcher  # pyright: ignore [reportMissingModuleSource]
+from libzim.suggestion import (  # pyright: ignore [reportMissingModuleSource]
+    SuggestionSearcher,
+)
+from libzim.writer import (  # pyright: ignore [reportMissingModuleSource]
     Blob,
     ContentProvider,
     Creator,
