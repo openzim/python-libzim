@@ -54,7 +54,7 @@ lint = [
   "libzim[build]",
 ]
 check = [
-  "pyright==1.1.379",
+  "pyright==1.1.381",
   "libzim",
   "libzim[build]",
   "libzim[test]",
