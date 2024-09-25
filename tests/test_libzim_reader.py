@@ -8,10 +8,12 @@ from urllib.request import urlretrieve
 
 import pytest
 
-import libzim.writer
-from libzim.reader import Archive
-from libzim.search import Query, Searcher
-from libzim.suggestion import SuggestionSearcher
+import libzim.writer  # pyright: ignore [reportMissingModuleSource]
+from libzim.reader import Archive  # pyright: ignore [reportMissingModuleSource]
+from libzim.search import Query, Searcher  # pyright: ignore [reportMissingModuleSource]
+from libzim.suggestion import (  # pyright: ignore [reportMissingModuleSource]
+    SuggestionSearcher,
+)
 
 # expected data for tests ZIMs (see `all_zims`)
 ZIMS_DATA = {
