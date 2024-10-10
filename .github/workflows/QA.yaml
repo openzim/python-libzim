@@ -14,6 +14,7 @@ jobs:
       - name: Set up Python ${{ matrix.python }}
         uses: actions/setup-python@v5
         with:
+          # to update to 3.13 once it lands in GH image
           python-version: "3.12"
           architecture: x64
 
