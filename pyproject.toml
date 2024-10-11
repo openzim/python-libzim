@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "libzim"
 version = "3.6.0.dev0"
-requires-python = ">=3.9,<3.13"
+requires-python = ">=3.9,<3.14"
 description = "A python-facing API for creating and interacting with ZIM files"
 authors = [
     {name = "openZIM", email = "dev@kiwix.org"},
@@ -33,6 +33,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Typing :: Stubs Only",
     "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     "Operating System :: MacOS",
@@ -48,33 +49,33 @@ scripts = [
   "invoke==2.2.0",
 ]
 lint = [
-  "black==24.8.0",
-  "ruff==0.6.3",
+  "black==24.10.0",
+  "ruff==0.6.9",
   "libzim",
   "libzim[build]",
 ]
 check = [
-  "pyright==1.1.381",
+  "pyright==1.1.384",
   "libzim",
   "libzim[build]",
   "libzim[test]",
   "types-setuptools",
 ]
 test = [
-  "pytest==8.3.2",
-  "coverage==7.6.1",
+  "pytest==8.3.3",
+  "coverage==7.6.2",
   # for cython coverage plugin
   "libzim[build]",
 ]
 build = [
-  "setuptools == 74.1.1",
+  "setuptools == 75.1.0",
   "wheel == 0.44.0",
   "cython == 3.0.11",
   "delocate == 0.11.0 ; platform_system=='Windows'",
 ]
 dev = [
-  "pre-commit==3.8.0",
-  "ipython==8.27.0",
+  "pre-commit==4.0.1",
+  "ipython==8.28.0",
   "types-setuptools",
   "libzim[scripts]",
   "libzim[lint]",
@@ -155,7 +156,7 @@ features = ["scripts", "test"]
 PROFILE = "1"
 
 [[tool.hatch.envs.test.matrix]]
-python = ["3.9", "3.10", "3.11", "3.12"]
+python = ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
 [tool.hatch.envs.test.scripts]
 run = "inv test --args '{args}'"
@@ -316,6 +317,6 @@ exclude_lines = [
 [tool.pyright]
 include = ["libzim", "tests", "tasks.py"]
 exclude = [".env/**", ".venv/**"]
-pythonVersion = "3.12"
+pythonVersion = "3.13"
 typeCheckingMode="basic"
 disableBytesTypePromotions = true
