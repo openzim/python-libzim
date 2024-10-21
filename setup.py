@@ -54,6 +54,7 @@ class Config:
         "Linux": ["x86_64", "aarch64"],
         "Linux-musl": ["x86_64", "aarch64"],
         "Windows": ["amd64"],
+        "FreeBSD": ["amd64"],
     }
 
     base_dir: pathlib.Path = Path(__file__).parent
@@ -133,6 +134,7 @@ class Config:
             "Darwin": f"libzim.{self.libzim_major}.dylib",
             "Linux": f"libzim.so.{self.libzim_major}",
             "Windows": f"zim-{self.libzim_major}.dll",
+            "FreeBSD": f"libzim.so.{self.libzim_major}",
         }[self.platform]
 
     @property
