@@ -10,6 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Declare the extension free-threading compatible so that importing it on a free-threaded CPython no longer forces the GIL back on (#240)
+- **Breaking**: `Creator.config_nbworkers()` param `nbWorkers` renamed `nb_workers` (#200)
+- **Breaking**: `Creator.set_mainpath()` param `mainPath` renamed `main_path` (#200)
+- **Breaking**: `Creator.add_redirection()` param `targetPath` renamed `target_path` (#200)
+- **Breaking**: `Creator.add_alias()` param `targetPath` renamed `target_path` (#200)
+- **Breaking**: `Search.getEstimatedMatches()` renamed `Search.get_estimated_matches()` (#200)
+- **Breaking**: `Search.getResults()` renamed `Search.get_results()` (#200)
+- **Breaking**: `SuggestionSearch.getEstimatedMatches()` renamed `SuggestionSearch.get_estimated_matches()` (#200)
+- **Breaking**: `SuggestionSearch.getResults()` renamed `SuggestionSearch.get_results()` (#200)
 
 ### Removed
 
