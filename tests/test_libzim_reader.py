@@ -478,14 +478,14 @@ def test_reader_suggest_search(
         query = Query().set_query(search_string)
         searcher = Searcher(zim)
         search = searcher.search(query)
-        assert search.getEstimatedMatches() == search_count
-        assert list(search.getResults(0, search_count)) == search_result
+        assert search.get_estimated_matches() == search_count
+        assert list(search.get_results(0, search_count)) == search_result
 
     if suggestion_string is not None:
         suggestion_searcher = SuggestionSearcher(zim)
         suggestion = suggestion_searcher.suggest(suggestion_string)
-        assert suggestion.getEstimatedMatches() == suggestion_count
-        assert list(suggestion.getResults(0, suggestion_count)) == suggestion_result
+        assert suggestion.get_estimated_matches() == suggestion_count
+        assert list(suggestion.get_results(0, suggestion_count)) == suggestion_result
 
 
 @skip_if_offline
