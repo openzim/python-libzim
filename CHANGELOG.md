@@ -5,9 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+### Breaking Changes
 
-- Remove traces of camelCase in API (#200)
+- [search]  `Search.getEstimatedMatches()` renamed `Search.get_estimated_matches()` (#200)
+- [search]  `Search.getResults()` renamed `Search.get_results()` (#200)
+- [suggestion]  `SuggestionSearch.getEstimatedMatches()` renamed `SuggestionSearch.get_estimated_matches()` (#200)
+- [suggestion]  `SuggestionSearch.getResults()` renamed `SuggestionSearch.get_results()` (#200)
+- [suggestion]  `SuggestionSearch.getResults()` renamed `SuggestionSearch.get_results()` (#200)
+- [writer] `Creator.config_nbworkers()` param `nbWorkers` renamed `nb_workers` (#200)
+- [writer] `Creator.set_mainpath()` param `mainPath` renamed `main_path` (#200)
+- [writer] `Creator.add_redirection()` param `targetPath` renamed `target_path` (#200)
+- [writer] `Creator.add_alias()` param `targetPath` renamed `target_path` (#200)
 
 ## [3.6.0] - 2024-10-15
 
