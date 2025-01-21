@@ -602,12 +602,15 @@ writer_module_doc = """libzim writer module
 - Compression to select the algorithm to compress ZIM archive with
 
 Usage:
+
+```python
 with Creator(pathlib.Path("myfile.zim")) as creator:
     creator.config_verbose(False)
     creator.add_metadata("Name", b"my name")
     # example
     creator.add_item(MyItemSubclass(path, title, mimetype, content)
-    creator.set_mainpath(path)"""
+    creator.set_mainpath(path)
+```"""
 writer_public_objects = [
     Creator,
     Compression,
@@ -1041,10 +1044,12 @@ reader_module_doc = """libzim reader module
 
 Usage:
 
+```python
 with Archive(fpath) as zim:
     entry = zim.get_entry_by_path(zim.main_entry.path)
     print(f"Article {entry.title} at {entry.path} is "
-          f"{entry.get_item().content.nbytes}b")"""
+          f"{entry.get_item().content.nbytes}b")
+```"""
 reader_public_objects = [
     Archive,
     Entry,
@@ -1151,12 +1156,14 @@ search_module_doc = """libzim search module
 
 Usage:
 
+```python
 archive = libzim.reader.Archive(fpath)
 searcher = Searcher(archive)
 query = Query().set_query("foo")
 search = searcher.search(query)
 for path in search.getResults(10, 10) # get result from 10 to 20 (10 results)
-    print(path, archive.get_entry_by_path(path).title)"""
+    print(path, archive.get_entry_by_path(path).title)
+```"""
 search_public_objects = [
     Query,
     SearchResultSet,
@@ -1247,16 +1254,17 @@ cdef class SuggestionSearcher:
         return SuggestionSearch.from_search(move(self.c_searcher.suggest(query.encode('UTF-8'))))
 
 suggestion_module_doc = """libzim suggestion module
-
 - SuggestionSearcher to perform a suggestion search over a libzim.reader.Archive
 
 Usage:
 
+```python
 archive = Archive(fpath)
 suggestion_searcher = SuggestionSearcher(archive)
 suggestions = suggestion_searcher.suggest("foo")
 for path in suggestion.getResults(10, 10) # get result from 10 to 20 (10 results)
-    print(path, archive.get_entry_by_path(path).title)"""
+    print(path, archive.get_entry_by_path(path).title)
+```"""
 suggestion_public_objects = [
     SuggestionSearcher
 ]
@@ -1268,13 +1276,16 @@ version_module_doc = """libzim version module
 - Get libzim version
 
 Usage:
-    from libzim.version import get_libzim_version, get_versions, print_versions
-    major, minor, patch = get_libzim_version().split(".", 2)
 
-    for dependency, version in get_versions().items():
-        print(f"- {dependency}={version}")
+```python
+from libzim.version import get_libzim_version, get_versions, print_versions
+major, minor, patch = get_libzim_version().split(".", 2)
 
-    print_versions()"""
+for dependency, version in get_versions().items():
+    print(f"- {dependency}={version}")
+
+print_versions()
+```"""
 
 
 def print_versions(out: TextIO = sys.stdout):
