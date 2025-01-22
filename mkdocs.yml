@@ -1,0 +1,139 @@
+site_name: libzim
+site_description: 'XX.'
+repo_url: https://github.com/openzim/python-libzim
+repo_name: GitHub
+edit_uri: edit/main/docs/
+
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+
+nav:
+  - Home: index.md
+  - API Reference: api_reference/
+  - License: license.md
+
+theme:
+  name: material
+  logo: assets/openzim.png
+  palette:
+    # Light mode
+    - scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    # Use XHR for page changes to avoid page flash during navigation.
+    - navigation.instant
+    - navigation.instant.progress
+    # Use tabs and section headers rather than a single side navbar.
+    - navigation.tabs
+    - navigation.sections
+    # Add buttons to edit content
+    - content.action.edit
+    - content.code.annotate
+    - content.code.copy
+    - content.tooltips
+    - navigation.expand
+    - navigation.footer
+    - navigation.path
+    - navigation.sections
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.top
+    - search.highlight
+    - search.suggest
+    - toc.follow
+
+extra_css:
+- assets/mkdocstrings.css
+
+markdown_extensions:
+  - attr_list
+  - admonition
+  - callouts:
+      strip_period: no
+  - footnotes
+  - md_in_html
+  - pymdownx.blocks.tab:
+      alternate_style: true
+  - pymdownx.snippets:
+      base_path: .
+      check_paths: true
+  - pymdownx.superfences:
+      custom_fences:
+      - name: mermaid
+        class: mermaid
+        format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - toc:
+      permalink: "¤"
+
+plugins:
+  - search
+  - markdown-exec:
+      ansi: required
+
+  # Replace externally hosted assets for compliance with various privacy regulations.
+  - privacy
+
+  # Nicely include markdown, e.g. to rewrite relative links
+  - include-markdown
+
+  # Generate API docs and navigation for them
+  - gen-files:
+      scripts:
+        - gen_griffe_json.py
+        - docs/scripts/generate_api_nav.py
+
+  # Import additional nav from NAVIGATION.md files, like the one produced
+  # by gen-files.
+  - literate-nav:
+      nav_file: NAVIGATION.md
+
+  # Generate items
+  - mkdocstrings:
+      handlers:
+        python:
+          # Set up cross-references to Python types
+          import:
+            - url: https://docs.python.org/3/objects.inv
+              domains: [std, py]
+            - https://typing-extensions.readthedocs.io/en/latest/objects.inv
+          paths: [libzim]
+          options:
+            load_external_modules: false
+            allow_inspection: true
+            force_inspection: true
+            show_source: false
+            docstring_section_style: list
+            docstring_style: google
+            filters:
+              # attr and methods starting with _
+              - '!^_'
+              # *_module_* for internal libzim-only vars that build the sub modules
+              - '!_module_'
+              # *_public_objects for internal libzim-only vars that exposes sub modules
+              - '!_public_objects$'
+            show_submodules: false
+            inherited_members: true
+            separate_signature: true
+            show_signature_annotations: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            signature_crossrefs: true
+            summary: true
+            show_if_no_docstring: true
+            modernize_annotations: true

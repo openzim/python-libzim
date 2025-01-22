@@ -73,6 +73,31 @@ build = [
   "cython == 3.0.11",
   "delocate == 0.11.0 ; platform_system=='Windows'",
 ]
+doc = [
+
+    "mkdocs==1.6.1",
+    "mkdocstrings[python]==0.27.0",
+    "mkdocs-material==9.5.44",
+    "pymdown-extensions==10.12",
+    "mkdocs-gen-files==0.5.0",
+    "mkdocs-literate-nav==0.6.1",
+    "mkdocs-include-markdown-plugin==7.1.2",
+    "griffe==1.5.5",
+
+    "black==24.10.0",
+    "code2flow==2.5.1",
+    "griffe-inherited-docstrings==1.1.1",
+    "markdown-callouts==0.4.0",
+    "markdown-exec[ansi]==1.10.0",
+    "mkdocs-coverage==1.1.0",
+    "mkdocs-git-revision-date-localized-plugin==1.3.0",
+    "mkdocs-minify-plugin==0.8.0",
+    "mkdocs-section-index==0.3.9",
+    "mkdocs-redirects==1.2.2",
+    "pydeps==3.0.0",
+    # YORE: EOL 3.10: Remove line.
+    "tomli==2.2.1; python_version < '3.11'",
+]
 dev = [
   "pre-commit==4.0.1",
   "ipython==8.28.0",
@@ -82,6 +107,7 @@ dev = [
   "libzim[test]",
   "libzim[check]",
   "libzim[build]",
+  "libzim[doc]",
 ]
 
 [tool.setuptools]
