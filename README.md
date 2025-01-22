@@ -76,11 +76,14 @@ print(list(suggestion.getResults(0, suggestion_count)))
 ### Write a ZIM file
 
 ```py
+import base64
+import pathlib
+
 from libzim.writer import Creator, Item, StringProvider, FileProvider, Hint
 
 
 class MyItem(Item):
-    def __init__(self, title, path, content = "", fpath = None):
+    def __init__(self, title, path, content="", fpath=None):
         super().__init__()
         self.path = path
         self.title = title
@@ -108,14 +111,26 @@ class MyItem(Item):
 content = """<html><head><meta charset="UTF-8"><title>Web Page Title</title></head>
 <body><h1>Welcome to this ZIM</h1><p>Kiwix</p></body></html>"""
 
+pathlib.Path("home-fr.html").write_text(
+    """<html><head><meta charset="UTF-8">
+    <title>Bonjour</title></head>
+    <body><h1>this is home-fr</h1></body></html>"""
+)
+
 item = MyItem("Hello Kiwix", "home", content)
 item2 = MyItem("Bonjour Kiwix", "home/fr", None, "home-fr.html")
+
+# illustration = pathlib.Path("icon48x48.png").read_bytes()
+illustration = base64.b64decode(
+    "iVBORw0KGgoAAAANSUhEUgAAADAAAAAwAQMAAABtzGvEAAAAGXRFWHRTb2Z0d2FyZQBB"
+    "ZG9iZSBJbWFnZVJlYWR5ccllPAAAAANQTFRFR3BMgvrS0gAAAAF0Uk5TAEDm2GYAAAAN"
+    "SURBVBjTY2AYBdQEAAFQAAGn4toWAAAAAElFTkSuQmCC"
+)
 
 with Creator("test.zim").config_indexing(True, "eng") as creator:
     creator.set_mainpath("home")
     creator.add_item(item)
     creator.add_item(item2)
-    illustration = pathlib.Path("icon48x48.png").read_bytes()
     creator.add_illustration(48, illustration)
     for name, value in {
         "creator": "python-libzim",
@@ -124,7 +139,7 @@ with Creator("test.zim").config_indexing(True, "eng") as creator:
         "publisher": "You",
         "title": "Test ZIM",
         "language": "eng",
-        "date": "2024-06-30"
+        "date": "2024-06-30",
     }.items():
 
         creator.add_metadata(name.title(), value)
