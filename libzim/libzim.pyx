@@ -593,6 +593,7 @@ class Creator(_Creator):
         return f"Creator(filename={self.filename})"
 
 writer_module_doc = """libzim writer module
+
 - Creator to create ZIM files
 - Item to store ZIM articles metadata
 - ContentProvider to store an Item's content
@@ -835,6 +836,10 @@ cdef class Archive:
 
     @property
     def filename(self) -> pathlib.Path:
+        """ Path (not just file name) of the ZIM Archive
+
+        Returns:
+            (pathlib.Path): Archive\'s ZIM file path"""
         return self._filename
 
     @property
@@ -847,20 +852,17 @@ cdef class Archive:
         return self.c_archive.hasEntryByPath(<string>path.encode('UTF-8'))
 
     def get_entry_by_path(self, path: str) -> Entry:
-        """Entry from a path -> Entry
+        """Entry from a path
 
-            Parameters
-            ----------
-            path : str
-                The path of the article
-            Returns
-            -------
-            Entry
-                The Entry object
-            Raises
-            ------
-                KeyError
-                    If an entry with the provided path is not found in the archive"""
+        Args:
+            path: The path of the article
+
+        Returns:
+            The Entry object
+
+        Raises:
+            KeyError: If an entry with the provided path is not found in the archive"""
+
         cdef zim.Entry entry
         try:
             entry = move(self.c_archive.getEntryByPath(<string>path.encode('UTF-8')))
@@ -1254,6 +1256,7 @@ cdef class SuggestionSearcher:
         return SuggestionSearch.from_search(move(self.c_searcher.suggest(query.encode('UTF-8'))))
 
 suggestion_module_doc = """libzim suggestion module
+
 - SuggestionSearcher to perform a suggestion search over a libzim.reader.Archive
 
 Usage:
@@ -1271,6 +1274,7 @@ suggestion_public_objects = [
 suggestion = create_module(suggestion_module_name, suggestion_module_doc, suggestion_public_objects)
 
 version_module_doc = """libzim version module
+
 - Get version of libzim and its dependencies
 - Print version of libzim and its dependencies
 - Get libzim version
