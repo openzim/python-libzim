@@ -244,7 +244,7 @@ def test_creator_indexing(fpath, lipsum_item, indexing, language, expected):
         query = Query().set_query("standard")
         searcher = Searcher(zim)
         search = searcher.search(query)
-        assert search.getEstimatedMatches() == expected
+        assert search.get_estimated_matches() == expected
 
 
 @pytest.mark.parametrize("nb_workers", [1, 2, 3, 5])
@@ -472,10 +472,10 @@ def test_creator_redirection(fpath, lipsum_item):
     # suggestions
     sugg_searcher = SuggestionSearcher(zim)
     sugg_hello = sugg_searcher.suggest("hello")
-    assert "home" in list(sugg_hello.getResults(0, sugg_hello.getEstimatedMatches()))
+    assert "home" in list(sugg_hello.get_results(0, sugg_hello.get_estimated_matches()))
     sugg_bonjour = sugg_searcher.suggest("bonjour")
     assert "accueil" in list(
-        sugg_bonjour.getResults(0, sugg_hello.getEstimatedMatches())
+        sugg_bonjour.get_results(0, sugg_hello.get_estimated_matches())
     )
 
 
@@ -659,7 +659,7 @@ def test_hints_values(fpath):
         # Hint values are casted to bool
         c.add_item(StaticItem(path="3", title="", hints={Hint.FRONT_ARTICLE: "world"}))
         c.add_redirection(
-            path="4", title="", targetPath="0", hints={Hint.COMPRESS: True}
+            path="4", title="", target_path="0", hints={Hint.COMPRESS: True}
         )
         # filtered-out values
         c.add_item(StaticItem(path="5", title="", hints={5: True}))
@@ -683,13 +683,13 @@ def test_hints_values(fpath):
             c.add_redirection(  # pyright: ignore [reportCallIssue]
                 path="5",
                 title="",
-                targetPath="0",
+                target_path="0",
                 hints={Hint.YOLO: True},  # pyright: ignore [reportAttributeAccessIssue]
             )
 
 
 @pytest.mark.parametrize(
-    "indexData, customContent, search_expected",
+    "index_data, custom_content, search_expected",
     [
         (None, "", [("standard", 1), ("home", 0), ("computer", 0)]),
         (False, "", [("standard", 1), ("home", 0), ("computer", 0)]),
@@ -699,22 +699,22 @@ def test_hints_values(fpath):
     ],
 )
 def test_custom_indexdata(
-    fpath, lipsum_item, lipsum, indexData, customContent, search_expected
+    fpath, lipsum_item, lipsum, index_data, custom_content, search_expected
 ):
     item = StaticItem(path=HOME_PATH + "custom", content=lipsum, mimetype="text/html")
-    if indexData is None:
+    if index_data is None:
         item.get_indexdata = lambda: None
     else:
 
         class CustomIndexData(IndexData):
             def has_indexdata(self):
-                return indexData
+                return index_data
 
             def get_title(self):
                 return ""
 
             def get_content(self):
-                return customContent
+                return custom_content
 
             def get_keywords(self):
                 return ""
@@ -733,7 +733,7 @@ def test_custom_indexdata(
     for search_query, expected in search_expected:
         query = Query().set_query(search_query)
         search = searcher.search(query)
-        assert search.getEstimatedMatches() == expected
+        assert search.get_estimated_matches() == expected
 
 
 def test_indexdata_interface():
@@ -871,11 +871,11 @@ def test_accented_search_from_libzim(fpath):
     ascii_query = Query().set_query("test article")
     ascii_searcher = Searcher(zim)
     ascii_search = ascii_searcher.search(ascii_query)
-    assert ascii_search.getEstimatedMatches() == zim.article_count
-    assert list(ascii_search.getResults(0, zim.article_count)) == ["path0", "path1"]
+    assert ascii_search.get_estimated_matches() == zim.article_count
+    assert list(ascii_search.get_results(0, zim.article_count)) == ["path0", "path1"]
 
     accented_query = Query().set_query("test àrticlé")
     accented_searcher = Searcher(zim)
     accented_search = accented_searcher.search(accented_query)
-    assert accented_search.getEstimatedMatches() == zim.article_count
-    assert list(accented_search.getResults(0, zim.article_count)) == ["path0", "path1"]
+    assert accented_search.get_estimated_matches() == zim.article_count
+    assert list(accented_search.get_results(0, zim.article_count)) == ["path0", "path1"]

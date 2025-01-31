@@ -314,16 +314,16 @@ cdef class _Creator:
         self.c_creator.configIndexing(indexing, language.encode('UTF-8'))
         return self
 
-    def config_nbworkers(self, int nbWorkers: pyint) -> Creator:
+    def config_nbworkers(self, int nb_workers: pyint) -> Creator:
         """Number of thread to use for internal worker"""
         if self._started:
             raise RuntimeError("Creator started")
-        self.c_creator.configNbWorkers(nbWorkers)
+        self.c_creator.configNbWorkers(nb_workers)
         return self
 
-    def set_mainpath(self, str mainPath: str) -> Creator:
+    def set_mainpath(self, str main_path: str) -> Creator:
         """Set path of the main entry"""
-        self.c_creator.setMainPath(mainPath.encode('UTF-8'))
+        self.c_creator.setMainPath(main_path.encode('UTF-8'))
         return self
 
     def add_illustration(self, int size: pyint, content: bytes):
@@ -381,7 +381,7 @@ cdef class _Creator:
         with nogil:
             self.c_creator.addMetadata(_name, _content, _mimetype)
 
-    def add_redirection(self, str path: str, str title: str, str targetPath: str, dict hints: Dict[Hint, pyint]):
+    def add_redirection(self, str path: str, str title: str, str target_path: str, dict hints: Dict[Hint, pyint]):
         """Add redirection entry to Archive
 
             https://wiki.openzim.org/wiki/ZIM_file_format#Redirect_Entry
@@ -396,25 +396,25 @@ cdef class _Creator:
 
         cdef string _path = path.encode('UTF-8')
         cdef string _title = title.encode('UTF-8')
-        cdef string _targetPath = targetPath.encode('UTF-8')
+        cdef string _targetPath = target_path.encode('UTF-8')
         cdef map[zim.HintKeys, uint64_t] _hints = convertToCppHints(hints)
         with nogil:
             self.c_creator.addRedirection(_path, _title, _targetPath, _hints)
 
-    def add_alias(self, str path: str, str title: str, str targetPath: str, dict hints: Dict[Hint, pyint]):
-        """Alias the (existing) entry `targetPath` as a new entry `path`.
+    def add_alias(self, str path: str, str title: str, str target_path: str, dict hints: Dict[Hint, pyint]):
+        """Alias the (existing) entry `target_path` as a new entry `path`.
 
             Raises
             ------
                 RuntimeError
-                    If `targetPath` entry doesn't exist.
+                    If `target_path` entry doesn't exist.
             """
         if not self._started:
             raise RuntimeError("Creator not started")
 
         cdef string _path = path.encode('UTF-8')
         cdef string _title = title.encode('UTF-8')
-        cdef string _targetPath = targetPath.encode('UTF-8')
+        cdef string _targetPath = target_path.encode('UTF-8')
         cdef map[zim.HintKeys, uint64_t] _hints = convertToCppHints(hints)
         with nogil:
             self.c_creator.addAlias(_path, _title, _targetPath, _hints)
@@ -1110,11 +1110,11 @@ cdef class Search:
         search.c_search = move(_search)
         return search
 
-    def getEstimatedMatches(self) -> pyint:
+    def get_estimated_matches(self) -> pyint:
         """Estimated number of results in Archive for the search"""
         return self.c_search.getEstimatedMatches()
 
-    def getResults(self, start: pyint, count: pyint) -> SearchResultSet:
+    def get_results(self, start: pyint, count: pyint) -> SearchResultSet:
         """Iterator over Entry paths found in Archive for the search"""
         return SearchResultSet.from_resultset(move(self.c_search.getResults(start, count)))
 
@@ -1155,7 +1155,7 @@ archive = libzim.reader.Archive(fpath)
 searcher = Searcher(archive)
 query = Query().set_query("foo")
 search = searcher.search(query)
-for path in search.getResults(10, 10) # get result from 10 to 20 (10 results)
+for path in search.get_results(10, 10) # get result from 10 to 20 (10 results)
     print(path, archive.get_entry_by_path(path).title)"""
 search_public_objects = [
     Query,
@@ -1212,11 +1212,11 @@ cdef class SuggestionSearch:
         search.c_search = move(_search)
         return search
 
-    def getEstimatedMatches(self) -> pyint:
+    def get_estimated_matches(self) -> pyint:
         """Estimated number of results in Archive for the suggestion search"""
         return self.c_search.getEstimatedMatches()
 
-    def getResults(self, start: pyint, count: pyint) -> SuggestionResultSet:
+    def get_results(self, start: pyint, count: pyint) -> SuggestionResultSet:
         """Iterator over Entry paths found in Archive for the suggestion search"""
         return SuggestionResultSet.from_resultset(move(self.c_search.getResults(start, count)))
 
@@ -1255,7 +1255,7 @@ Usage:
 archive = Archive(fpath)
 suggestion_searcher = SuggestionSearcher(archive)
 suggestions = suggestion_searcher.suggest("foo")
-for path in suggestion.getResults(10, 10) # get result from 10 to 20 (10 results)
+for path in suggestion.get_results(10, 10) # get result from 10 to 20 (10 results)
     print(path, archive.get_entry_by_path(path).title)"""
 suggestion_public_objects = [
     SuggestionSearcher
@@ -1334,4 +1334,3 @@ class ModuleFinder(importlib.abc.MetaPathFinder):
 sys.meta_path.insert(0, ModuleFinder())
 
 __all__ = ["writer", "reader", "search", "suggestion", "version"]
-
