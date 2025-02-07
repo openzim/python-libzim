@@ -13,6 +13,6 @@ build:
   commands:
     - pip install hatch
     - hatch run build-ext
-    - mkdocs build
+    - hatch run docs:build
     - mkdir --parents $READTHEDOCS_OUTPUT
     - mv site $READTHEDOCS_OUTPUT/html
