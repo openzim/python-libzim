@@ -192,6 +192,10 @@ fixall = "inv fixall --args '{args}'"
 [tool.hatch.envs.docs]
 features = ["scripts", "docs", "lint"]
 
+[tool.hatch.envs.docs.scripts]
+build = "mkdocs build {args}"
+serve = "mkdocs serve {args}"
+
 [tool.hatch.envs.check]
 features = ["scripts", "check"]
 
