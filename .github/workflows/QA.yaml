@@ -7,15 +7,14 @@ env:
 
 jobs:
   lint:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          # to update to 3.13 once it lands in GH image
-          python-version: "3.12"
+          python-version: "3.13"
           architecture: x64
 
       - name: Install dependencies (and project)
