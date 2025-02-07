@@ -3,7 +3,8 @@ requires = [
   "setuptools == 74.1.1",
   "wheel == 0.44.0",
   "cython == 3.0.11",
-  "delocate == 0.11.0 ; platform_system=='Windows'",
+  # https://github.com/pypa/cibuildwheel/blob/v2.22/cibuildwheel/resources/constraints.txt
+  "delocate == 0.12.0 ; platform_system=='Windows'",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -71,7 +72,7 @@ build = [
   "setuptools == 75.8.0",
   "wheel == 0.45.1",
   "cython == 3.0.11",
-  "delocate == 0.11.0 ; platform_system=='Windows'",
+  "delocate == 0.12.0 ; platform_system=='Windows'",
 ]
 docs = [
   "mkdocs==1.6.1",
