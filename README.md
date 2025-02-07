@@ -12,6 +12,7 @@ It is primarily used in [openZIM](https://github.com/openzim/) scrapers like [`s
 [![PyPI version shields.io](https://img.shields.io/pypi/v/libzim.svg)](https://pypi.org/project/libzim/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/libzim.svg)](https://pypi.org/project/libzim)
 [![codecov](https://codecov.io/gh/openzim/python-libzim/branch/main/graph/badge.svg)](https://codecov.io/gh/openzim/python-libzim)
+[![Read the Docs](https://img.shields.io/readthedocs/python-libzim)](https://python-libzim.readthedocs.io/)
 
 ## Installation
 
