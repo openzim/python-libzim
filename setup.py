@@ -30,7 +30,8 @@ from Cython.Distutils.build_ext import new_build_ext as build_ext
 from setuptools import Command, Extension, setup
 
 
-class Config:
+
+class LibzimConfig:
     libzim_dl_version: str = os.getenv("LIBZIM_DL_VERSION", "9.2.3-2")
     use_system_libzim: bool = bool(os.getenv("USE_SYSTEM_LIBZIM") or False)
     download_libzim: bool = not bool(os.getenv("DONT_DOWNLOAD_LIBZIM") or False)
@@ -349,6 +350,10 @@ class Config:
         """opens windows wheels in target folder and moves all DLLs files inside
         subdirectories of the wheel to the root one (where wrapper is expected)"""
 
+        # Only import and use delocate on Windows
+        if sys.platform != 'win32':
+            return
+
         from delocate.wheeltools import InWheel
 
         # we're only interested in windows wheels
@@ -384,7 +389,7 @@ class Config:
         )
 
 
-config = Config()
+config: LibzimConfig = LibzimConfig()
 
 
 def get_cython_extension() -> list[Extension]:
@@ -453,7 +458,7 @@ def get_cython_extension() -> list[Extension]:
     return cythonize([wrapper_extension], compiler_directives=compiler_directives)
 
 
-class LibzimBuildExt(build_ext):
+class libzim_build_ext(build_ext):
     def finalize_options(self):
         """Workaround for rpath bug in distutils for macOS"""
         super().finalize_options()
@@ -567,49 +572,64 @@ class LibzimBuildExt(build_ext):
         )
 
 
-class DownloadLibzim(Command):
+class download_libzim(Command):
     """dedicated command to solely download libzim binary"""
 
     user_options = []  # noqa: RUF012
 
-    def initialize_options(self): ...
+    def initialize_options(self):
+        """Initialize default values for options"""
+        pass
 
-    def finalize_options(self): ...
+    def finalize_options(self):
+        """Finalize options"""
+        pass
 
     def run(self):
+        """Download libzim binary"""
         config.download_to_dest()
 
 
-class LibzimClean(Command):
+class libzim_clean(Command):
+    """Custom clean command to remove generated files"""
+
     user_options = []  # noqa: RUF012
 
-    def initialize_options(self): ...
+    def initialize_options(self):
+        """Initialize default values for options"""
+        pass
 
-    def finalize_options(self): ...
+    def finalize_options(self):
+        """Finalize options"""
+        pass
 
     def run(self):
+        """Cleanup generated files"""
         config.cleanup()
 
 
-class RepairWindowsWheel(Command):
+class repair_windows_wheel(Command):
+    """Repair Windows wheel by moving DLLs"""
+
     user_options = [  # noqa: RUF012
         ("wheel=", None, "Wheel to repair"),
         ("destdir=", None, "Destination folder for repaired wheels"),
     ]
 
     def initialize_options(self):
-        self.wheel: str = ""
-        self.destdir: str = ""
+        """Initialize default values for options"""
+        self.wheel = os.path.join(os.getcwd(), 'default_wheel.whl')
+        self.destdir = os.getcwd()
 
     def finalize_options(self):
-        assert (  # noqa: S101
-            self.wheel and Path(self.wheel).exists()
-        ), "wheel file does not exists"
-        assert self.destdir and (  # noqa: S101
-            Path(self.destdir).exists() and Path(self.destdir).is_dir()
-        ), "dest_dir does not exists"
+        """Validate and finalize options"""
+        if not self.wheel or not Path(self.wheel).exists():
+            raise ValueError("Wheel file does not exist")
+        if not self.destdir or not Path(self.destdir).is_dir():
+            raise ValueError("Destination directory does not exist")
 
     def run(self):
+        """Repair Windows wheel"""
         config.repair_windows_wheel(wheel=Path(self.wheel), dest_dir=Path(self.destdir))
 
 
@@ -622,10 +642,10 @@ else:
 
 setup(
     cmdclass={
-        "build_ext": LibzimBuildExt,
-        "download_libzim": DownloadLibzim,
-        "clean": LibzimClean,
-        "repair_win_wheel": RepairWindowsWheel,
+        "build_ext": libzim_build_ext,
+        "download_libzim": download_libzim,
+        "clean": libzim_clean,
+        "repair_win_wheel": repair_windows_wheel,
     },
     ext_modules=ext_modules,
 )
