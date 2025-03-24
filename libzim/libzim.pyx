@@ -1101,6 +1101,21 @@ cdef class Archive:
             raise KeyError(str(e))
         return Entry.from_entry(move(entry))
 
+    def get_random_entry(self) -> Entry:
+        """Get a random `Entry`.
+
+        Returns:
+            A random entry.
+
+        Raises:
+            KeyError: If no valid random entry is found.
+        """
+        try:
+            entry = move(self.c_archive.getRandomEntry())
+        except RuntimeError as e:
+            raise KeyError(str(e))
+        return Entry.from_entry(move(entry))
+
     @property
     def metadata_keys(self) -> List[str]:
         """List of Metadata keys present in this archive.
