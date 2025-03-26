@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
 - Set up documentation using `mkdocs`, published on readthedocs.com (#186)
+- `Archive.get_random_entry()`
 
 ## [3.6.0] - 2024-10-15
 
