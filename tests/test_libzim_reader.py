@@ -9,7 +9,7 @@ from urllib.request import urlretrieve
 import pytest
 
 import libzim.writer  # pyright: ignore [reportMissingModuleSource]
-from libzim.reader import Archive  # pyright: ignore [reportMissingModuleSource]
+from libzim.reader import Archive, Entry  # pyright: ignore [reportMissingModuleSource]
 from libzim.search import Query, Searcher  # pyright: ignore [reportMissingModuleSource]
 from libzim.suggestion import (  # pyright: ignore [reportMissingModuleSource]
     SuggestionSearcher,
@@ -599,3 +599,19 @@ def test_archive_equality(all_zims):
     assert zim != Different(fpath1)
     assert zim == Sub(fpath1)
     assert zim != Sub2(fpath1)
+
+
+def test_reader_get_random_entry(all_zims):
+    zim_1 = Archive(all_zims / "zimfile.zim")
+
+    entry_1 = zim_1.get_random_entry()
+    entry_2 = zim_1.get_random_entry()
+    assert isinstance(entry_1, Entry)
+    assert isinstance(entry_2, Entry)
+    # this may occasionaly fail (1 chance over 129)
+    assert entry_1 != entry_2
+
+    # example.zim has no FRONT_ARTICLE (article_count=0): random cannot yield any result
+    zim_2 = Archive(all_zims / "example.zim")
+    with pytest.raises(KeyError):
+        zim_2.get_random_entry()

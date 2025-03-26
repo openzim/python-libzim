@@ -144,6 +144,7 @@ class Archive : public Wrapper<zim::Archive>
     FORWARD(wrapper::Entry, getEntryByPath)
     FORWARD(wrapper::Entry, getEntryByTitle)
     FORWARD(wrapper::Entry, getMainEntry)
+    FORWARD(wrapper::Entry, getRandomEntry)
     FORWARD(wrapper::Item, getIllustrationItem)
     FORWARD(std::set<unsigned int>, getIllustrationSizes)
     std::string getUuid() const
