@@ -601,12 +601,17 @@ def test_archive_equality(all_zims):
     assert zim != Sub2(fpath1)
 
 
-@skip_if_offline
 def test_reader_get_random_entry(all_zims):
-    fpath1 = Archive(all_zims / "zimfile.zim")
-    fpath2 = Archive(all_zims / "example.zim")
+    zim_1 = Archive(all_zims / "zimfile.zim")
 
-    assert isinstance(fpath1.get_random_entry(), Entry)
+    entry_1 = zim_1.get_random_entry()
+    entry_2 = zim_1.get_random_entry()
+    assert isinstance(entry_1, Entry)
+    assert isinstance(entry_2, Entry)
+    # this may occasionaly fail (1 chance over 129)
+    assert entry_1 != entry_2
 
+    # example.zim has no FRONT_ARTICLE (article_count=0): random cannot yield any result
+    zim_2 = Archive(all_zims / "example.zim")
     with pytest.raises(KeyError):
-        fpath2.get_random_entry()
+        zim_2.get_random_entry()
