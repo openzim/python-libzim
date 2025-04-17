@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Set up documentation using `mkdocs`, published on readthedocs.com (#186)
 - `Archive.get_random_entry()`
+- libzim 9.3.0 Cache Control API:
+  - `Archive.cluster_cache_max_size`
+  - `Archive.cluster_cache_current_size`
+  - `Archive.dirent_cache_max_size`
+  - `Archive.dirent_cache_current_size`
+  - `Archive.dirent_lookup_cache_max_size`
 
 ### Changed
 

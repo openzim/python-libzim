@@ -178,6 +178,15 @@ cdef extern from "libwrapper.h" namespace "wrapper":
         bool hasChecksum() except +
         bool check() except +
 
+        uint64_t getClusterCacheMaxSize() except +
+        uint64_t getClusterCacheCurrentSize() except +
+        void setClusterCacheMaxSize(uint64_t nbClusters) except +
+        uint64_t getDirentCacheMaxSize() except +
+        uint64_t getDirentCacheCurrentSize() except +
+        void setDirentCacheMaxSize(uint64_t nbDirents) except +
+        uint64_t getDirentLookupCacheMaxSize() except +
+        void setDirentLookupCacheMaxSize(uint64_t nbRanges) except +
+
     cdef cppclass Searcher:
         Searcher()
         Searcher(const Archive& archive) except +
