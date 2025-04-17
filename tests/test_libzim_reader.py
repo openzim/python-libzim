@@ -19,7 +19,7 @@ from libzim.suggestion import (  # pyright: ignore [reportMissingModuleSource]
 ZIMS_DATA = {
     "blank.zim": {
         "filename": "blank.zim",
-        "filesize": 2197,
+        "filesize": 2189,
         "new_ns": True,
         "mutlipart": False,
         "zim_uuid": None,
