@@ -31,7 +31,7 @@ from setuptools import Command, Extension, setup
 
 
 class Config:
-    libzim_dl_version: str = os.getenv("LIBZIM_DL_VERSION", "9.2.3-2")
+    libzim_dl_version: str = os.getenv("LIBZIM_DL_VERSION", "9.3.0")
     use_system_libzim: bool = bool(os.getenv("USE_SYSTEM_LIBZIM") or False)
     download_libzim: bool = not bool(os.getenv("DONT_DOWNLOAD_LIBZIM") or False)
 
@@ -258,7 +258,7 @@ class Config:
         if not fpath.exists():
             print(f"> from {url}")
             with (
-                urllib.request.urlopen(url) as response,  # noqa: S310
+                urllib.request.urlopen(url) as response,  # noqa: S310 # nosec B310
                 open(fpath, "wb") as fh,  # nosec
             ):  # nosec
                 fh.write(response.read())
