@@ -866,7 +866,7 @@ def test_accented_search_from_libzim(fpath):
 
     assert zim.entry_count == 2
     assert zim.article_count == 2
-    assert zim.all_entry_count == 7
+    assert zim.all_entry_count == 6
 
     ascii_query = Query().set_query("test article")
     ascii_searcher = Searcher(zim)
