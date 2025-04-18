@@ -172,6 +172,14 @@ class Archive : public Wrapper<zim::Archive>
     FORWARD(bool, hasTitleIndex)
     FORWARD(bool, hasChecksum)
     FORWARD(bool, check)
+    FORWARD(zim::size_type, getClusterCacheMaxSize)
+    FORWARD(zim::size_type, getClusterCacheCurrentSize)
+    FORWARD(void, setClusterCacheMaxSize)
+    FORWARD(zim::size_type, getDirentCacheMaxSize)
+    FORWARD(zim::size_type, getDirentCacheCurrentSize)
+    FORWARD(void, setDirentCacheMaxSize)
+    FORWARD(zim::size_type, getDirentLookupCacheMaxSize)
+    FORWARD(void, setDirentLookupCacheMaxSize)
 };
 
 class SearchResultSet : public Wrapper<zim::SearchResultSet>
