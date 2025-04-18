@@ -2,7 +2,7 @@ name: QA
 on: [push]
 
 env:
-  LIBZIM_DL_VERSION: "9.3.0"
+  LIBZIM_DL_VERSION: "9.3.0-1"
   MACOSX_DEPLOYMENT_TARGET: "13.0"
 
 jobs:
