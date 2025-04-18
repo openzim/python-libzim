@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Using C++ libzim 9.3.0
+- Using C++ libzim 9.3.0-1
 
 ## [3.6.0] - 2024-10-15
 

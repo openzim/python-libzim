@@ -31,7 +31,7 @@ from setuptools import Command, Extension, setup
 
 
 class Config:
-    libzim_dl_version: str = os.getenv("LIBZIM_DL_VERSION", "9.3.0")
+    libzim_dl_version: str = os.getenv("LIBZIM_DL_VERSION", "9.3.0-1")
     use_system_libzim: bool = bool(os.getenv("USE_SYSTEM_LIBZIM") or False)
     download_libzim: bool = not bool(os.getenv("DONT_DOWNLOAD_LIBZIM") or False)
 
