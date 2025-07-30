@@ -211,6 +211,10 @@ class Searcher : public Wrapper<zim::Searcher>
     Searcher(const wrapper::Archive& a) : Wrapper(zim::Searcher(*a)) {};
     Searcher(const zim::Searcher& o) : Wrapper(o) {};
 
+    Searcher& addArchive(const wrapper::Archive& a) {
+      mp_base->addArchive(*a);
+      return *this;
+    }
     FORWARD(void, setVerbose)
     FORWARD(wrapper::Search, search)
 };

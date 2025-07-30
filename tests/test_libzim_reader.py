@@ -274,7 +274,11 @@ def all_zims(tmpdir_factory):
 
     # download libzim tests
     for url in libzim_urls:
-        urlretrieve(url, temp_dir / os.path.basename(url))  # noqa: S310  # nosec
+        path = temp_dir / os.path.basename(url)
+        if not path.exists():
+            print(f"Downloading {url} to {path}")
+            # nosec: we trust the source of the URL
+            urlretrieve(url, temp_dir / os.path.basename(url))  # noqa: S310  # nosec
 
     # create blank using pylibzim
     creator = libzim.writer.Creator(temp_dir / "blank.zim")
@@ -487,6 +491,49 @@ def test_reader_suggest_search(
         assert suggestion.getEstimatedMatches() == suggestion_count
         assert list(suggestion.getResults(0, suggestion_count)) == suggestion_result
 
+@skip_if_offline
+def test_reader_search_multiple_zims(all_zims):
+    """Test search across multiple ZIMs"""
+    search_count_zimfile = 1
+    search_count_example = 2
+
+    zim1 = Archive(all_zims / "zimfile.zim")
+    zim2 = Archive(all_zims / "example.zim")
+
+    # Search each ZIM separately for "main" and get the counts
+    # Because both ZIMs have a "main" entry
+    searcher1 = Searcher(zim1)
+    searcher2 = Searcher(zim2)
+    query = Query().set_query("main")
+    search1 = searcher1.search(query)
+    search2 = searcher2.search(query)
+    main_count_zimfile = search1.getEstimatedMatches()
+    main_count_example = search2.getEstimatedMatches()
+    assert main_count_example == search_count_example  # should be the same from other tests
+    main_count_both = main_count_zimfile + main_count_example
+
+    searcher = Searcher(zim1)
+    searcher.addArchive(zim2)
+
+    query = Query().set_query("lucky")
+    search = searcher.search(query)
+
+    assert search.getEstimatedMatches() == search_count_zimfile
+    assert list(search.getResults(0, search_count_zimfile)) == [
+        "A/That_Lucky_Old_Sun",
+    ]
+
+    query = Query().set_query("main")
+    search = searcher.search(query)
+    assert search.getEstimatedMatches() == main_count_both
+    results = list(search.getResults(0, main_count_both))
+    expected = [
+        "A/In_the_Heat_of_the_Night_(Ray_Charles_song)",
+        "Wikibooks.html",
+        "FreedomBox for Communities_Offline Wikipedia - Wikibooks, open books for an open world.html",
+    ]
+    for item in expected:
+        assert item in results, f"Expected '{item}' in search results, got {results}"
 
 @skip_if_offline
 @pytest.mark.parametrize(
@@ -600,7 +647,7 @@ def test_archive_equality(all_zims):
     assert zim == Sub(fpath1)
     assert zim != Sub2(fpath1)
 
-
+@skip_if_offline
 def test_reader_get_random_entry(all_zims):
     zim_1 = Archive(all_zims / "zimfile.zim")
 

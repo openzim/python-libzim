@@ -190,6 +190,7 @@ cdef extern from "libwrapper.h" namespace "wrapper":
     cdef cppclass Searcher:
         Searcher()
         Searcher(const Archive& archive) except +
+        Searcher& addArchive(const Archive& archive) except +
         setVerbose(bool verbose)
         Search search(Query query) except +
 

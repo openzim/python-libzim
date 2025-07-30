@@ -1553,6 +1553,18 @@ cdef class Searcher:
 
         self.c_searcher = move(zim.Searcher(archive.c_archive))
 
+    def addArchive(self, object archive: Archive) -> Searcher:
+        """Add an Archive to the Searcher.
+
+        Args:
+            archive (Archive): The Archive to add to the Searcher.
+
+        Returns:
+            The Searcher instance with the added Archive.
+        """
+        self.c_searcher.addArchive(archive.c_archive)
+        return self
+
     def search(self, object query: Query) -> Search:
         """Create a Search object for a query of this Searcher's ZIM Archive.
 
