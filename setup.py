@@ -338,7 +338,7 @@ class Config:
         # we downloaded libzim, so we must remove it
         if self.download_libzim:
             print("removing downloaded libraries")
-            for fpath in self.dylib_file.parent.glob("*.[dylib|so|dll|lib|pc]*"):
+            for fpath in self.dylib_file.parent.glob("*.[dylib|so|dll|pc]*"):
                 print(">", fpath)
                 fpath.unlink(missing_ok=True)
             if self.header_file.parent.exists():
