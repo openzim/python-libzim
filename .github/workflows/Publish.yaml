@@ -120,7 +120,7 @@ jobs:
           name: wheels-windows-2022
           path: dist
 
-      - uses: pypa/gh-action-pypi-publish@v1.9.0
+      - uses: pypa/gh-action-pypi-publish@v1.13.0
         with:
           user: __token__
           # password: ${{ secrets.PYPI_TEST_API_TOKEN }}
