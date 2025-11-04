@@ -254,6 +254,50 @@ class Hint(enum.Enum):
     FRONT_ARTICLE = zim.HintKeys.FRONT_ARTICLE
 
 
+class ContentProvider:
+    """ABC in charge of providing the content to add in the archive to the Creator."""
+    __module__ = writer_module_name
+    def __init__(self):
+        self.generator = None
+
+    def get_size(self) -> pyint:
+        """Size of `get_data`'s result in bytes.
+
+        Returns:
+            int: The size of the data in bytes.
+        """
+        raise NotImplementedError("get_size must be implemented.")
+
+    def feed(self) -> WritingBlob:
+        """Blob(s) containing the complete content of the article.
+
+        Must return an empty blob to tell writer no more content has to be written.
+        Sum(size(blobs)) must be equals to `self.get_size()`
+
+        Returns:
+            WritingBlob: The content blob(s) of the article.
+        """
+        if self.generator is None:
+            self.generator = self.gen_blob()
+
+        try:
+            # We have to keep a ref to _blob to be sure gc do not del it while cpp is
+            # using it
+            self._blob = next(self.generator)
+        except StopIteration:
+            self._blob = WritingBlob("")
+
+        return self._blob
+
+    def gen_blob(self) -> Generator[WritingBlob, None, None]:
+        """Generator yielding blobs for the content of the article.
+
+        Yields:
+            WritingBlob: A blob containing part of the article content.
+        """
+        raise NotImplementedError("gen_blob (ro feed) must be implemented")
+
+
 class BaseWritingItem:
     """
     Data to be added to the archive.
@@ -563,49 +607,6 @@ cdef class _Creator:
             (pathlib.Path): Path of the ZIM Archive on the filesystem.
         """
         return self._filename
-
-class ContentProvider:
-    """ABC in charge of providing the content to add in the archive to the Creator."""
-    __module__ = writer_module_name
-    def __init__(self):
-        self.generator = None
-
-    def get_size(self) -> pyint:
-        """Size of `get_data`'s result in bytes.
-
-        Returns:
-            int: The size of the data in bytes.
-        """
-        raise NotImplementedError("get_size must be implemented.")
-
-    def feed(self) -> WritingBlob:
-        """Blob(s) containing the complete content of the article.
-
-        Must return an empty blob to tell writer no more content has to be written.
-        Sum(size(blobs)) must be equals to `self.get_size()`
-
-        Returns:
-            WritingBlob: The content blob(s) of the article.
-        """
-        if self.generator is None:
-            self.generator = self.gen_blob()
-
-        try:
-            # We have to keep a ref to _blob to be sure gc do not del it while cpp is
-            # using it
-            self._blob = next(self.generator)
-        except StopIteration:
-            self._blob = WritingBlob("")
-
-        return self._blob
-
-    def gen_blob(self) -> Generator[WritingBlob, None, None]:
-        """Generator yielding blobs for the content of the article.
-
-        Yields:
-            WritingBlob: A blob containing part of the article content.
-        """
-        raise NotImplementedError("gen_blob (ro feed) must be implemented")
 
 
 class StringProvider(ContentProvider):
