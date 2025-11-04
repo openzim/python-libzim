@@ -344,7 +344,7 @@ cdef class _Creator:
     def __init__(self, filename: pathlib.Path):
         pass
 
-    def config_verbose(self, bool verbose: bool) -> Creator:
+    def config_verbose(self, bool verbose: bool) -> _Creator:
         """Set creator verbosity inside libzim (default: off).
 
         Args:
@@ -358,7 +358,7 @@ cdef class _Creator:
         self.c_creator.configVerbose(verbose)
         return self
 
-    def config_compression(self, compression: Compression) -> Creator:
+    def config_compression(self, compression: Compression) -> _Creator:
         """Set compression algorithm to use.
 
         Check libzim for default setting. (Fall 2021 default: zstd).
@@ -374,7 +374,7 @@ cdef class _Creator:
         self.c_creator.configCompression(zim.comp_from_int(compression.value))
         return self
 
-    def config_clustersize(self, int size: pyint) -> Creator:
+    def config_clustersize(self, int size: pyint) -> _Creator:
         """Set size of created clusters.
 
         Check libzim for default setting. (Fall 2021 default: 2Mib).
@@ -393,7 +393,7 @@ cdef class _Creator:
         self.c_creator.configClusterSize(size)
         return self
 
-    def config_indexing(self, bool indexing: bool, str language: str) -> Creator:
+    def config_indexing(self, bool indexing: bool, str language: str) -> _Creator:
         """Configures the full-text indexing feature.
 
         Args:
@@ -408,7 +408,7 @@ cdef class _Creator:
         self.c_creator.configIndexing(indexing, language.encode('UTF-8'))
         return self
 
-    def config_nbworkers(self, int nbWorkers: pyint) -> Creator:
+    def config_nbworkers(self, int nbWorkers: pyint) -> _Creator:
         """Configures the number of threads to use for internal workers (default: 4).
 
         Args:
@@ -422,7 +422,7 @@ cdef class _Creator:
         self.c_creator.configNbWorkers(nbWorkers)
         return self
 
-    def set_mainpath(self, str mainPath: str) -> Creator:
+    def set_mainpath(self, str mainPath: str) -> _Creator:
         """Set path of the main entry.
 
         Args:
@@ -449,7 +449,7 @@ cdef class _Creator:
         cdef string _content = content
         self.c_creator.addIllustration(size, _content)
 
-#    def set_uuid(self, uuid) -> Creator:
+#    def set_uuid(self, uuid) -> _Creator:
 #        self.c_creator.setUuid(uuid)
 
     def add_item(self, writer_item not None: BaseWritingItem):
