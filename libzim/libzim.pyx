@@ -39,6 +39,7 @@ import os
 import pathlib
 import sys
 import traceback
+import warnings
 from collections import OrderedDict
 from types import ModuleType
 from typing import Dict, Generator, Iterator, List, Optional, Set, TextIO, Tuple, Union
@@ -1304,9 +1305,18 @@ cdef class Archive:
     def get_illustration_sizes(self) -> Set[pyint]:
         """Sizes for which an illustration is available (@1 scale only).
 
+        .. deprecated:: 3.8.0
+            Use :meth:`get_illustration_infos` instead for full illustration metadata
+            including width, height, and scale information.
+
         Returns:
             The set of available sizes of the illustration.
         """
+        warnings.warn(
+            "get_illustration_sizes() is deprecated, use get_illustration_infos() instead",
+            DeprecationWarning,
+            stacklevel=2
+        )
         return self.c_archive.getIllustrationSizes()
 
     def has_illustration(self, size: pyint = None) -> pybool:
