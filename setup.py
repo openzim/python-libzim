@@ -392,7 +392,13 @@ def get_cython_extension() -> list[Extension]:
     compiler_directives = {"language_level": "3"}
 
     if config.profiling:
-        define_macros += [("CYTHON_TRACE", "1"), ("CYTHON_TRACE_NOGIL", "1")]
+        define_macros += [
+            ("CYTHON_TRACE", "1"),
+            ("CYTHON_TRACE_NOGIL", "1"),
+            # Disable sys.monitoring for Python 3.13+ to enable coverage.py support
+            # coverage.py doesn't support sys.monitoring yet (Cython 3.1+ issue)
+            ("CYTHON_USE_SYS_MONITORING", "0"),
+        ]
         compiler_directives.update(linetrace="true")
 
     include_dirs: list[str] = []
