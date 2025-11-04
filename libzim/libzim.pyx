@@ -1343,37 +1343,6 @@ cdef class Archive:
             raise KeyError(str(e))
 
     @property
-    def cluster_cache_max_size(self) -> pyint:
-        """Maximum size of the cluster cache.
-
-        Returns:
-            (int): maximum number of clusters stored in the cache.
-        """
-        return self.c_archive.getClusterCacheMaxSize()
-
-    @cluster_cache_max_size.setter
-    def cluster_cache_max_size(self, nb_clusters: pyint):
-        """Set the size of the cluster cache.
-
-        If the new size is lower than the number of currently stored clusters
-        some clusters will be dropped from cache to respect the new size.
-
-        Args:
-            nb_clusters (int): maximum number of clusters stored in the cache
-        """
-
-        self.c_archive.setClusterCacheMaxSize(nb_clusters)
-
-    @property
-    def cluster_cache_current_size(self) -> pyint:
-        """Size of the cluster cache.
-
-        Returns:
-            (int): number of clusters currently stored in the cache.
-        """
-        return self.c_archive.getClusterCacheCurrentSize()
-
-    @property
     def dirent_cache_max_size(self) -> pyint:
         """Maximum size of the dirent cache.
 
@@ -1403,36 +1372,38 @@ cdef class Archive:
         """
         return self.c_archive.getDirentCacheCurrentSize()
 
-    @property
-    def dirent_lookup_cache_max_size(self) -> pyint:
-        """Size of the dirent lookup cache.
-
-        The returned size returns the default size or the last set size.
-        This may not correspond to the actual size of the dirent lookup cache.
-        See set_dirent_lookup_cache_max_size for more information.
-
-        Returns:
-            (int): maximum number of sub ranges created in the lookup cache.
-        """
-        return self.c_archive.getDirentLookupCacheMaxSize()
-
-    @dirent_lookup_cache_max_size.setter
-    def dirent_lookup_cache_max_size(self, nb_ranges: pyint):
-        """Set the size of the dirent lookup cache.
-
-        Contrary to other set_<foo>_cache_max_size, this method is useless
-        once the lookup cache is created.
-        The lookup cache is created at first access to a entry in the archive.
-        So this method must be called before any access to content (including metadata).
-        It is best to call this method first, just after the archive creation.
-
-        Args:
-            nb_ranges (int): maximum number of sub ranges created in the lookup cache. 
-        """
-        self.c_archive.setDirentLookupCacheMaxSize(nb_ranges)
-
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(filename={self.filename})"
+
+
+def get_cluster_cache_max_size() -> pyint:
+    """Get the maximum size of the cluster cache.
+
+    Returns:
+        (int): the maximum memory size used by the cluster cache (in bytes). 
+    """
+    return zim.getClusterCacheMaxSize()
+
+def set_cluster_cache_max_size(size_in_bytes: pyint):
+    """Set the size of the cluster cache.
+
+    If the new size is lower than the number of currently stored clusters
+    some clusters will be dropped from cache to respect the new size.
+
+    Args:
+        size_in_bytes (int): the memory limit (in bytes) for the cluster cache.
+    """
+
+    zim.setClusterCacheMaxSize(size_in_bytes)
+
+def get_cluster_cache_current_size() -> pyint:
+    """Get the current size of the cluster cache.
+
+    Returns:
+        (int): the current memory size (in bytes) used by the cluster cache. 
+    """
+    return zim.getClusterCacheCurrentSize()
+
 
 reader_module_doc = """libzim reader module
 
@@ -1452,6 +1423,9 @@ reader_public_objects = [
     Archive,
     Entry,
     Item,
+    get_cluster_cache_max_size,
+    set_cluster_cache_max_size,
+    get_cluster_cache_current_size,
 ]
 reader = create_module(reader_module_name, reader_module_doc, reader_public_objects)
 
