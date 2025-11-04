@@ -1,17 +1,17 @@
 [build-system]
 requires = [
-  "setuptools == 74.1.1",
-  "wheel == 0.44.0",
-  "cython == 3.0.11",
+  "setuptools == 80.9.0",
+  "wheel == 0.45.1",
+  "cython == 3.1.6",
   # https://github.com/pypa/cibuildwheel/blob/v2.22/cibuildwheel/resources/constraints.txt
-  "delocate == 0.12.0 ; platform_system=='Windows'",
+  "delocate == 0.13.0 ; platform_system=='Windows'",
 ]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "libzim"
 version = "3.7.1-dev0"
-requires-python = ">=3.9,<3.14"
+requires-python = ">=3.10,<3.15"
 description = "A python-facing API for creating and interacting with ZIM files"
 authors = [
     {name = "openZIM", email = "dev@kiwix.org"},
@@ -30,11 +30,11 @@ classifiers = [
     "Intended Audience :: Developers",
     "Programming Language :: Cython",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Typing :: Stubs Only",
     "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     "Operating System :: MacOS",
@@ -50,43 +50,43 @@ scripts = [
   "invoke==2.2.0",
 ]
 lint = [
-  "black==25.1.0",
-  "ruff==0.9.5",
+  "black==25.9.0",
+  "ruff==0.14.3",
   "libzim",
   "libzim[build]",
 ]
 check = [
-  "pyright==1.1.393",
+  "pyright==1.1.407",
   "libzim",
   "libzim[build]",
   "libzim[test]",
   "types-setuptools",
 ]
 test = [
-  "pytest==8.3.4",
-  "coverage==7.6.10",
+  "pytest==8.4.2",
+  "coverage==7.11.0",
   # for cython coverage plugin
   "libzim[build]",
 ]
 build = [
-  "setuptools == 75.8.0",
+  "setuptools == 80.9.0",
   "wheel == 0.45.1",
-  "cython == 3.0.11",
-  "delocate == 0.12.0 ; platform_system=='Windows'",
+  "cython == 3.1.6",
+  "delocate == 0.13.0 ; platform_system=='Windows'",
 ]
 docs = [
   "mkdocs==1.6.1",
-  "mkdocstrings-python==1.14.5",
-  "mkdocs-material==9.5.49",
-  "pymdown-extensions==10.14",
+  "mkdocstrings-python==1.18.2",
+  "mkdocs-material==9.6.23",
+  "pymdown-extensions==10.16.1",
   "mkdocs-gen-files==0.5.0",
-  "mkdocs-literate-nav==0.6.1",
-  "mkdocs-include-markdown-plugin==7.1.2",
-  "griffe==1.5.6",
+  "mkdocs-literate-nav==0.6.2",
+  "mkdocs-include-markdown-plugin==7.2.0",
+  "griffe==1.14.0",
 ]
 dev = [
-  "pre-commit==4.1.0",
-  "ipython==8.32.0",
+  "pre-commit==4.3.0",
+  "ipython==9.6.0",
   "types-setuptools",
   "libzim[scripts]",
   "libzim[lint]",
@@ -139,10 +139,8 @@ archs = ["x86_64", "aarch64"]
 archs = ["x86_64", "arm64"]
 # macOS arm64 is cross-compiled and can not be tested.
 # cibuildwheel skips it already. *_arm64 this removes the warning
-# skipping tests on cp <=3.9 as the wheels we produce are on unexpected combinations
-# because those python versions were released before our building host version
 # > requires changing wheel names
-test-skip = "*_arm64 cp39*"
+test-skip = "*_arm64"
 
 [tool.hatch.build]
 exclude = [
@@ -168,7 +166,7 @@ features = ["scripts", "test"]
 PROFILE = "1"
 
 [[tool.hatch.envs.test.matrix]]
-python = ["3.9", "3.10", "3.11", "3.12", "3.13"]
+python = ["3.10", "3.11", "3.12", "3.13", "3.14"]
 
 [tool.hatch.envs.test.scripts]
 run = "inv test --args '{args}'"
@@ -206,10 +204,10 @@ all = "inv checkall --args '{args}'"
 
 [tool.black]
 line-length = 88
-target-version = ['py312']
+target-version = ['py314']
 
 [tool.ruff]
-target-version = "py312"
+target-version = "py314"
 line-length = 88
 src = ["src"]
 
@@ -336,6 +334,6 @@ exclude_lines = [
 [tool.pyright]
 include = ["libzim", "tests", "tasks.py"]
 exclude = [".env/**", ".venv/**"]
-pythonVersion = "3.13"
+pythonVersion = "3.14"
 typeCheckingMode="basic"
 disableBytesTypePromotions = true
