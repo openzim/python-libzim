@@ -142,10 +142,10 @@ archs = ["x86_64", "aarch64"]
 
 [tool.cibuildwheel.macos]
 archs = ["x86_64", "arm64"]
-# macOS arm64 is cross-compiled and can not be tested.
-# cibuildwheel skips it already. *_arm64 this removes the warning
+# macOS x86_64 is cross-compiled and can not be tested.
+# cibuildwheel skips it already. *_x86_64 this removes the warning
 # > requires changing wheel names
-test-skip = "*_arm64"
+test-skip = "*_x86_64"
 
 [tool.hatch.build]
 exclude = [

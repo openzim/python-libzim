@@ -22,7 +22,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-24.04, macos-13, windows-2022]
+        os: [ubuntu-24.04, macos-14, windows-2022]
 
     steps:
       - uses: actions/checkout@v5
@@ -34,7 +34,7 @@ jobs:
           platforms: all
 
       - name: Prepare Apple Keychain for Signing
-        if: matrix.os == 'macos-13'
+        if: matrix.os == 'macos-14'
         shell: bash
         run: |
           # store certificate on filesystem
@@ -71,7 +71,7 @@ jobs:
         uses: pypa/cibuildwheel@v3.2
 
       - name: Cleanup Apple Keychain
-        if: matrix.os == 'macos-13'
+        if: matrix.os == 'macos-14'
         shell: bash
         run: |
           security lock-keychain ${APPLE_SIGNING_KEYCHAIN_PATH}
@@ -113,7 +113,7 @@ jobs:
           path: dist
       - uses: actions/download-artifact@v6
         with:
-          name: wheels-macos-13
+          name: wheels-macos-14
           path: dist
       - uses: actions/download-artifact@v6
         with:
