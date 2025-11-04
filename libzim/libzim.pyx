@@ -254,6 +254,67 @@ class Hint(enum.Enum):
     FRONT_ARTICLE = zim.HintKeys.FRONT_ARTICLE
 
 
+class BaseWritingItem:
+    """
+    Data to be added to the archive.
+
+    This is a stub to override. Pass a subclass of it to `Creator.add_item()`
+    """
+    __module__ = writer_module_name
+
+    def __init__(self):
+        self._blob = None
+        get_indexdata = None
+
+    def get_path(self) -> str:
+        """Full path of item.
+
+        The path must be absolute and unique.
+
+        Returns:
+            Path of the item.
+        """
+        raise NotImplementedError("get_path must be implemented.")
+
+    def get_title(self) -> str:
+        """Item title. Might be indexed and used in suggestions.
+
+        Returns:
+            Title of the item.
+        """
+        raise NotImplementedError("get_title must be implemented.")
+
+    def get_mimetype(self) -> str:
+        """MIME-type of the item's content.
+
+        Returns:
+            Mimetype of the item.
+        """
+        raise NotImplementedError("get_mimetype must be implemented.")
+
+    def get_contentprovider(self) -> ContentProvider:
+        """ContentProvider containing the complete content of the item.
+
+        Returns:
+            The content provider of the item.
+        """
+        raise NotImplementedError("get_contentprovider must be implemented.")
+
+    def get_hints(self) -> Dict[Hint, pyint]:
+        """Get the Hints that help the Creator decide how to handle this item.
+
+        Hints affects compression, presence in suggestion, random and search.
+
+        Returns:
+            Hints to help the Creator decide how to handle this item.
+        """
+        raise NotImplementedError("get_hints must be implemented.")
+
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}(path={self.get_path()}, "
+            f"title={self.get_title()})"
+        )
 
 cdef class _Creator:
     """ZIM Creator.
@@ -642,69 +703,6 @@ class IndexData:
         """
 
         return None
-
-
-class BaseWritingItem:
-    """
-    Data to be added to the archive.
-
-    This is a stub to override. Pass a subclass of it to `Creator.add_item()`
-    """
-    __module__ = writer_module_name
-
-    def __init__(self):
-        self._blob = None
-        get_indexdata = None
-
-    def get_path(self) -> str:
-        """Full path of item.
-
-        The path must be absolute and unique.
-
-        Returns:
-            Path of the item.
-        """
-        raise NotImplementedError("get_path must be implemented.")
-
-    def get_title(self) -> str:
-        """Item title. Might be indexed and used in suggestions.
-
-        Returns:
-            Title of the item.
-        """
-        raise NotImplementedError("get_title must be implemented.")
-
-    def get_mimetype(self) -> str:
-        """MIME-type of the item's content.
-
-        Returns:
-            Mimetype of the item.
-        """
-        raise NotImplementedError("get_mimetype must be implemented.")
-
-    def get_contentprovider(self) -> ContentProvider:
-        """ContentProvider containing the complete content of the item.
-
-        Returns:
-            The content provider of the item.
-        """
-        raise NotImplementedError("get_contentprovider must be implemented.")
-
-    def get_hints(self) -> Dict[Hint, pyint]:
-        """Get the Hints that help the Creator decide how to handle this item.
-
-        Hints affects compression, presence in suggestion, random and search.
-
-        Returns:
-            Hints to help the Creator decide how to handle this item.
-        """
-        raise NotImplementedError("get_hints must be implemented.")
-
-    def __repr__(self) -> str:
-        return (
-            f"{self.__class__.__name__}(path={self.get_path()}, "
-            f"title={self.get_title()})"
-        )
 
 
 class Creator(_Creator):
