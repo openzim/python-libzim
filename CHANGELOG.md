@@ -9,7 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Drop support of Python 3.9, add support for Python 3.14, upgrade dependencies (#237)
+- Maintenance upgrades (#237):
+  - Drop support of Python 3.9
+  - Add support for Python 3.14
+  - Upgrade dependencies, especially Cython 3.1.6
+  - Upgrade supported macOS to 14.0+ (instead of 13.0+)
+  - Add support for free-threaded CPython (3.13 and 3.14)
+  - Upgrade Github CI Actions
+  - Run tests on minimum supported platforms + more recent stable ones
 
 ## [3.7.0] - 2025-04-18
 
