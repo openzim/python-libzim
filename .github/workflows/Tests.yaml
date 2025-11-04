@@ -12,8 +12,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-14, windows-2022, ubuntu-24.04]
-        python: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        os: [macos-14, macos-15, macos-15-intel, windows-2022, windows-2025, ubuntu-22.04, ubuntu-24.04]
+        python: ["3.10", "3.11", "3.12", "3.13", "3.13t", "3.14", "3.14t"]
 
     steps:
       - uses: actions/checkout@v5
@@ -23,6 +23,8 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
+      - name: Display Python version
+        run: python -VV
 
       - name: Install dependencies (and project)
         run: |
@@ -30,7 +32,7 @@ jobs:
           pip install -e .[test,scripts]
 
       - name: move DLLs next to wrapper
-        if: matrix.os == 'windows-2022'
+        if: startsWith(matrix.os, 'windows-')
         run: Move-Item -Force -Path .\libzim\*.dll -Destination .\
 
       - name: Run the tests
