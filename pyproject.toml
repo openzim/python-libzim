@@ -3,8 +3,8 @@ requires = [
   "setuptools == 74.1.1",
   "wheel == 0.44.0",
   "cython == 3.0.11",
-  # https://github.com/pypa/cibuildwheel/blob/v2.22/cibuildwheel/resources/constraints.txt
-  "delocate == 0.12.0 ; platform_system=='Windows'",
+  # https://github.com/pypa/cibuildwheel/blob/v3.2/cibuildwheel/resources/constraints.txt
+  "delocate == 0.13.0 ; platform_system=='Windows'",
 ]
 build-backend = "setuptools.build_meta"
 
