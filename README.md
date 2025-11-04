@@ -29,6 +29,8 @@ Our [PyPI wheels](https://pypi.org/project/libzim/) bundle a [recent release](ht
 
 Wheels are available for CPython only (but can be built for Pypy).
 
+Free-threaded CPython is not supported. If you use a free-threaded CPython, GIL must be turned on (using the environment variable PYTHON_GIL or the command-line option -X gil). If you don't turn it on yourself, GIL will be forced-on and you will get a warning. Only few methods support the GIL to be disabled.
+
 Users on other platforms can install the source distribution (see [Building](#Building) below). 
 
 

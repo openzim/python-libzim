@@ -123,6 +123,11 @@ skip = "pp* *win32*"
 test-requires = ["pytest"]
 test-command = "py.test {project}/tests/"
 
+# Override test command for free-threaded builds to force GIL on
+[[tool.cibuildwheel.overrides]]
+select = "cp313t-* cp314t-*"
+test-command = "python -X gil=1 -m pytest {project}/tests/"
+
 manylinux-x86_64-image = "manylinux_2_28"
 manylinux-aarch64-image = "manylinux_2_28"
 manylinux-pypy_x86_64-image = "manylinux_2_28"
