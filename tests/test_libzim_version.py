@@ -11,14 +11,14 @@ from libzim.version import (  # pyright: ignore [reportMissingModuleSource]
 def test_version_print_version_with_stdout(capsys):
     print_versions()
     print("", file=sys.stdout, flush=True)
-    stdout, stderr = capsys.readouterr()
+    stdout, _ = capsys.readouterr()
     assert len(stdout) != 0
 
 
 def test_version_print_version_with_stderr(capsys):
     print_versions(sys.stderr)
     print("", file=sys.stderr, flush=True)
-    stdout, stderr = capsys.readouterr()
+    _, stderr = capsys.readouterr()
     assert len(stderr) != 0
 
 

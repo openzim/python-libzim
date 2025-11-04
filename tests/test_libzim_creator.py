@@ -373,7 +373,10 @@ def test_creator_additem(fpath, lipsum_item):
             c.add_item(None)  # pyright: ignore [reportCallIssue, reportArgumentType]
         with pytest.raises(RuntimeError):
             c.add_item("hello")  # pyright: ignore [reportCallIssue, reportArgumentType]
-        with pytest.raises(TypeError, match="takes exactly 1 positional argument"):
+        with pytest.raises(
+            TypeError,
+            match="got an unexpected keyword argument 'mimetype'",
+        ):
             c.add_item(mimetype="text/html")  # pyright: ignore [reportCallIssue]
 
 

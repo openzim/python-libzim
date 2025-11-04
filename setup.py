@@ -349,7 +349,7 @@ class Config:
         """opens windows wheels in target folder and moves all DLLs files inside
         subdirectories of the wheel to the root one (where wrapper is expected)"""
 
-        from delocate.wheeltools import InWheel
+        from delocate.wheeltools import InWheel  # noqa : PLC0415
 
         # we're only interested in windows wheels
         if not re.match(r"libzim-.+-win_.+", wheel.stem):
