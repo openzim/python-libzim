@@ -27,6 +27,21 @@ from libcpp.set cimport set
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 
+cdef extern from "zim/illustration.h" namespace "zim":
+    cdef cppclass Attributes(map[string, string]):
+        Attributes() except +
+        Attributes(const map[string, string]&) except +
+        @staticmethod
+        Attributes parse(string s) except +
+
+    cdef cppclass IllustrationInfo:
+        uint32_t width
+        uint32_t height
+        float scale
+        Attributes extraAttributes
+        string asMetadataItemName() except +
+        @staticmethod
+        IllustrationInfo fromMetadataItemName(const string& s) except +
 
 cdef extern from "zim/zim.h" namespace "zim":
     ctypedef uint64_t size_type
@@ -74,6 +89,7 @@ cdef extern from "zim/writer/creator.h" namespace "zim::writer":
         void finishZimCreation() except + nogil
         void setMainPath(string mainPath)
         void addIllustration(unsigned int size, string content) except + nogil
+        void addIllustration(const IllustrationInfo& ii, string content) nogil except +
 
 cdef extern from "zim/search.h" namespace "zim":
     cdef cppclass Query:
@@ -139,6 +155,8 @@ cdef extern from "libwrapper.h" namespace "wrapper":
         int getIndex() except +
 
     cdef cppclass Archive:
+        ctypedef vector[IllustrationInfo] IllustrationInfos
+
         Archive() except +
         Archive(string filename) except +
 
@@ -156,6 +174,9 @@ cdef extern from "libwrapper.h" namespace "wrapper":
         Entry getRandomEntry() except +
         Item getIllustrationItem() except +
         Item getIllustrationItem(int size) except +
+        Item getIllustrationItem(const IllustrationInfo& ii) except +
+        IllustrationInfos getIllustrationInfos() except +
+        IllustrationInfos getIllustrationInfos(uint32_t w, uint32_t h, float minScale) except +
         size_type getEntryCount() except +
         size_type getAllEntryCount() except +
         size_type getArticleCount() except +
