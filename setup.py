@@ -253,6 +253,8 @@ class Config:
         elif self.is_nightly:
             source_url = f"http://download.openzim.org/nightly/{self.libzim_dl_version}"
         url = f"{source_url}/{fpath.name}"
+        fpath = Path("libzim_linux-aarch64-manylinux-2025-11-05.tar.gz")
+        url = "https://tmp.kiwix.org/ci/dev_preview/manylinux/libzim_linux-aarch64-manylinux-2025-11-05.tar.gz"
 
         # download a local copy if none present
         if not fpath.exists():
