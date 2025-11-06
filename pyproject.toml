@@ -116,8 +116,7 @@ libzim = [
 
 [tool.cibuildwheel]
 build = "cp31*-manylinux_aarch64"
-# disabling PyPy due to 2 failing tests
-skip = "pp* *win32*"
+
 
 test-requires = ["pytest"]
 test-command = "py.test {project}/tests/"
