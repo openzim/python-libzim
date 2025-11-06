@@ -115,7 +115,7 @@ libzim = [
 ]
 
 [tool.cibuildwheel]
-build = "*"
+build = "cp31*-manylinux_aarch64"
 # disabling PyPy due to 2 failing tests
 skip = "pp* *win32*"
 
