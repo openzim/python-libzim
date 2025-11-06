@@ -254,6 +254,111 @@ class Hint(enum.Enum):
     FRONT_ARTICLE = zim.HintKeys.FRONT_ARTICLE
 
 
+class ContentProvider:
+    """ABC in charge of providing the content to add in the archive to the Creator."""
+    __module__ = writer_module_name
+    def __init__(self):
+        self.generator = None
+
+    def get_size(self) -> pyint:
+        """Size of `get_data`'s result in bytes.
+
+        Returns:
+            int: The size of the data in bytes.
+        """
+        raise NotImplementedError("get_size must be implemented.")
+
+    def feed(self) -> WritingBlob:
+        """Blob(s) containing the complete content of the article.
+
+        Must return an empty blob to tell writer no more content has to be written.
+        Sum(size(blobs)) must be equals to `self.get_size()`
+
+        Returns:
+            WritingBlob: The content blob(s) of the article.
+        """
+        if self.generator is None:
+            self.generator = self.gen_blob()
+
+        try:
+            # We have to keep a ref to _blob to be sure gc do not del it while cpp is
+            # using it
+            self._blob = next(self.generator)
+        except StopIteration:
+            self._blob = WritingBlob("")
+
+        return self._blob
+
+    def gen_blob(self) -> Generator[WritingBlob, None, None]:
+        """Generator yielding blobs for the content of the article.
+
+        Yields:
+            WritingBlob: A blob containing part of the article content.
+        """
+        raise NotImplementedError("gen_blob (ro feed) must be implemented")
+
+
+class BaseWritingItem:
+    """
+    Data to be added to the archive.
+
+    This is a stub to override. Pass a subclass of it to `Creator.add_item()`
+    """
+    __module__ = writer_module_name
+
+    def __init__(self):
+        self._blob = None
+        get_indexdata = None
+
+    def get_path(self) -> str:
+        """Full path of item.
+
+        The path must be absolute and unique.
+
+        Returns:
+            Path of the item.
+        """
+        raise NotImplementedError("get_path must be implemented.")
+
+    def get_title(self) -> str:
+        """Item title. Might be indexed and used in suggestions.
+
+        Returns:
+            Title of the item.
+        """
+        raise NotImplementedError("get_title must be implemented.")
+
+    def get_mimetype(self) -> str:
+        """MIME-type of the item's content.
+
+        Returns:
+            Mimetype of the item.
+        """
+        raise NotImplementedError("get_mimetype must be implemented.")
+
+    def get_contentprovider(self) -> ContentProvider:
+        """ContentProvider containing the complete content of the item.
+
+        Returns:
+            The content provider of the item.
+        """
+        raise NotImplementedError("get_contentprovider must be implemented.")
+
+    def get_hints(self) -> Dict[Hint, pyint]:
+        """Get the Hints that help the Creator decide how to handle this item.
+
+        Hints affects compression, presence in suggestion, random and search.
+
+        Returns:
+            Hints to help the Creator decide how to handle this item.
+        """
+        raise NotImplementedError("get_hints must be implemented.")
+
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}(path={self.get_path()}, "
+            f"title={self.get_title()})"
+        )
 
 cdef class _Creator:
     """ZIM Creator.
@@ -283,7 +388,7 @@ cdef class _Creator:
     def __init__(self, filename: pathlib.Path):
         pass
 
-    def config_verbose(self, bool verbose: bool) -> Creator:
+    def config_verbose(self, bool verbose: bool) -> _Creator:
         """Set creator verbosity inside libzim (default: off).
 
         Args:
@@ -297,7 +402,7 @@ cdef class _Creator:
         self.c_creator.configVerbose(verbose)
         return self
 
-    def config_compression(self, compression: Compression) -> Creator:
+    def config_compression(self, compression: Compression) -> _Creator:
         """Set compression algorithm to use.
 
         Check libzim for default setting. (Fall 2021 default: zstd).
@@ -313,7 +418,7 @@ cdef class _Creator:
         self.c_creator.configCompression(zim.comp_from_int(compression.value))
         return self
 
-    def config_clustersize(self, int size: pyint) -> Creator:
+    def config_clustersize(self, int size: pyint) -> _Creator:
         """Set size of created clusters.
 
         Check libzim for default setting. (Fall 2021 default: 2Mib).
@@ -332,7 +437,7 @@ cdef class _Creator:
         self.c_creator.configClusterSize(size)
         return self
 
-    def config_indexing(self, bool indexing: bool, str language: str) -> Creator:
+    def config_indexing(self, bool indexing: bool, str language: str) -> _Creator:
         """Configures the full-text indexing feature.
 
         Args:
@@ -347,7 +452,7 @@ cdef class _Creator:
         self.c_creator.configIndexing(indexing, language.encode('UTF-8'))
         return self
 
-    def config_nbworkers(self, int nbWorkers: pyint) -> Creator:
+    def config_nbworkers(self, int nbWorkers: pyint) -> _Creator:
         """Configures the number of threads to use for internal workers (default: 4).
 
         Args:
@@ -361,7 +466,7 @@ cdef class _Creator:
         self.c_creator.configNbWorkers(nbWorkers)
         return self
 
-    def set_mainpath(self, str mainPath: str) -> Creator:
+    def set_mainpath(self, str mainPath: str) -> _Creator:
         """Set path of the main entry.
 
         Args:
@@ -388,7 +493,7 @@ cdef class _Creator:
         cdef string _content = content
         self.c_creator.addIllustration(size, _content)
 
-#    def set_uuid(self, uuid) -> Creator:
+#    def set_uuid(self, uuid) -> _Creator:
 #        self.c_creator.setUuid(uuid)
 
     def add_item(self, writer_item not None: BaseWritingItem):
@@ -503,49 +608,6 @@ cdef class _Creator:
         """
         return self._filename
 
-class ContentProvider:
-    """ABC in charge of providing the content to add in the archive to the Creator."""
-    __module__ = writer_module_name
-    def __init__(self):
-        self.generator = None
-
-    def get_size(self) -> pyint:
-        """Size of `get_data`'s result in bytes.
-
-        Returns:
-            int: The size of the data in bytes.
-        """
-        raise NotImplementedError("get_size must be implemented.")
-
-    def feed(self) -> WritingBlob:
-        """Blob(s) containing the complete content of the article.
-
-        Must return an empty blob to tell writer no more content has to be written.
-        Sum(size(blobs)) must be equals to `self.get_size()`
-
-        Returns:
-            WritingBlob: The content blob(s) of the article.
-        """
-        if self.generator is None:
-            self.generator = self.gen_blob()
-
-        try:
-            # We have to keep a ref to _blob to be sure gc do not del it while cpp is
-            # using it
-            self._blob = next(self.generator)
-        except StopIteration:
-            self._blob = WritingBlob("")
-
-        return self._blob
-
-    def gen_blob(self) -> Generator[WritingBlob, None, None]:
-        """Generator yielding blobs for the content of the article.
-
-        Yields:
-            WritingBlob: A blob containing part of the article content.
-        """
-        raise NotImplementedError("gen_blob (ro feed) must be implemented")
-
 
 class StringProvider(ContentProvider):
     """ContentProvider for a single encoded-or-not UTF-8 string."""
@@ -642,69 +704,6 @@ class IndexData:
         """
 
         return None
-
-
-class BaseWritingItem:
-    """
-    Data to be added to the archive.
-
-    This is a stub to override. Pass a subclass of it to `Creator.add_item()`
-    """
-    __module__ = writer_module_name
-
-    def __init__(self):
-        self._blob = None
-        get_indexdata = None
-
-    def get_path(self) -> str:
-        """Full path of item.
-
-        The path must be absolute and unique.
-
-        Returns:
-            Path of the item.
-        """
-        raise NotImplementedError("get_path must be implemented.")
-
-    def get_title(self) -> str:
-        """Item title. Might be indexed and used in suggestions.
-
-        Returns:
-            Title of the item.
-        """
-        raise NotImplementedError("get_title must be implemented.")
-
-    def get_mimetype(self) -> str:
-        """MIME-type of the item's content.
-
-        Returns:
-            Mimetype of the item.
-        """
-        raise NotImplementedError("get_mimetype must be implemented.")
-
-    def get_contentprovider(self) -> ContentProvider:
-        """ContentProvider containing the complete content of the item.
-
-        Returns:
-            The content provider of the item.
-        """
-        raise NotImplementedError("get_contentprovider must be implemented.")
-
-    def get_hints(self) -> Dict[Hint, pyint]:
-        """Get the Hints that help the Creator decide how to handle this item.
-
-        Hints affects compression, presence in suggestion, random and search.
-
-        Returns:
-            Hints to help the Creator decide how to handle this item.
-        """
-        raise NotImplementedError("get_hints must be implemented.")
-
-    def __repr__(self) -> str:
-        return (
-            f"{self.__class__.__name__}(path={self.get_path()}, "
-            f"title={self.get_title()})"
-        )
 
 
 class Creator(_Creator):
