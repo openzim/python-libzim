@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Add support for free-threaded CPython (3.13 and 3.14)
   - Upgrade Github CI Actions
   - Run tests on minimum supported platforms + more recent stable ones
+- Fix various Cython warning and deprecation notices (#239)
 
 ## [3.7.0] - 2025-04-18
 
