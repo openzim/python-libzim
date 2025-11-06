@@ -349,7 +349,7 @@ class Config:
         """opens windows wheels in target folder and moves all DLLs files inside
         subdirectories of the wheel to the root one (where wrapper is expected)"""
 
-        from delocate.wheeltools import InWheel
+        from delocate.wheeltools import InWheel  # noqa : PLC0415
 
         # we're only interested in windows wheels
         if not re.match(r"libzim-.+-win_.+", wheel.stem):
@@ -392,7 +392,13 @@ def get_cython_extension() -> list[Extension]:
     compiler_directives = {"language_level": "3"}
 
     if config.profiling:
-        define_macros += [("CYTHON_TRACE", "1"), ("CYTHON_TRACE_NOGIL", "1")]
+        define_macros += [
+            ("CYTHON_TRACE", "1"),
+            ("CYTHON_TRACE_NOGIL", "1"),
+            # Disable sys.monitoring for Python 3.13+ to enable coverage.py support
+            # coverage.py doesn't support sys.monitoring yet (Cython 3.1+ issue)
+            ("CYTHON_USE_SYS_MONITORING", "0"),
+        ]
         compiler_directives.update(linetrace="true")
 
     include_dirs: list[str] = []
