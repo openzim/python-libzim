@@ -12,18 +12,19 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-13, windows-2022, ubuntu-24.04]
-        python: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        os: [macos-14, macos-15, macos-15-intel, windows-2022, windows-2025, ubuntu-22.04, ubuntu-24.04]
+        python: ["3.10", "3.11", "3.12", "3.13", "3.13t", "3.14", "3.14t"]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
-          architecture: x64
 
+      - name: Display Python version
+        run: python -VV
 
       - name: Install dependencies (and project)
         run: |
@@ -31,15 +32,15 @@ jobs:
           pip install -e .[test,scripts]
 
       - name: move DLLs next to wrapper
-        if: matrix.os == 'windows-2022'
+        if: startsWith(matrix.os, 'windows-')
         run: Move-Item -Force -Path .\libzim\*.dll -Destination .\
 
       - name: Run the tests
         run: inv coverage --args "-vvv"
 
       - name: Upload coverage report to codecov
-        if: matrix.os == 'ubuntu-24.04' && matrix.python == '3.13'
-        uses: codecov/codecov-action@v4
+        if: matrix.os == 'ubuntu-24.04' && matrix.python == '3.14'
+        uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
