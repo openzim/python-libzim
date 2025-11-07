@@ -2,7 +2,7 @@ name: Tests
 on: [push]
 
 env:
-  LIBZIM_DL_VERSION: "9.4.0"
+  LIBZIM_DL_VERSION: "9.4.0-1"
   MACOSX_DEPLOYMENT_TARGET: "13.0"
   # we want cython traces for coverage
   PROFILE: "1"
