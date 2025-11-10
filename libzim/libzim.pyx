@@ -479,7 +479,7 @@ cdef class _Creator:
         self.c_creator.setMainPath(mainPath.encode('UTF-8'))
         return self
 
-    def add_illustration(self, size_or_info, content: bytes):
+    def add_illustration(self, size_or_info: Union[pyint, IllustrationInfo], content: bytes):
         """Add a PNG illustration to Archive.
 
         Refer to https://wiki.openzim.org/wiki/Metadata for more details.
@@ -761,6 +761,7 @@ with Creator(pathlib.Path("myfile.zim")) as creator:
     # example
     creator.add_item(MyItemSubclass(path, title, mimetype, content)
     creator.set_mainpath(path)
+    creator.add_illustration(IllustrationInfo(48, 48, 1.0), png_data)
 ```"""
 writer_public_objects = [
     Creator,
@@ -789,7 +790,10 @@ cdef class IllustrationInfo:
         width (int): Width of the illustration in CSS pixels.
         height (int): Height of the illustration in CSS pixels.
         scale (float): Device pixel ratio (scale) of the illustration.
-        extra_attributes (dict): Additional attributes as key-value pairs.
+        extra_attributes (dict[str, str]): Additional attributes as key-value pairs.
+            Note: This property returns a new dict on each access. Direct mutations
+            like `info.extra_attributes["key"] = value` won't persist. Use the setter:
+            `info.extra_attributes = {"key": "value"}` to update.
     """
     __module__ = illustration_module_name
     cdef zim.IllustrationInfo c_info
@@ -1483,26 +1487,41 @@ cdef class Archive:
             return self.c_archive.hasIllustration(size)
         return self.c_archive.hasIllustration()
 
-    def get_illustration_item(self, size: pyint = None, info: IllustrationInfo = None) -> Item:
+    def get_illustration_item(self, size_or_info: Union[pyint, IllustrationInfo] = None) -> Item:
         """Get the illustration Metadata item of the archive.
 
         Args:
-            size: Optional size of the illustration (for backward compatibility).
-            info: Optional IllustrationInfo with width, height, and scale.
+            size_or_info: Either an int (width of the square PNG illustration in pixels)
+                          or an IllustrationInfo object with width, height, and scale.
+                          If None, defaults to size 48.
 
         Returns:
             The illustration item.
 
-        Note:
-            Either provide size (int) or info (IllustrationInfo), not both.
-            If neither is provided, returns the default illustration item.
+        Raises:
+            KeyError: If the requested illustration is not found.
+            TypeError: If size_or_info is not None, int, or IllustrationInfo.
+
+        Examples:
+            # Get default illustration (48x48@1)
+            item = archive.get_illustration_item()
+
+            # Get illustration by size (square at scale 1)
+            item = archive.get_illustration_item(96)
+
+            # Get illustration by IllustrationInfo (width, height, scale)
+            info = IllustrationInfo(48, 48, 2.0)
+            item = archive.get_illustration_item(info)
         """
         try:
-            if info is not None:
-                return Item.from_item(move(self.c_archive.getIllustrationItem(info.c_info)))
-            elif size is not None:
-                return Item.from_item(move(self.c_archive.getIllustrationItem(<int>size)))
-            return Item.from_item(move(self.c_archive.getIllustrationItem()))
+            if size_or_info is None:
+                return Item.from_item(move(self.c_archive.getIllustrationItem(<int>48)))
+            elif isinstance(size_or_info, IllustrationInfo):
+                return Item.from_item(move(self.c_archive.getIllustrationItem((<IllustrationInfo>size_or_info).c_info)))
+            elif isinstance(size_or_info, int):
+                return Item.from_item(move(self.c_archive.getIllustrationItem(<int>size_or_info)))
+            else:
+                raise TypeError(f"Argument must be None, int, or IllustrationInfo, not {type(size_or_info)}")
         except RuntimeError as e:
             raise KeyError(str(e))
 

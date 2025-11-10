@@ -89,7 +89,7 @@ cdef extern from "zim/writer/creator.h" namespace "zim::writer":
         void finishZimCreation() except + nogil
         void setMainPath(string mainPath)
         void addIllustration(unsigned int size, string content) except + nogil
-        void addIllustration(const IllustrationInfo& ii, string content) nogil except +
+        void addIllustration(const IllustrationInfo& ii, string content) except + nogil
 
 cdef extern from "zim/search.h" namespace "zim":
     cdef cppclass Query:

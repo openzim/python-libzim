@@ -1,23 +1,3 @@
-#!/usr/bin/env python3
-
-# This file is part of python-libzim
-# (see https://github.com/libzim/python-libzim)
-#
-# Copyright (c) 2025 Benoit Arnaud <benoit@kymeria.fr>
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-
 import pytest
 
 from libzim.illustration import (  # pyright: ignore [reportMissingModuleSource]
@@ -28,7 +8,16 @@ from libzim.writer import Creator  # pyright: ignore [reportMissingModuleSource]
 
 
 @pytest.fixture(scope="function")
-def zim_with_varied_illustrations(tmp_path, favicon_data):
+def zim_with_varied_illustrations(
+    tmp_path,
+    favicon_data_48,
+    favicon_data_96,
+    favicon_data_144,
+    favicon_data_192,
+    favicon_data_128_64,
+    favicon_data_64_128,
+    favicon_data_256,
+):
     """Create a ZIM file with various illustration sizes and scales."""
     fpath = tmp_path / "test_illustrations.zim"
     with Creator(fpath) as c:
@@ -36,20 +25,26 @@ def zim_with_varied_illustrations(tmp_path, favicon_data):
 
         # Add multiple illustrations with different dimensions and scales
         # 48x48 at different scales
-        c.add_illustration(IllustrationInfo(48, 48, 1.0), favicon_data)
-        c.add_illustration(IllustrationInfo(48, 48, 2.0), favicon_data)
-        c.add_illustration(IllustrationInfo(48, 48, 3.0), favicon_data)
+        c.add_illustration(IllustrationInfo(48, 48, 1.0), favicon_data_48)  # 48x48 PNG
+        c.add_illustration(
+            IllustrationInfo(48, 48, 2.0), favicon_data_96
+        )  # 96x96 PNG (48*2)
+        c.add_illustration(
+            IllustrationInfo(48, 48, 3.0), favicon_data_144
+        )  # 144x144 PNG (48*3)
 
         # 96x96 at different scales
-        c.add_illustration(IllustrationInfo(96, 96, 1.0), favicon_data)
-        c.add_illustration(IllustrationInfo(96, 96, 2.0), favicon_data)
+        c.add_illustration(IllustrationInfo(96, 96, 1.0), favicon_data_96)  # 96x96 PNG
+        c.add_illustration(
+            IllustrationInfo(96, 96, 2.0), favicon_data_192
+        )  # 192x192 PNG (96*2)
 
         # Non-square illustrations
-        c.add_illustration(IllustrationInfo(128, 64, 1.0), favicon_data)
-        c.add_illustration(IllustrationInfo(64, 128, 1.0), favicon_data)
+        c.add_illustration(IllustrationInfo(128, 64, 1.0), favicon_data_128_64)
+        c.add_illustration(IllustrationInfo(64, 128, 1.0), favicon_data_64_128)
 
         # Large illustration
-        c.add_illustration(IllustrationInfo(256, 256, 1.0), favicon_data)
+        c.add_illustration(IllustrationInfo(256, 256, 1.0), favicon_data_256)
 
     return fpath
 
@@ -169,29 +164,51 @@ class TestArchiveGetIllustrationItem:
     """Test Archive.get_illustration_item() with IllustrationInfo."""
 
     def test_get_illustration_item_with_info(
-        self, zim_with_varied_illustrations, favicon_data
+        self,
+        zim_with_varied_illustrations,
+        favicon_data_48,
+        favicon_data_96,
+        favicon_data_144,
+        favicon_data_192,
+        favicon_data_128_64,
+        favicon_data_64_128,
+        favicon_data_256,
     ):
         """Test getting illustration item using IllustrationInfo."""
         zim = Archive(zim_with_varied_illustrations)
         infos = zim.get_illustration_infos()
 
+        # Map (width, height, scale) to expected PNG data
+        # Physical pixels = CSS pixels * scale
+        expected_data = {
+            (48, 48, 1.0): favicon_data_48,  # 48x48 PNG
+            (48, 48, 2.0): favicon_data_96,  # 96x96 PNG (48*2)
+            (48, 48, 3.0): favicon_data_144,  # 144x144 PNG (48*3)
+            (96, 96, 1.0): favicon_data_96,  # 96x96 PNG
+            (96, 96, 2.0): favicon_data_192,  # 192x192 PNG (96*2)
+            (128, 64, 1.0): favicon_data_128_64,  # 128x64 PNG
+            (64, 128, 1.0): favicon_data_64_128,  # 64x128 PNG
+            (256, 256, 1.0): favicon_data_256,  # 256x256 PNG
+        }
+
         # Get item for each illustration
         for info in infos:
-            item = zim.get_illustration_item(info=info)
-            assert bytes(item.content) == favicon_data
+            item = zim.get_illustration_item(info)
+            expected = expected_data[(info.width, info.height, info.scale)]
+            assert bytes(item.content) == expected
             # Verify path contains the illustration metadata name
             assert "Illustration" in item.path
 
     def test_get_illustration_item_specific_scale(
-        self, zim_with_varied_illustrations, favicon_data
+        self, zim_with_varied_illustrations, favicon_data_96
     ):
         """Test getting specific scale illustration."""
         zim = Archive(zim_with_varied_illustrations)
 
-        # Get the 48x48@2 illustration specifically
+        # Get the 48x48@2 illustration specifically (96x96 physical pixels)
         info = IllustrationInfo(48, 48, 2.0)
-        item = zim.get_illustration_item(info=info)
-        assert bytes(item.content) == favicon_data
+        item = zim.get_illustration_item(info)
+        assert bytes(item.content) == favicon_data_96
 
     def test_get_illustration_item_nonexistent(self, zim_with_varied_illustrations):
         """Test getting non-existent illustration raises error."""
@@ -200,20 +217,31 @@ class TestArchiveGetIllustrationItem:
         # Try to get illustration that doesn't exist
         info = IllustrationInfo(999, 999, 1.0)
         with pytest.raises(KeyError):
-            zim.get_illustration_item(info=info)
+            zim.get_illustration_item(info)
+
+    def test_get_illustration_item_default(
+        self, zim_with_varied_illustrations, favicon_data_48
+    ):
+        """Test that get_illustration_item() without argument defaults to size 48."""
+        zim = Archive(zim_with_varied_illustrations)
+
+        # No argument should default to 48x48@1
+        item = zim.get_illustration_item()
+        assert bytes(item.content) == favicon_data_48
+        assert "Illustration_48x48@1" in item.path
 
     def test_get_illustration_item_old_api_still_works(
-        self, zim_with_varied_illustrations, favicon_data
+        self, zim_with_varied_illustrations, favicon_data_48, favicon_data_96
     ):
         """Test that old API (size parameter) still works."""
         zim = Archive(zim_with_varied_illustrations)
 
         # Old API with size should work for @1 scale illustrations
-        item = zim.get_illustration_item(size=48)
-        assert bytes(item.content) == favicon_data
+        item = zim.get_illustration_item(48)
+        assert bytes(item.content) == favicon_data_48
 
-        item = zim.get_illustration_item(size=96)
-        assert bytes(item.content) == favicon_data
+        item = zim.get_illustration_item(96)
+        assert bytes(item.content) == favicon_data_96
 
 
 class TestDeprecationWarnings:

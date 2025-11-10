@@ -1,23 +1,3 @@
-#!/usr/bin/env python3
-
-# This file is part of python-libzim
-# (see https://github.com/libzim/python-libzim)
-#
-# Copyright (c) 2025 Benoit Arnaud <benoit@kymeria.fr>
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-
 import pytest
 
 from libzim.illustration import (  # pyright: ignore [reportMissingModuleSource]
@@ -26,7 +6,6 @@ from libzim.illustration import (  # pyright: ignore [reportMissingModuleSource]
 
 
 class TestIllustrationInfo:
-    """Tests for IllustrationInfo class."""
 
     def test_default_construction(self):
         """Test creating an IllustrationInfo with defaults."""
@@ -71,6 +50,38 @@ class TestIllustrationInfo:
         info = IllustrationInfo(48, 48, 1.0)
         info.extra_attributes = {"foo": "bar", "baz": "qux"}
         assert info.extra_attributes == {"foo": "bar", "baz": "qux"}
+
+    def test_extra_attributes_not_directly_mutable(self):
+        """Test that direct mutation of extra_attributes doesn't persist.
+
+        The extra_attributes property returns a new dict each time it's accessed,
+        so direct mutation operations like .update() or direct assignment don't work.
+        You must use the setter to update the attributes.
+        """
+        info = IllustrationInfo(48, 48, 1.0)
+        info.extra_attributes = {"original": "value"}
+
+        # This won't work - modifying the returned dict doesn't affect underlying data
+        info.extra_attributes.update({"new": "item"})
+        assert info.extra_attributes == {"original": "value"}  # "new" was not added
+
+        # This won't work either - item assignment on the returned dict
+        info.extra_attributes["another"] = "value"
+        assert info.extra_attributes == {"original": "value"}  # "another" was not added
+
+        # The correct way is to use the setter with the full dict
+        current = info.extra_attributes
+        current.update({"new": "item"})
+        info.extra_attributes = current
+        assert info.extra_attributes == {"original": "value", "new": "item"}
+
+        # Or create a new dict directly
+        info.extra_attributes = {"original": "value", "new": "item", "another": "value"}
+        assert info.extra_attributes == {
+            "original": "value",
+            "new": "item",
+            "another": "value",
+        }
 
     def test_as_metadata_item_name(self):
         """Test converting IllustrationInfo to metadata item name."""
