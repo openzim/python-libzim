@@ -9,7 +9,13 @@ from urllib.request import urlretrieve
 import pytest
 
 import libzim.writer  # pyright: ignore [reportMissingModuleSource]
-from libzim.reader import Archive, Entry  # pyright: ignore [reportMissingModuleSource]
+from libzim.reader import (  # pyright: ignore [reportMissingModuleSource]
+    Archive,
+    Entry,
+    get_cluster_cache_current_size,
+    get_cluster_cache_max_size,
+    set_cluster_cache_max_size,
+)
 from libzim.search import Query, Searcher  # pyright: ignore [reportMissingModuleSource]
 from libzim.suggestion import (  # pyright: ignore [reportMissingModuleSource]
     SuggestionSearcher,
@@ -621,28 +627,25 @@ def test_reader_get_random_entry(all_zims):
 @pytest.mark.parametrize(*parametrize_for(["filename"]))
 def test_cluster_cache(all_zims, filename):
     zim = Archive(all_zims / filename)
-    default_value = 16
-    new_value = 1
-    empty_value = 0
+    default_value = 536870912  # 512M
+    new_value = 1024
 
-    assert zim.cluster_cache_max_size == default_value
+    assert get_cluster_cache_max_size() == default_value
 
-    zim.cluster_cache_max_size = new_value
-    assert zim.cluster_cache_max_size == new_value
+    # modify cluster cache max size
+    set_cluster_cache_max_size(new_value)
+    assert get_cluster_cache_max_size() == new_value
 
     # test index access
     for index in range(0, zim.entry_count - 1):
         bytes(zim._get_entry_by_id(index).get_item().content)
 
-    assert zim.cluster_cache_current_size <= new_value
+    # check current size is not too big (not really relevant since cache keeps at least
+    # one cluster in memory, so this value depends on maximum cluster size
+    assert get_cluster_cache_current_size() <= new_value
 
-    zim.cluster_cache_max_size = empty_value
-    assert zim.cluster_cache_max_size == empty_value
-
-    for index in range(0, zim.entry_count - 1):
-        bytes(zim._get_entry_by_id(index).get_item().content)
-
-    assert zim.cluster_cache_current_size == empty_value
+    # restore default value for next tests
+    set_cluster_cache_max_size(default_value)
 
 
 @skip_if_offline
@@ -671,26 +674,5 @@ def test_dirent_cache(all_zims, filename):
     for index in range(0, zim.entry_count - 1):
         bytes(zim._get_entry_by_id(index).get_item().content)
 
-    assert zim.dirent_cache_current_size == empty_value
-
-
-@skip_if_offline
-@pytest.mark.parametrize(*parametrize_for(["filename"]))
-def test_dirent_lookup_cache(all_zims, filename):
-    zim = Archive(all_zims / filename)
-    default_value = 1024
-    new_value = 2
-    empty_value = 0
-
-    assert zim.dirent_lookup_cache_max_size == default_value
-
-    zim.dirent_lookup_cache_max_size = new_value
-    assert zim.dirent_lookup_cache_max_size == new_value
-
-    # test index access
-    for index in range(0, zim.entry_count - 1):
-        bytes(zim._get_entry_by_id(index).get_item().content)
-
-    # setting after reading records the value but it has no use
-    zim.dirent_lookup_cache_max_size = empty_value
-    assert zim.dirent_lookup_cache_max_size == empty_value
+    # always at least one entry is kept in cache unless ZIM is empty
+    assert zim.dirent_cache_current_size == (1 if zim.entry_count else 0)
