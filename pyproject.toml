@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "libzim"
-version = "3.7.1-dev0"
+version = "3.8.0"
 requires-python = ">=3.10,<3.15"
 description = "A python-facing API for creating and interacting with ZIM files"
 authors = [
