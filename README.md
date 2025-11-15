@@ -134,7 +134,8 @@ with Creator("test.zim").config_indexing(True, "eng") as creator:
     creator.set_mainpath("home")
     creator.add_item(item)
     creator.add_item(item2)
-    creator.add_illustration(48, illustration)
+    # equivalent to old-style creator.add_illustration(48, illustration)
+    creator.add_illustration(IllustrationInfo(48, 48, 1.0), illustration)
     for name, value in {
         "creator": "python-libzim",
         "description": "Created in python",

@@ -5,7 +5,9 @@ import enum
 import pathlib
 import types
 from collections.abc import Callable, Generator
-from typing import Self
+from typing import Self, overload
+
+from libzim.illustration import IllustrationInfo
 
 class Compression(enum.Enum):
     none: Self
@@ -60,7 +62,10 @@ class Creator:
     def config_indexing(self, indexing: bool, language: str) -> Self: ...
     def config_nbworkers(self, nbWorkers: int) -> Self: ...  # noqa: N803
     def set_mainpath(self, mainPath: str) -> Self: ...  # noqa: N803
+    @overload
     def add_illustration(self, size: int, content: bytes) -> None: ...
+    @overload
+    def add_illustration(self, info: IllustrationInfo, content: bytes) -> None: ...
     def add_item(self, writer_item: Item) -> None: ...
     def add_metadata(
         self,
