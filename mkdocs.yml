@@ -13,7 +13,8 @@ nav:
   - Home: index.md
   - API Reference: api_reference/
   - Changelog: 'changelog.md'
-  - License: license.md
+  - Contributing: CONTRIBUTING.md
+  - License: LICENSE.md
 
 theme:
   name: material
