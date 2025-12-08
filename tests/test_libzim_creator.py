@@ -1,8 +1,5 @@
-#!/usr/bin/env python
-
 from __future__ import annotations
 
-import base64
 import datetime
 import itertools
 import os
@@ -14,6 +11,9 @@ import sys
 import pytest
 
 import libzim.writer  # pyright: ignore [reportMissingModuleSource]
+from libzim.illustration import (  # pyright: ignore [reportMissingModuleSource]
+    IllustrationInfo,
+)
 from libzim.reader import Archive  # pyright: ignore [reportMissingModuleSource]
 from libzim.search import Query, Searcher  # pyright: ignore [reportMissingModuleSource]
 from libzim.suggestion import (  # pyright: ignore [reportMissingModuleSource]
@@ -60,14 +60,6 @@ class StaticItem(libzim.writer.Item):
 @pytest.fixture(scope="function")
 def fpath(tmpdir):
     return pathlib.Path(tmpdir / "test.zim")
-
-
-@pytest.fixture(scope="module")
-def favicon_data():
-    return base64.b64decode(
-        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQ"
-        "ImWO4ISn6HwAE2QIGKsd69QAAAABJRU5ErkJggg=="
-    )
 
 
 @pytest.fixture(scope="module")
@@ -357,20 +349,99 @@ def test_creator_mainpath(fpath, lipsum_item):
         assert zim.main_entry
 
 
-def test_creator_illustration(fpath, favicon_data):
+def test_creator_illustration(fpath, favicon_data_48, favicon_data_96):
     with Creator(fpath) as c:
-        c.add_illustration(48, favicon_data)
-        c.add_illustration(96, favicon_data)
+        c.add_illustration(48, favicon_data_48)
+        c.add_illustration(96, favicon_data_96)
 
     zim = Archive(fpath)
     assert zim.has_illustration() is True
     assert zim.has_illustration(48) is True
     assert zim.has_illustration(96) is True
     assert zim.has_illustration(128) is False
-    assert bytes(zim.get_illustration_item().content) == favicon_data
-    assert bytes(zim.get_illustration_item(96).content) == favicon_data
+    assert bytes(zim.get_illustration_item().content) == favicon_data_48
+    assert bytes(zim.get_illustration_item(96).content) == favicon_data_96
     with pytest.warns(DeprecationWarning, match="get_illustration_sizes.*deprecated"):
         assert zim.get_illustration_sizes() == {48, 96}
+
+
+def test_creator_illustration_with_info(
+    fpath, favicon_data_48, favicon_data_96, favicon_data_64_32
+):
+    """Test creating illustrations with IllustrationInfo (new API)."""
+
+    with Creator(fpath) as c:
+        # Add illustrations with different scales and dimensions
+        info1 = IllustrationInfo(48, 48, 1.0)
+        c.add_illustration(info1, favicon_data_48)
+
+        # 48x48@2 means 48 CSS pixels at 2x scale = 96x96 physical pixels
+        info2 = IllustrationInfo(48, 48, 2.0)
+        c.add_illustration(info2, favicon_data_96)
+
+        info3 = IllustrationInfo(96, 96, 1.0)
+        c.add_illustration(info3, favicon_data_96)
+
+        # Non-square illustration
+        info4 = IllustrationInfo(64, 32, 1.0)
+        c.add_illustration(info4, favicon_data_64_32)
+
+    zim = Archive(fpath)
+    assert zim.has_illustration() is True
+
+    # Test get_illustration_infos() - should return all illustrations
+    infos = zim.get_illustration_infos()
+    assert len(infos) == 4
+
+    # Verify we have the expected illustrations
+    found_specs = {(info.width, info.height, info.scale) for info in infos}
+    assert (48, 48, 1.0) in found_specs
+    assert (48, 48, 2.0) in found_specs
+    assert (96, 96, 1.0) in found_specs
+    assert (64, 32, 1.0) in found_specs
+
+    # Test get_illustration_item with IllustrationInfo
+    # Map (width, height, scale) to expected PNG data
+    # Note: scale affects physical pixel size (width*scale x height*scale)
+    expected_data = {
+        (48, 48, 1.0): favicon_data_48,  # 48x48 PNG
+        (48, 48, 2.0): favicon_data_96,  # 96x96 PNG (48*2 x 48*2)
+        (96, 96, 1.0): favicon_data_96,  # 96x96 PNG
+        (64, 32, 1.0): favicon_data_64_32,  # 64x32 PNG
+    }
+    for info in infos:
+        item = zim.get_illustration_item(info)
+        expected = expected_data[(info.width, info.height, info.scale)]
+        assert bytes(item.content) == expected
+        # Verify the item path matches the metadata name
+        assert info.as_metadata_item_name() in item.path
+
+
+def test_creator_illustration_backward_compatibility(
+    fpath, favicon_data_48, favicon_data_96
+):
+    """Test that old-style add_illustration still works."""
+    with Creator(fpath) as c:
+        # Old API: just size (int)
+        c.add_illustration(48, favicon_data_48)
+        c.add_illustration(96, favicon_data_96)
+
+    zim = Archive(fpath)
+    # Old API still works
+    assert zim.has_illustration(48) is True
+    assert zim.has_illustration(96) is True
+    assert bytes(zim.get_illustration_item(48).content) == favicon_data_48
+    assert bytes(zim.get_illustration_item(96).content) == favicon_data_96
+
+
+def test_creator_illustration_invalid_type(fpath, favicon_data_48):
+    """Test that add_illustration raises TypeError for invalid input."""
+    with Creator(fpath) as c:
+        with pytest.raises(TypeError, match="must be int or IllustrationInfo"):
+            c.add_illustration(
+                "invalid",  # pyright: ignore [reportCallIssue, reportArgumentType]
+                favicon_data_48,
+            )
 
 
 def test_creator_additem(fpath, lipsum_item):
@@ -439,7 +510,7 @@ def test_creator_metadata(fpath, lipsum_item):
         assert zim.get_metadata(name).decode("UTF-8") == value
 
 
-def test_creator_metadata_overwrite(fpath, lipsum_item, favicon_data):
+def test_creator_metadata_overwrite(fpath, lipsum_item, favicon_data_48):
     """re-adding an Entry (even Metadata) now raises an exception (libzim 7.2+)"""
     with Creator(fpath) as c:
         c.add_item(lipsum_item)
@@ -454,10 +525,10 @@ def test_creator_metadata_overwrite(fpath, lipsum_item, favicon_data):
         with pytest.raises(RuntimeError, match="Impossible to add"):
             c.add_redirection("home", lipsum_item.get_path(), "Home again", {})
 
-        c.add_illustration(48, favicon_data)
+        c.add_illustration(48, favicon_data_48)
         # this currently segfaults but it should not
         with pytest.raises(RuntimeError, match="Impossible to add"):
-            c.add_illustration(48, favicon_data)
+            c.add_illustration(48, favicon_data_48)
     zim = Archive(fpath)
     assert zim.get_metadata("Key").decode("UTF-8") == "first"
 
