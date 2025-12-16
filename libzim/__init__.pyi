@@ -1,4 +1,5 @@
 from libzim import (
+    illustration,  # noqa: F401 # pyright: ignore[reportUnusedImport]
     reader,  # noqa: F401 # pyright: ignore[reportUnusedImport]
     search,  # noqa: F401 # pyright: ignore[reportUnusedImport]
     suggestion,  # noqa: F401 # pyright: ignore[reportUnusedImport]
