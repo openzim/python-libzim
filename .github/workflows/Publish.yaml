@@ -25,11 +25,11 @@ jobs:
         os: [ubuntu-24.04, macos-14, windows-2022]
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Set up QEMU
         if: runner.os == 'Linux'
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
         with:
           platforms: all
 
@@ -68,7 +68,7 @@ jobs:
           security unlock-keychain -p mysecretpassword ${APPLE_SIGNING_KEYCHAIN_PATH}
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.2
+        uses: pypa/cibuildwheel@v3.4
 
       - name: Cleanup Apple Keychain
         if: matrix.os == 'macos-14'
@@ -78,7 +78,7 @@ jobs:
           security delete-keychain ${APPLE_SIGNING_KEYCHAIN_PATH}
           rm -f ${APPLE_SIGNING_KEYCHAIN_PATH}
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: wheels-${{ matrix.os }}
           path: ./wheelhouse/*.whl
@@ -87,12 +87,12 @@ jobs:
     name: Build source distribution
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Build sdist
         run: pipx run build --sdist
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: sdist
           path: dist/*.tar.gz
@@ -103,19 +103,19 @@ jobs:
     environment: release
     steps:
       # retrieve all artifacts
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: sdist
           path: dist
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: wheels-ubuntu-24.04
           path: dist
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: wheels-macos-14
           path: dist
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: wheels-windows-2022
           path: dist
