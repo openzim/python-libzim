@@ -2,14 +2,14 @@ name: QA
 on: [push]
 
 env:
-  LIBZIM_DL_VERSION: "9.4.0-1"
+  LIBZIM_DL_VERSION: "9.5.1"
   MACOSX_DEPLOYMENT_TARGET: "13.0"
 
 jobs:
   lint:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Set up Python
         uses: actions/setup-python@v6
