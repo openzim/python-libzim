@@ -47,16 +47,14 @@ for path in sorted(src.rglob("*.pyi")):
 
     # Create a document with mkdocstrings placeholders.
     with mkdocs_gen_files.open(full_doc_path, "w") as fd:
-        fd.write(
-            f"""---
+        fd.write(f"""---
 title: {identifier}
 ---
 
 
 ::: {identifier}
 {module_options}
-"""
-        )
+""")
 
     # Make the edit button on the page link to the source file.
     mkdocs_gen_files.set_edit_path(full_doc_path, Path("..") / path.relative_to(root))

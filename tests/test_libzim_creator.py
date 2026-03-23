@@ -157,11 +157,7 @@ def get_creator_output(fpath, verbose):
 from libzim.writer import Creator
 with Creator(r"{fpath}").config_verbose({verbose}) as creator:
     pass
-""".replace(
-        "{fpath}", str(fpath)
-    ).replace(
-        "{verbose}", str(verbose)
-    )
+""".replace("{fpath}", str(fpath)).replace("{verbose}", str(verbose))
 
     # Build command with appropriate GIL settings for free-threaded Python
     cmd = [sys.executable]
