@@ -2,7 +2,7 @@ name: Tests
 on: [push]
 
 env:
-  LIBZIM_DL_VERSION: "9.4.0-1"
+  LIBZIM_DL_VERSION: "9.5.1"
   MACOSX_DEPLOYMENT_TARGET: "13.0"
   # we want cython traces for coverage
   PROFILE: "1"
@@ -16,7 +16,7 @@ jobs:
         python: ["3.10", "3.11", "3.12", "3.13", "3.13t", "3.14", "3.14t"]
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Set up Python ${{ matrix.python }}
         uses: actions/setup-python@v6

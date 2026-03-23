@@ -627,7 +627,7 @@ def test_reader_get_random_entry(all_zims):
 @pytest.mark.parametrize(*parametrize_for(["filename"]))
 def test_cluster_cache(all_zims, filename):
     zim = Archive(all_zims / filename)
-    default_value = 536870912  # 512M
+    default_value = 16777216  # 16M
     new_value = 1024
 
     assert get_cluster_cache_max_size() == default_value

@@ -7,10 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-* fixed broken links in docs
-
 ### Added
-- Added Changelog to docs.
+
+- Added Changelog to docs (#227)
+
+### Changed
+
+- Upgrade to libzim 9.5.1 and upgrade other Python dependencies, especially Cython 3.2.4 (#250)
+
+### Fixed
+
+- Fixed broken links in docs (#246)
 
 ## [3.8.0] - 2025-11-14
 
