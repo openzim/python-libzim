@@ -1429,10 +1429,17 @@ reader_public_objects = [
 ]
 reader = create_module(reader_module_name, reader_module_doc, reader_public_objects)
 
+###############################################################################
+#   Search module                                                             #
+###############################################################################
 
-###############################################################################
-#   Search module                                                             #
-###############################################################################
+from __future__ import annotations
+
+from collections.abc import Iterator
+
+cimport zim
+from libzim.reader cimport Archive
+from libzim._util cimport move, preincrement
 
 search_module_name = f"{__name__}.search"
 
@@ -1441,132 +1448,135 @@ cdef class Query:
     __module__ = search_module_name
     cdef zim.Query c_query
 
+    def __cinit__(self):
+        self.c_query = zim.Query()
+
     def set_query(self, query: str) -> Query:
-        """Set the textual query of the `Query`.
-
-        Args:
-            query: The string to search for.
-
-        Returns:
-            The Query instance with updated search query.
-        """
-        self.c_query.setQuery(query.encode('UTF-8'))
+        """Set the textual query of the `Query`."""
+        self.c_query.setQuery(query.encode("UTF-8"))
         return self
 
+cdef class SearchResult:
+    """Identifiable search result: (archive, path)."""
+    __module__ = search_module_name
+
+    cdef Archive archive
+    cdef str path
+
+    def __init__(self, Archive archive, str path):
+        self.archive = archive
+        self.path = path
+
+    def __repr__(self):
+        return f"<SearchResult archive={self.archive!r} path={self.path!r}>"
 
 cdef class SearchResultSet:
-    """Iterator over a Search result: entry paths."""
+    """Iterator over search results."""
     __module__ = search_module_name
+
     cdef zim.SearchResultSet c_resultset
+    cdef list _archives
 
     @staticmethod
-    cdef from_resultset(zim.SearchResultSet _resultset):
+    cdef from_resultset(zim.SearchResultSet rs, list archives):
         cdef SearchResultSet resultset = SearchResultSet()
-        resultset.c_resultset = move(_resultset)
+        resultset.c_resultset = move(rs)
+        resultset._archives = archives
         return resultset
 
-    def __iter__(self) -> Iterator[str]:
-        """Entry paths found in Archive for Search"""
+    def __iter__(self) -> Iterator[SearchResult]:
         cdef zim.SearchIterator current = self.c_resultset.begin()
         cdef zim.SearchIterator end = self.c_resultset.end()
+
         while current != end:
-            yield current.getPath().decode('UTF-8')
+            # libzim exposes archive index per result
+            idx = current.getArchiveIndex()
+            archive = self._archives[idx]
+            path = current.getPath().decode("UTF-8")
+            yield SearchResult(archive, path)
             preincrement(current)
 
 cdef class Search:
-    """Search request over a ZIM Archive."""
+    """Search request produced by a Searcher."""
     __module__ = search_module_name
+
     cdef zim.Search c_search
+    cdef Searcher _searcher
 
-    # Factory functions - Currently Cython can't use classmethods
     @staticmethod
-    cdef from_search(zim.Search _search):
-        """Creates a python ReadArticle from a C++ Article (zim::) -> ReadArticle
-
-        Args:
-        _item (Item): A C++ Item
-
-        Returns:
-            (Item): Casted item"""
+    cdef from_search(zim.Search s, Searcher searcher):
         cdef Search search = Search()
-        search.c_search = move(_search)
+        search.c_search = move(s)
+        search._searcher = searcher
         return search
 
-    def getEstimatedMatches(self) -> pyint:
-        """Estimated number of results in Archive for the search.
-
-
-        Returns:
-            The number of estimeated results for this search.
-        """
+    def getEstimatedMatches(self) -> int:
+        """Estimated number of matches across all archives."""
         return self.c_search.getEstimatedMatches()
 
-    def getResults(self, start: pyint, count: pyint) -> SearchResultSet:
-        """Iterator over Entry paths found in Archive for the search.
-
-        Args:
-            start (int): The beginning of the range to get (offset of the first result).
-            count (int): The number of results to return.
-
-        Returns:
-            A set of results for this search.
-        """
-        return SearchResultSet.from_resultset(move(self.c_search.getResults(start, count)))
-
+    def getResults(self, start: int, count: int) -> SearchResultSet:
+        """Return identifiable search results."""
+        return SearchResultSet.from_resultset(
+            move(self.c_search.getResults(start, count)),
+            self._searcher._archives
+        )
 
 cdef class Searcher:
-    """ZIM Archive Searcher.
-
-    Args:
-        archive (Archive): ZIM Archive to search.
-
-    Attributes:
-        *c_searcher (zim.Searcher): a pointer to a C++ Searcher object.
-    """
+    """Multi-ZIM Archive Searcher."""
     __module__ = search_module_name
 
     cdef zim.Searcher c_searcher
+    cdef list _archives
 
-    def __cinit__(self, object archive: Archive):
-        """Constructs a Searcher from a ZIM Archive.
+    def __cinit__(self):
+        self.c_searcher = zim.Searcher()
+        self._archives = []
 
-        Args:
-            archive (Archive): ZIM Archive to search..
-        """
+    def addArchive(self, Archive archive):
+        """Bind an Archive to this Searcher."""
+        self.c_searcher.addArchive(archive.c_archive)
+        self._archives.append(archive)
 
-        self.c_searcher = move(zim.Searcher(archive.c_archive))
+    def search(self, Query query) -> Search:
+        """Create a Search object for the given query."""
+        return Search.from_search(
+            move(self.c_searcher.search(query.c_query)),
+            self
+        )
 
-    def search(self, object query: Query) -> Search:
-        """Create a Search object for a query of this Searcher's ZIM Archive.
+search_module_doc = """libzim search module (multi-archive aware)
 
-        Returns:
-            A Search object for querying this Searcher's ZIM Archive.
-        """
-        return Search.from_search(move(self.c_searcher.search(query.c_query)))
+- Query: prepare a search query
+- Searcher: bind multiple ZIM Archives
+- Search: execute a query
+- SearchResult: (archive, path)
 
-search_module_doc = """libzim search module
-
-- Query to prepare a query from a string
-- Searcher to perform a search over a libzim.reader.Archive
-
-Usage:
+Example:
 
 ```python
-archive = libzim.reader.Archive(fpath)
-searcher = Searcher(archive)
-query = Query().set_query("foo")
+searcher = Searcher()
+searcher.addArchive(wiki)
+searcher.addArchive(wiktionary)
+
+query = Query().set_query("Python")
 search = searcher.search(query)
-for path in search.getResults(10, 10) # get result from 10 to 20 (10 results)
-    print(path, archive.get_entry_by_path(path).title)
-```"""
+
+for result in search.getResults(0, 10):
+    print(result.archive, result.path)
+
 search_public_objects = [
     Query,
+    SearchResult,
     SearchResultSet,
     Search,
     Searcher,
 ]
-search = create_module(search_module_name, search_module_doc, search_public_objects)
 
+search = create_module(
+    search_module_name,
+    search_module_doc,
+    search_public_objects
+)
 
 ###############################################################################
 #   Suggestion module                                                         #
