@@ -187,9 +187,9 @@ def test_creator_verbose(fpath, verbose):
     lines = output.splitlines()
     if verbose:
         assert "T:" in output
-        assert len(lines) >= 5
+        assert len(lines) >= 7
     else:
-        assert len(lines) == 2
+        assert len(lines) == 4
 
 
 def test_creator_compression(fpath, lipsum_item):

@@ -1,7 +1,7 @@
 [build-system]
 requires = [
   "setuptools == 82.0.1",
-  "wheel == 0.46.3",
+  "wheel == 0.47.0",
   "cython == 3.2.4",
   # https://github.com/pypa/cibuildwheel/blob/v2.22/cibuildwheel/resources/constraints.txt
   "delocate == 0.13.0 ; platform_system=='Windows'",
