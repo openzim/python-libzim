@@ -187,9 +187,12 @@ def test_creator_verbose(fpath, verbose):
     lines = output.splitlines()
     if verbose:
         assert "T:" in output
-        assert len(lines) >= 7
+        assert len(lines) >= 9
     else:
-        assert len(lines) == 4
+        # 'Detect dangling redirects', 'Detect loops and/or blind chains of redirects',
+        # 'Index titles', 'Set entry indices', 'Adding checksum...',
+        # 'ZIM file is ready!'
+        assert len(lines) == 6
 
 
 def test_creator_compression(fpath, lipsum_item):
