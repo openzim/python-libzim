@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Upgrade to libzim 9.8.1 (#261)
+- Upgrade to libzim 9.8.1 and upgrade other Python dependencies, especially Cython 3.2.8 (#261)
 
 ## [3.11.0] - 2026-07-09
 
