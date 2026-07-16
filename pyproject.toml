@@ -1,8 +1,8 @@
 [build-system]
 requires = [
-  "setuptools == 82.0.1",
+  "setuptools == 83.0.0",
   "wheel == 0.47.0",
-  "cython == 3.2.4",
+  "cython == 3.2.8",
   # https://github.com/pypa/cibuildwheel/blob/v2.22/cibuildwheel/resources/constraints.txt
   "delocate == 0.13.0 ; platform_system=='Windows'",
 ]
@@ -46,46 +46,46 @@ Donate = "https://www.kiwix.org/en/support-us/"
 
 [project.optional-dependencies]
 scripts = [
-  "invoke==2.2.1",
+  "invoke==3.0.3",
 ]
 lint = [
-  "black==26.3.1",
-  "ruff==0.15.7",
+  "black==26.5.1",
+  "ruff==0.15.21",
   "libzim",
   "libzim[build]",
 ]
 check = [
-  "pyright==1.1.408",
+  "pyright==1.1.411",
   "libzim",
   "libzim[build]",
   "libzim[test]",
   "types-setuptools",
 ]
 test = [
-  "pytest==9.0.2",
-  "coverage==7.13.5",
+  "pytest==9.1.1",
+  "coverage==7.15.2",
   # for cython coverage plugin
   "libzim[build]",
 ]
 build = [
-  "setuptools == 82.0.1",
-  "wheel == 0.46.3",
-  "cython == 3.2.4",
+  "setuptools == 83.0.0",
+  "wheel == 0.47.0",
+  "cython == 3.2.8",
   "delocate == 0.13.0 ; platform_system=='Windows'",
 ]
 docs = [
   "mkdocs==1.6.1",
-  "mkdocstrings-python==2.0.3",
+  "mkdocstrings-python==2.0.5",
   "mkdocs-material==9.7.6",
-  "pymdown-extensions==10.21",
+  "pymdown-extensions==11.0.1",
   "mkdocs-gen-files==0.6.1",
   "mkdocs-literate-nav==0.6.3",
-  "mkdocs-include-markdown-plugin==7.2.1",
-  "griffe==2.0.0",
+  "mkdocs-include-markdown-plugin==7.3.0",
+  "griffe==2.1.0",
 ]
 dev = [
-  "pre-commit==4.5.1",
-  "ipython==9.11.0",
+  "pre-commit==4.6.0",
+  "ipython==9.15.0",
   "types-setuptools",
   "libzim[scripts]",
   "libzim[lint]",
