@@ -383,6 +383,11 @@ class Config:
             ]
         )
 
+    @property
+    def can_use_limited_api(self) -> bool:
+        """whether runtime can use ABIv3 (free-threaded cannot)"""
+        return not self.profiling and not sysconfig.get_config_var("Py_GIL_DISABLED")
+
 
 config = Config()
 
@@ -400,6 +405,8 @@ def get_cython_extension() -> list[Extension]:
             ("CYTHON_USE_SYS_MONITORING", "0"),
         ]
         compiler_directives.update(linetrace="true")
+    elif config.can_use_limited_api:
+        define_macros += [("Py_LIMITED_API", "0x030B0000")]
 
     include_dirs: list[str] = []
     library_dirs: list[str] = []
@@ -455,6 +462,7 @@ def get_cython_extension() -> list[Extension]:
         extra_compile_args=extra_compile_args,
         language="c++",
         define_macros=define_macros,
+        py_limited_api=config.can_use_limited_api,
     )
     return cythonize([wrapper_extension], compiler_directives=compiler_directives)
 
@@ -634,4 +642,7 @@ setup(
         "repair_win_wheel": RepairWindowsWheel,
     },
     ext_modules=ext_modules,
+    options={"bdist_wheel": {"py_limited_api": "cp311"}}
+    if config.can_use_limited_api
+    else {},
 )
