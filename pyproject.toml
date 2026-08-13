@@ -1,8 +1,8 @@
 [build-system]
 requires = [
-  "setuptools == 83.0.0",
-  "wheel == 0.47.0",
-  "cython == 3.2.8",
+  "setuptools == 84.0.0",
+  "wheel == 0.48.0",
+  "cython == 3.2.9",
   # https://github.com/pypa/cibuildwheel/blob/v2.22/cibuildwheel/resources/constraints.txt
   "delocate == 0.13.0 ; platform_system=='Windows'",
 ]
@@ -68,9 +68,9 @@ test = [
   "libzim[build]",
 ]
 build = [
-  "setuptools == 83.0.0",
-  "wheel == 0.47.0",
-  "cython == 3.2.8",
+  "setuptools == 84.0.0",
+  "wheel == 0.48.0",
+  "cython == 3.2.9",
   "delocate == 0.13.0 ; platform_system=='Windows'",
 ]
 docs = [
