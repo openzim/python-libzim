@@ -660,7 +660,9 @@ setup(
         "repair_win_wheel": RepairWindowsWheel,
     },
     ext_modules=ext_modules,
-    options={"bdist_wheel": {"py_limited_api": "cp311"}}
-    if config.can_use_limited_api
-    else {},
+    options=(
+        {"bdist_wheel": {"py_limited_api": "cp311"}}
+        if config.can_use_limited_api
+        else {}
+    ),
 )
