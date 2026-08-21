@@ -470,13 +470,22 @@ def get_cython_extension() -> list[Extension]:
 class LibzimBuildExt(build_ext):
 
     def get_ext_filename(self, ext_name):
-        # set proper abi3 extension
+        # set proper filename for abi3 usage on all Python versions
         filename = super().get_ext_filename(ext_name)
-        if config.can_use_limited_api:
+
+        if not config.can_use_limited_api:
+            return filename
+
+        if config.platform == "Windows":
+            ext_path = ext_name.split(".")
+            return os.path.join(*ext_path) + ".pyd"
+        else:
             ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
-            filename = filename[: -len(ext_suffix)] + ".abi3" + os.path.splitext(ext_suffix)[1]
+            filename = (
+                filename[: -len(ext_suffix)] + ".abi3" + os.path.splitext(ext_suffix)[1]
+            )
         return filename
-    
+
     def finalize_options(self):
         """Workaround for rpath bug in distutils for macOS"""
         super().finalize_options()
