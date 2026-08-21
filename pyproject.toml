@@ -1,8 +1,8 @@
 [build-system]
 requires = [
-  "setuptools == 83.0.0",
-  "wheel == 0.47.0",
-  "cython == 3.2.8",
+  "setuptools == 84.0.0",
+  "wheel == 0.48.0",
+  "cython == 3.2.9",
   # https://github.com/pypa/cibuildwheel/blob/v2.22/cibuildwheel/resources/constraints.txt
   "delocate == 0.13.0 ; platform_system=='Windows'",
 ]
@@ -11,7 +11,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "libzim"
 version = "3.12.1-dev0"
-requires-python = ">=3.10,<3.15"
+requires-python = ">=3.11,<3.15"
 description = "A python-facing API for creating and interacting with ZIM files"
 authors = [
     {name = "openZIM", email = "dev@kiwix.org"},
@@ -30,7 +30,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "Programming Language :: Cython",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -68,9 +67,9 @@ test = [
   "libzim[build]",
 ]
 build = [
-  "setuptools == 83.0.0",
-  "wheel == 0.47.0",
-  "cython == 3.2.8",
+  "setuptools == 84.0.0",
+  "wheel == 0.48.0",
+  "cython == 3.2.9",
   "delocate == 0.13.0 ; platform_system=='Windows'",
 ]
 docs = [
@@ -170,7 +169,7 @@ features = ["scripts", "test"]
 PROFILE = "1"
 
 [[tool.hatch.envs.test.matrix]]
-python = ["3.10", "3.11", "3.12", "3.13", "3.14"]
+python = ["3.11", "3.12", "3.13", "3.14"]
 
 [tool.hatch.envs.test.scripts]
 run = "inv test --args '{args}'"
