@@ -136,15 +136,19 @@ ZIMS_DATA = {
         "suggestion_string": "Free",
         "suggestion_count": 1,
         "suggestion_result": [
-            "FreedomBox for Communities_Offline Wikipedia "
-            "- Wikibooks, open books for an open world.html"
+            (
+                "FreedomBox for Communities_Offline Wikipedia "
+                "- Wikibooks, open books for an open world.html"
+            )
         ],
         "search_string": "main",
         "search_count": 2,
         "search_result": [
             "Wikibooks.html",
-            "FreedomBox for Communities_Offline Wikipedia "
-            "- Wikibooks, open books for an open world.html",
+            (
+                "FreedomBox for Communities_Offline Wikipedia "
+                "- Wikibooks, open books for an open world.html"
+            ),
         ],
         "test_path": "FreedomBox for Communities_Offline Wikipedia - Wikibooks, "
         "open books for an open world.html",

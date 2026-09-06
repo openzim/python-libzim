@@ -1,8 +1,8 @@
 [build-system]
 requires = [
-  "setuptools == 83.0.0",
-  "wheel == 0.47.0",
-  "cython == 3.2.8",
+  "setuptools == 84.0.0",
+  "wheel == 0.48.0",
+  "cython == 3.3.0",
   # https://github.com/pypa/cibuildwheel/blob/v2.22/cibuildwheel/resources/constraints.txt
   "delocate == 0.13.0 ; platform_system=='Windows'",
 ]
@@ -50,7 +50,7 @@ scripts = [
 ]
 lint = [
   "black==26.5.1",
-  "ruff==0.15.21",
+  "ruff==0.16.5",
   "libzim",
   "libzim[build]",
 ]
@@ -63,29 +63,29 @@ check = [
 ]
 test = [
   "pytest==9.1.1",
-  "coverage==7.15.2",
+  "coverage==7.15.4",
   # for cython coverage plugin
   "libzim[build]",
 ]
 build = [
-  "setuptools == 83.0.0",
-  "wheel == 0.47.0",
-  "cython == 3.2.8",
+  "setuptools == 84.0.0",
+  "wheel == 0.48.0",
+  "cython == 3.3.0",
   "delocate == 0.13.0 ; platform_system=='Windows'",
 ]
 docs = [
   "mkdocs==1.6.1",
-  "mkdocstrings-python==2.0.5",
-  "mkdocs-material==9.7.6",
-  "pymdown-extensions==11.0.1",
+  "mkdocstrings-python==2.0.7",
+  "mkdocs-material==9.7.7",
+  "pymdown-extensions==11.0.2",
   "mkdocs-gen-files==0.6.1",
   "mkdocs-literate-nav==0.6.3",
   "mkdocs-include-markdown-plugin==7.3.0",
-  "griffe==2.1.0",
+  "griffe==2.2.0",
 ]
 dev = [
-  "pre-commit==4.6.0",
-  "ipython==9.15.0",
+  "pre-commit==4.6.2",
+  "ipython==9.17.0",
   "types-setuptools",
   "libzim[scripts]",
   "libzim[lint]",
@@ -285,7 +285,7 @@ ignore = [
   # Ignore warnings on subprocess.run / popen
   "S603",
   # Ignore complexity
-  "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915",
+  "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915", "PLR0917",
 ]
 unfixable = [
   # Don't touch unused imports

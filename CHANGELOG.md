@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Upgrade to libzim 9.8.2 and upgrade other Python dependencies, especially Cython 3.3.0 (#265)
+
 ## [3.12.0] - 2026-07-20
 
 ### Changed
