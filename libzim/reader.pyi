@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import pathlib
+from typing import overload
 from uuid import UUID
+
+from libzim.illustration import IllustrationInfo
 
 class Item:
     @property
@@ -76,7 +79,21 @@ class Archive:
     def media_count(self) -> int: ...
     def get_illustration_sizes(self) -> set[int]: ...
     def has_illustration(self, size: int | None = None) -> bool: ...
-    def get_illustration_item(self, size: int | None = None) -> Item: ...
+    @overload
+    def get_illustration_item(self) -> Item: ...
+    @overload
+    def get_illustration_item(self, size_or_info: int) -> Item: ...
+    @overload
+    def get_illustration_item(self, size_or_info: IllustrationInfo) -> Item: ...
+    @overload
+    def get_illustration_infos(self) -> list[IllustrationInfo]: ...
+    @overload
+    def get_illustration_infos(
+        self,
+        width: int | None = None,
+        height: int | None = None,
+        min_scale: float | None = None,
+    ) -> list[IllustrationInfo]: ...
     @property
     def dirent_cache_max_size(self) -> int: ...
     @dirent_cache_max_size.setter

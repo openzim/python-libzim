@@ -479,20 +479,34 @@ cdef class _Creator:
         self.c_creator.setMainPath(mainPath.encode('UTF-8'))
         return self
 
-    def add_illustration(self, int size: pyint, content: bytes):
+    def add_illustration(self, size_or_info: Union[pyint, IllustrationInfo], content: bytes):
         """Add a PNG illustration to Archive.
 
         Refer to https://wiki.openzim.org/wiki/Metadata for more details.
 
         Args:
-            size (int): The width of the square PNG illustration in pixels.
+            size_or_info: Either an int (width of the square PNG illustration in pixels)
+                          or an IllustrationInfo object with width, height, and scale.
             content (bytes): The binary content of the PNG illustration.
 
         Raises:
-            RuntimeError: If an illustration with the same width already exists.
+            RuntimeError: If an illustration with the same attributes already exists.
+
+        Examples:
+            # Old style (square illustration at scale 1)
+            creator.add_illustration(48, png_data)
+
+            # New style (with dimensions and scale)
+            info = IllustrationInfo(48, 48, 2.0)
+            creator.add_illustration(info, png_data)
         """
         cdef string _content = content
-        self.c_creator.addIllustration(size, _content)
+        if isinstance(size_or_info, IllustrationInfo):
+            self.c_creator.addIllustration((<IllustrationInfo>size_or_info).c_info, _content)
+        elif isinstance(size_or_info, int):
+            self.c_creator.addIllustration(<int>size_or_info, _content)
+        else:
+            raise TypeError(f"First argument must be int or IllustrationInfo, not {type(size_or_info)}")
 
 #    def set_uuid(self, uuid) -> _Creator:
 #        self.c_creator.setUuid(uuid)
@@ -747,6 +761,7 @@ with Creator(pathlib.Path("myfile.zim")) as creator:
     # example
     creator.add_item(MyItemSubclass(path, title, mimetype, content)
     creator.set_mainpath(path)
+    creator.add_illustration(IllustrationInfo(48, 48, 1.0), png_data)
 ```"""
 writer_public_objects = [
     Creator,
@@ -760,6 +775,149 @@ writer_public_objects = [
     IndexData
 ]
 writer = create_module(writer_module_name, writer_module_doc, writer_public_objects)
+
+
+###############################################################################
+#   Illustration module                                                       #
+###############################################################################
+
+illustration_module_name = f"{__name__}.illustration"
+
+cdef class IllustrationInfo:
+    """Information about an illustration in a ZIM archive.
+
+    Attributes:
+        width (int): Width of the illustration in CSS pixels.
+        height (int): Height of the illustration in CSS pixels.
+        scale (float): Device pixel ratio (scale) of the illustration.
+        extra_attributes (dict[str, str]): Additional attributes as key-value pairs.
+            Note: This property returns a new dict on each access. Direct mutations
+            like `info.extra_attributes["key"] = value` won't persist. Use the setter:
+            `info.extra_attributes = {"key": "value"}` to update.
+    """
+    __module__ = illustration_module_name
+    cdef zim.IllustrationInfo c_info
+    def __cinit__(self, width: pyint = 0, height: pyint = 0, scale: float = 1.0, extra_attributes: Dict[str, str] = None):
+        """Create an IllustrationInfo.
+
+        Args:
+            width: Width of the illustration in CSS pixels.
+            height: Height of the illustration in CSS pixels.
+            scale: Device pixel ratio (default: 1.0).
+            extra_attributes: Additional attributes as key-value pairs (optional).
+        """
+        # Initialize struct fields directly
+        self.c_info.width = width
+        self.c_info.height = height
+        self.c_info.scale = scale
+        self.c_info.extraAttributes = zim.Attributes({})
+
+        # Set extra attributes if provided (need to encode strings to bytes)
+        if extra_attributes is not None:
+            for key, val in extra_attributes.items():
+                self.c_info.extraAttributes[key.encode('UTF-8')] = val.encode('UTF-8')
+
+    @staticmethod
+    cdef from_illustration_info(zim.IllustrationInfo info):
+        """Creates a Python IllustrationInfo from a C++ IllustrationInfo.
+
+        Args:
+            info: A C++ IllustrationInfo
+
+        Returns:
+            IllustrationInfo: Casted illustration info
+        """
+        cdef IllustrationInfo ii = IllustrationInfo()
+        ii.c_info = move(info)
+        return ii
+    @staticmethod
+    def from_metadata_item_name(name: str) -> IllustrationInfo:
+        """Parse an illustration metadata item name into IllustrationInfo.
+
+        Args:
+            name: The metadata item name (e.g., "Illustration_48x48@2").
+
+        Returns:
+            The parsed IllustrationInfo.
+
+        Raises:
+            RuntimeError: If the name cannot be parsed.
+        """
+        cdef string _name = name.encode('UTF-8')
+        cdef zim.IllustrationInfo info = zim.IllustrationInfo.fromMetadataItemName(_name)
+        return IllustrationInfo.from_illustration_info(move(info))
+    @property
+    def width(self) -> pyint:
+        """Width of the illustration in CSS pixels."""
+        return self.c_info.width
+    @width.setter
+    def width(self, value: pyint):
+        self.c_info.width = value
+    @property
+    def height(self) -> pyint:
+        """Height of the illustration in CSS pixels."""
+        return self.c_info.height
+    @height.setter
+    def height(self, value: pyint):
+        self.c_info.height = value
+    @property
+    def scale(self) -> float:
+        """Device pixel ratio (scale) of the illustration."""
+        return self.c_info.scale
+    @scale.setter
+    def scale(self, value: float):
+        self.c_info.scale = value
+    @property
+    def extra_attributes(self) -> Dict[str, str]:
+        """Additional attributes as key-value pairs."""
+        result = {}
+        for item in self.c_info.extraAttributes:
+            result[item.first.decode('UTF-8')] = item.second.decode('UTF-8')
+        return result
+    @extra_attributes.setter
+    def extra_attributes(self, value: Dict[str, str]):
+        """Set additional attributes."""
+        self.c_info.extraAttributes.clear()
+        for key, val in value.items():
+            self.c_info.extraAttributes[key.encode('UTF-8')] = val.encode('UTF-8')
+    def as_metadata_item_name(self) -> str:
+        """Convert this IllustrationInfo to a metadata item name.
+
+        Returns:
+            The metadata item name (e.g., "Illustration_48x48@2").
+        """
+        return self.c_info.asMetadataItemName().decode('UTF-8')
+    def __repr__(self) -> str:
+        return f"IllustrationInfo(width={self.width}, height={self.height}, scale={self.scale})"
+    def __eq__(self, other) -> pybool:
+        if not isinstance(other, IllustrationInfo):
+            return False
+        return (self.width == other.width and
+                self.height == other.height and
+                self.scale == other.scale and
+                self.extra_attributes == other.extra_attributes)
+
+
+illustration_module_doc = """Illustration data structures for ZIM archives
+
+This module provides classes for working with illustrations in ZIM archives.
+
+Usage:
+
+```python
+from libzim.illustration import IllustrationInfo
+
+# Create an IllustrationInfo
+info = IllustrationInfo(48, 48, 2.0)
+print(f"Metadata name: {info.as_metadata_item_name()}")
+
+# Parse from metadata name
+parsed = IllustrationInfo.from_metadata_item_name("Illustration_48x48@2")
+```"""
+illustration_public_objects = [
+    IllustrationInfo,
+]
+illustration = create_module(illustration_module_name, illustration_module_doc, illustration_public_objects)
 
 
 ###############################################################################
@@ -1329,18 +1487,71 @@ cdef class Archive:
             return self.c_archive.hasIllustration(size)
         return self.c_archive.hasIllustration()
 
-    def get_illustration_item(self, size: pyint = None) -> Item:
+    def get_illustration_item(self, size_or_info: Union[pyint, IllustrationInfo] = None) -> Item:
         """Get the illustration Metadata item of the archive.
+
+        Args:
+            size_or_info: Either an int (width of the square PNG illustration in pixels)
+                          or an IllustrationInfo object with width, height, and scale.
+                          If None, defaults to size 48.
 
         Returns:
             The illustration item.
+
+        Raises:
+            KeyError: If the requested illustration is not found.
+            TypeError: If size_or_info is not None, int, or IllustrationInfo.
+
+        Examples:
+            # Get default illustration (48x48@1)
+            item = archive.get_illustration_item()
+
+            # Get illustration by size (square at scale 1)
+            item = archive.get_illustration_item(96)
+
+            # Get illustration by IllustrationInfo (width, height, scale)
+            info = IllustrationInfo(48, 48, 2.0)
+            item = archive.get_illustration_item(info)
         """
         try:
-            if size is not None:
-                return Item.from_item(move(self.c_archive.getIllustrationItem(size)))
-            return Item.from_item(move(self.c_archive.getIllustrationItem()))
+            if size_or_info is None:
+                return Item.from_item(move(self.c_archive.getIllustrationItem(<int>48)))
+            elif isinstance(size_or_info, IllustrationInfo):
+                return Item.from_item(move(self.c_archive.getIllustrationItem((<IllustrationInfo>size_or_info).c_info)))
+            elif isinstance(size_or_info, int):
+                return Item.from_item(move(self.c_archive.getIllustrationItem(<int>size_or_info)))
+            else:
+                raise TypeError(f"Argument must be None, int, or IllustrationInfo, not {type(size_or_info)}")
         except RuntimeError as e:
             raise KeyError(str(e))
+
+    def get_illustration_infos(self, width: pyint = None, height: pyint = None,
+                               min_scale: float = None) -> List[IllustrationInfo]:
+        """Get information about available illustrations.
+
+        Args:
+            width: Optional width to filter illustrations (must be provided with height).
+            height: Optional height to filter illustrations (must be provided with width).
+            min_scale: Optional minimum scale to filter illustrations (requires width and height).
+
+        Returns:
+            List of IllustrationInfo objects describing available illustrations.
+
+        Note:
+            - When called without arguments, returns all available illustrations.
+            - When called with width, height, and min_scale, filters illustrations.
+        """
+        cdef zim.Archive.IllustrationInfos infos
+        if width is not None and height is not None and min_scale is not None:
+            infos = self.c_archive.getIllustrationInfos(width, height, min_scale)
+        elif width is None and height is None and min_scale is None:
+            infos = self.c_archive.getIllustrationInfos()
+        else:
+            raise ValueError("Either provide all of (width, height, min_scale) or none of them")
+        result = []
+        for info in infos:
+            result.append(IllustrationInfo.from_illustration_info(info))
+        return result
 
     @property
     def dirent_cache_max_size(self) -> pyint:
@@ -1380,7 +1591,7 @@ def get_cluster_cache_max_size() -> pyint:
     """Get the maximum size of the cluster cache.
 
     Returns:
-        (int): the maximum memory size used by the cluster cache (in bytes). 
+        (int): the maximum memory size used by the cluster cache (in bytes).
     """
     return zim.getClusterCacheMaxSize()
 
@@ -1400,7 +1611,7 @@ def get_cluster_cache_current_size() -> pyint:
     """Get the current size of the cluster cache.
 
     Returns:
-        (int): the current memory size (in bytes) used by the cluster cache. 
+        (int): the current memory size (in bytes) used by the cluster cache.
     """
     return zim.getClusterCacheCurrentSize()
 
@@ -1743,6 +1954,7 @@ class ModuleLoader(importlib.abc.Loader):
     @staticmethod
     def create_module(spec):
         return {
+            'libzim.illustration': illustration,
             'libzim.writer': writer,
             'libzim.reader': reader,
             'libzim.search': search,
@@ -1766,4 +1978,4 @@ class ModuleFinder(importlib.abc.MetaPathFinder):
 # register finder for our submodules
 sys.meta_path.insert(0, ModuleFinder())
 
-__all__ = ["writer", "reader", "search", "suggestion", "version"]
+__all__ = ["illustration", "writer", "reader", "search", "suggestion", "version"]
