@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Upgrade to libzim 9.8.2-1 (#xxx)
+- Upgrade to libzim 9.8.2-1 and upgrade other Python dependencies (#269)
 
 ## [3.13.0] - 2026-09-07
 
