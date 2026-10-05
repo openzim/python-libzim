@@ -49,13 +49,13 @@ scripts = [
   "invoke==3.0.3",
 ]
 lint = [
-  "black==26.5.1",
-  "ruff==0.16.5",
+  "black==26.10.0",
+  "ruff==0.16.10",
   "libzim",
   "libzim[build]",
 ]
 check = [
-  "pyright==1.1.411",
+  "pyright==1.1.414",
   "libzim",
   "libzim[build]",
   "libzim[test]",
@@ -63,7 +63,7 @@ check = [
 ]
 test = [
   "pytest==9.1.1",
-  "coverage==7.15.4",
+  "coverage==7.16.2",
   # for cython coverage plugin
   "libzim[build]",
 ]
@@ -75,17 +75,17 @@ build = [
 ]
 docs = [
   "mkdocs==1.6.1",
-  "mkdocstrings-python==2.0.7",
+  "mkdocstrings-python==2.0.9",
   "mkdocs-material==9.7.7",
-  "pymdown-extensions==11.0.2",
+  "pymdown-extensions==12.1",
   "mkdocs-gen-files==0.6.1",
   "mkdocs-literate-nav==0.6.3",
   "mkdocs-include-markdown-plugin==7.3.0",
-  "griffe==2.2.0",
+  "griffe==2.3.0",
 ]
 dev = [
   "pre-commit==4.6.2",
-  "ipython==9.17.0",
+  "ipython==9.17.1",
   "types-setuptools",
   "libzim[scripts]",
   "libzim[lint]",

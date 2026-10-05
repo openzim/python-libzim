@@ -6,7 +6,7 @@ on:
       - published
 
 env:
-  LIBZIM_DL_VERSION: "9.8.2"
+  LIBZIM_DL_VERSION: "9.8.2-1"
   MACOSX_DEPLOYMENT_TARGET: "13.0"
   CIBW_ENVIRONMENT_PASS_LINUX: "LIBZIM_DL_VERSION"
   # APPLE_SIGNING_KEYCHAIN_PATH set in prepare keychain step
@@ -22,7 +22,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-24.04, macos-14, windows-2022]
+        os: [ubuntu-26.04, macos-26, windows-2025]
 
     steps:
       - uses: actions/checkout@v7
@@ -34,7 +34,7 @@ jobs:
           platforms: all
 
       - name: Prepare Apple Keychain for Signing
-        if: matrix.os == 'macos-14'
+        if: matrix.os == 'macos-26'
         shell: bash
         run: |
           # store certificate on filesystem
@@ -68,10 +68,10 @@ jobs:
           security unlock-keychain -p mysecretpassword ${APPLE_SIGNING_KEYCHAIN_PATH}
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v4.2
+        uses: pypa/cibuildwheel@v4.3
 
       - name: Cleanup Apple Keychain
-        if: matrix.os == 'macos-14'
+        if: matrix.os == 'macos-26'
         shell: bash
         run: |
           security lock-keychain ${APPLE_SIGNING_KEYCHAIN_PATH}
@@ -109,15 +109,15 @@ jobs:
           path: dist
       - uses: actions/download-artifact@v8
         with:
-          name: wheels-ubuntu-24.04
+          name: wheels-ubuntu-26.04
           path: dist
       - uses: actions/download-artifact@v8
         with:
-          name: wheels-macos-14
+          name: wheels-macos-26
           path: dist
       - uses: actions/download-artifact@v8
         with:
-          name: wheels-windows-2022
+          name: wheels-windows-2025
           path: dist
 
       - uses: pypa/gh-action-pypi-publish@v1.14.2
