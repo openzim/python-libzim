@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Upgrade to libzim 9.8.2-1 (#xxx)
+
 ## [3.13.0] - 2026-09-07
 
 ### Changed
