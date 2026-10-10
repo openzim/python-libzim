@@ -26,6 +26,7 @@
 #include <zim/archive.h>
 #include <zim/entry.h>
 #include <zim/item.h>
+#include <zim/illustration.h>
 #include <zim/writer/item.h>
 #include <zim/writer/contentProvider.h>
 #include <zim/search.h>
@@ -136,6 +137,8 @@ class Entry : public Wrapper<zim::Entry>
 class Archive : public Wrapper<zim::Archive>
 {
   public:
+    typedef zim::Archive::IllustrationInfos IllustrationInfos;
+
     Archive() = default;
     Archive(const std::string& filename) : Wrapper(zim::Archive(filename)) {};
     Archive(const zim::Archive& o) : Wrapper(o) {};
@@ -147,6 +150,7 @@ class Archive : public Wrapper<zim::Archive>
     FORWARD(wrapper::Entry, getRandomEntry)
     FORWARD(wrapper::Item, getIllustrationItem)
     FORWARD(std::set<unsigned int>, getIllustrationSizes)
+    FORWARD(zim::Archive::IllustrationInfos, getIllustrationInfos)
     std::string getUuid() const
     { auto u = mp_base->getUuid();
       std::string uuids(u.data, u.size());
