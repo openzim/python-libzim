@@ -323,7 +323,7 @@ def test_content_ref_keep(all_zims):
     gc.collect()
     # Load a lot of content
     for i in range(0, archive.entry_count, 2):
-        entry = archive._get_entry_by_id(i)
+        entry = archive.get_entry_by_id(i)
         if not entry.is_redirect:
             _ = entry.get_item().content
     # Check everything is ok
@@ -580,8 +580,8 @@ def test_reader_by_id(all_zims, filename):
 
     # test index access
     for index in range(0, zim.entry_count - 1):
-        assert zim._get_entry_by_id(index)._index == index
-        assert zim._get_entry_by_id(index).get_item()._index >= 0
+        assert zim.get_entry_by_id(index)._index == index
+        assert zim.get_entry_by_id(index).get_item()._index >= 0
 
 
 @skip_if_offline
@@ -640,7 +640,7 @@ def test_cluster_cache(all_zims, filename):
 
     # test index access
     for index in range(0, zim.entry_count - 1):
-        bytes(zim._get_entry_by_id(index).get_item().content)
+        bytes(zim.get_entry_by_id(index).get_item().content)
 
     # check current size is not too big (not really relevant since cache keeps at least
     # one cluster in memory, so this value depends on maximum cluster size
@@ -665,7 +665,7 @@ def test_dirent_cache(all_zims, filename):
 
     # test index access
     for index in range(0, zim.entry_count - 1):
-        bytes(zim._get_entry_by_id(index).get_item().content)
+        bytes(zim.get_entry_by_id(index).get_item().content)
 
     assert zim.dirent_cache_current_size <= new_value
 
@@ -674,7 +674,7 @@ def test_dirent_cache(all_zims, filename):
     assert zim.dirent_cache_current_size == empty_value
 
     for index in range(0, zim.entry_count - 1):
-        bytes(zim._get_entry_by_id(index).get_item().content)
+        bytes(zim.get_entry_by_id(index).get_item().content)
 
     # always at least one entry is kept in cache unless ZIM is empty
     assert zim.dirent_cache_current_size == (1 if zim.entry_count else 0)
