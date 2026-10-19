@@ -821,16 +821,80 @@ def test_indexdata_interface():
     assert default_id.get_geoposition() is None
 
 
-def test_exc_in_indexdata(fpath, lipsum):
+def test_indexdata_geoposition(fpath, lipsum):
+    item = StaticItem(path=HOME_PATH + "geo", content=lipsum, mimetype="text/html")
+
+    class CustomIndexData(IndexData):
+        def has_indexdata(self):
+            return True
+
+        def get_title(self):
+            return "Eiffel Tower"
+
+        def get_content(self):
+            return "Landmark in Paris"
+
+        def get_keywords(self):
+            return "tower paris"
+
+        def get_wordcount(self):
+            return 42
+
+        def get_geoposition(self):
+            return (48.8584, 2.2945)
+
+    item.get_indexdata = CustomIndexData
+
+    with Creator(fpath).config_indexing(True, "eng") as c:
+        c.add_item(item)
+
+    zim = Archive(fpath)
+    searcher = Searcher(zim)
+    query = Query().set_query("Landmark")
+    assert searcher.search(query).get_estimated_matches() == 1
+
+
+@pytest.mark.parametrize(
+    "method_name",
+    ["get_indexdata", "has_indexdata", "get_wordcount", "get_geoposition"],
+)
+def test_exc_in_indexdata(fpath, lipsum, method_name):
     item = StaticItem(path=HOME_PATH + "custom", content=lipsum, mimetype="text/html")
 
     class CustomIndexData(IndexData):
         def has_indexdata(self):
-            raise IndexError
+            if method_name == "has_indexdata":
+                raise IndexError("custom index error")
+            return True
 
-    item.get_indexdata = CustomIndexData
+        def get_title(self):
+            return "Title"
 
-    with pytest.raises(RuntimeError, match="IndexError"):
+        def get_content(self):
+            return "Content"
+
+        def get_keywords(self):
+            return ""
+
+        def get_wordcount(self):
+            if method_name == "get_wordcount":
+                raise ValueError("custom wordcount error")
+            return 1
+
+        def get_geoposition(self):
+            if method_name == "get_geoposition":
+                raise ValueError("custom geoposition error")
+
+    if method_name == "get_indexdata":
+
+        def failing_get_indexdata():
+            raise RuntimeError("custom get_indexdata error")
+
+        item.get_indexdata = failing_get_indexdata
+    else:
+        item.get_indexdata = CustomIndexData
+
+    with pytest.raises(RuntimeError):
         with Creator(fpath).config_indexing(True, "eng") as c:
             c.add_item(item)
 
