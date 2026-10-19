@@ -879,3 +879,48 @@ def test_accented_search_from_libzim(fpath):
     accented_search = accented_searcher.search(accented_query)
     assert accented_search.get_estimated_matches() == zim.article_count
     assert list(accented_search.get_results(0, zim.article_count)) == ["path0", "path1"]
+
+
+def test_get_entry_by_title_utf8(fpath):
+    """Test get_entry_by_title on a ZIM with title index and distinct title and path."""
+    with Creator(fpath) as creator:
+        creator.add_item(
+            StaticItem(
+                path="articles/song.html",
+                title="A Song for You",
+                content="Standard English content",
+            )
+        )
+        creator.add_item(
+            StaticItem(
+                path="articles/utf8.html",
+                title="Spécial: 日本語 & हिन्दी — 🚀 ★",
+                content="UTF-8 multilingual content",
+            )
+        )
+
+    zim = Archive(fpath)
+    assert zim.has_title_index is True
+
+    assert zim.has_entry_by_title("A Song for You") is True
+    entry1 = zim.get_entry_by_title("A Song for You")
+    assert entry1.path == "articles/song.html"
+    assert entry1.title == "A Song for You"
+
+    utf8_title = "Spécial: 日本語 & हिन्दी — 🚀 ★"
+    assert zim.has_entry_by_title(utf8_title) is True
+    entry2 = zim.get_entry_by_title(utf8_title)
+    assert entry2.path == "articles/utf8.html"
+    assert entry2.title == utf8_title
+
+    assert zim.has_entry_by_title("articles/song.html") is False
+    with pytest.raises(KeyError):
+        zim.get_entry_by_title("articles/song.html")
+
+    assert zim.has_entry_by_title("articles/utf8.html") is False
+    with pytest.raises(KeyError):
+        zim.get_entry_by_title("articles/utf8.html")
+
+    assert zim.has_entry_by_title("Non Existent Title 🔍") is False
+    with pytest.raises(KeyError):
+        zim.get_entry_by_title("Non Existent Title 🔍")
