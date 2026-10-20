@@ -206,9 +206,17 @@ class Search : public Wrapper<zim::Search>
 class Searcher : public Wrapper<zim::Searcher>
 {
   public:
-    Searcher() = default;
+    Searcher() : Wrapper(zim::Searcher(std::vector<zim::Archive>())) {};
     Searcher(const wrapper::Archive& a) : Wrapper(zim::Searcher(*a)) {};
     Searcher(const zim::Searcher& o) : Wrapper(o) {};
+
+    void addArchive(const wrapper::Archive& a)
+    {
+      if (!mp_base) {
+        mp_base.reset(new zim::Searcher(std::vector<zim::Archive>()));
+      }
+      mp_base->addArchive(*a);
+    }
 
     FORWARD(void, setVerbose)
     FORWARD(wrapper::Search, search)
