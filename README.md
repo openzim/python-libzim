@@ -61,11 +61,12 @@ print(bytes(entry.get_item().content).decode("UTF-8"))
 # searching using full-text index
 search_string = "Welcome"
 query = Query().set_query(search_string)
-searcher = Searcher(zim)
+searcher = Searcher(zim)  # or Searcher() followed by searcher.add_archive(...)
 search = searcher.search(query)
 search_count = search.get_estimated_matches()
 print(f"there are {search_count} matches for {search_string}")
-print(list(search.get_results(0, search_count)))
+for result in search.get_results(0, search_count):
+    print(result.archive, result.path, result.title, result.snippet)
 
 # accessing suggestions
 search_string = "kiwix"
