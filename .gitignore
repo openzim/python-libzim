@@ -241,6 +241,7 @@ libzim.dylib
 libzim.*.dylib
 zim*.dll
 libicu*.dll
+icu*.dll
 zim.lib
 
 # pkg-config file
