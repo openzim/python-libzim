@@ -1694,55 +1694,90 @@ cdef class Query:
         return self
 
 
+cdef class SearchResult:
+    """Identifiable search result containing archive, path, title, and snippet."""
+    __module__ = search_module_name
+    cdef readonly Archive archive
+    cdef readonly str path
+    cdef readonly str title
+    cdef readonly str snippet
+
+    def __init__(self, Archive archive, str path, str title, str snippet):
+        self.archive = archive
+        self.path = path
+        self.title = title
+        self.snippet = snippet
+
+    def __repr__(self) -> str:
+        return f"<SearchResult archive={self.archive!r} path={self.path!r}>"
+
+    def __str__(self) -> str:
+        return self.path
+
+    def __eq__(self, other):
+        if isinstance(other, str):
+            return self.path == other
+        if isinstance(other, SearchResult):
+            return self.archive == (<SearchResult>other).archive and self.path == (<SearchResult>other).path
+        return False
+
+    def __hash__(self):
+        return hash((self.archive.filename.expanduser().resolve(), self.path))
+
+
 cdef class SearchResultSet:
-    """Iterator over a Search result: entry paths."""
+    """Iterator over search results."""
     __module__ = search_module_name
     cdef zim.SearchResultSet c_resultset
+    cdef list _archives
 
     @staticmethod
-    cdef from_resultset(zim.SearchResultSet _resultset):
+    cdef from_resultset(zim.SearchResultSet _resultset, list archives):
         cdef SearchResultSet resultset = SearchResultSet()
         resultset.c_resultset = move(_resultset)
+        resultset._archives = archives
         return resultset
 
-    def __iter__(self) -> Iterator[str]:
-        """Entry paths found in Archive for Search"""
+    def __iter__(self) -> Iterator[SearchResult]:
+        """Search results found in Archive(s) for Search"""
         cdef zim.SearchIterator current = self.c_resultset.begin()
         cdef zim.SearchIterator end = self.c_resultset.end()
+        cdef int archive_idx
+        cdef Archive archive
+        cdef str path, title, snippet
         while current != end:
-            yield current.getPath().decode('UTF-8')
+            archive_idx = current.getFileIndex()
+            archive = self._archives[archive_idx]
+            path = current.getPath().decode('UTF-8')
+            title = current.getTitle().decode('UTF-8')
+            snippet = current.getSnippet().decode('UTF-8')
+            yield SearchResult(archive, path, title, snippet)
             preincrement(current)
 
+
 cdef class Search:
-    """Search request over a ZIM Archive."""
+    """Search request over ZIM Archive(s)."""
     __module__ = search_module_name
     cdef zim.Search c_search
+    cdef list _archives
 
-    # Factory functions - Currently Cython can't use classmethods
     @staticmethod
-    cdef from_search(zim.Search _search):
-        """Creates a python ReadArticle from a C++ Article (zim::) -> ReadArticle
-
-        Args:
-        _item (Item): A C++ Item
-
-        Returns:
-            (Item): Casted item"""
+    cdef from_search(zim.Search _search, list archives):
         cdef Search search = Search()
         search.c_search = move(_search)
+        search._archives = archives
         return search
 
     def get_estimated_matches(self) -> pyint:
-        """Estimated number of results in Archive for the search.
-
+        """Estimated number of results in Archive(s) for the search.
 
         Returns:
-            The number of estimeated results for this search.
+            The number of estimated results for this search.
         """
         return self.c_search.getEstimatedMatches()
 
     def get_results(self, start: pyint, count: pyint) -> SearchResultSet:
-        """Iterator over Entry paths found in Archive for the search.
+        """Iterator over search results found in Archive(s) for the search.
 
         Args:
             start (int): The beginning of the range to get (offset of the first result).
@@ -1751,14 +1786,18 @@ cdef class Search:
         Returns:
             A set of results for this search.
         """
-        return SearchResultSet.from_resultset(move(self.c_search.getResults(start, count)))
+        return SearchResultSet.from_resultset(
+            move(self.c_search.getResults(start, count)),
+            self._archives
+        )
 
 
 cdef class Searcher:
-    """ZIM Archive Searcher.
+    """ZIM Archive Searcher supporting single and multi-archive search.
 
     Args:
-        archive (Archive): ZIM Archive to search.
+        archive (Archive, optional): Initial ZIM Archive to search.
+        *extra_archives (Archive): Additional ZIM Archives to search across.
 
     Attributes:
         *c_searcher (zim.Searcher): a pointer to a C++ Searcher object.
@@ -1766,28 +1805,53 @@ cdef class Searcher:
     __module__ = search_module_name
 
     cdef zim.Searcher c_searcher
+    cdef list _archives
 
-    def __cinit__(self, object archive: Archive):
-        """Constructs a Searcher from a ZIM Archive.
+    def __cinit__(self, object archive = None, *extra_archives):
+        """Constructs a Searcher, optionally bound to one or more ZIM Archives.
 
         Args:
-            archive (Archive): ZIM Archive to search..
+            archive (Archive or list of Archives, optional): Initial Archive(s).
+            *extra_archives (Archive): Additional Archives.
         """
+        self.c_searcher = zim.Searcher()
+        self._archives = []
+        if archive is not None:
+            if isinstance(archive, (list, tuple)):
+                for a in archive:
+                    self.add_archive(a)
+            else:
+                self.add_archive(archive)
+        for a in extra_archives:
+            self.add_archive(a)
 
-        self.c_searcher = move(zim.Searcher(archive.c_archive))
+    def add_archive(self, Archive archive):
+        """Bind an Archive to this Searcher.
+
+        Args:
+            archive (Archive): ZIM Archive to add.
+        """
+        self.c_searcher.addArchive(archive.c_archive)
+        self._archives.append(archive)
 
     def search(self, object query: Query) -> Search:
-        """Create a Search object for a query of this Searcher's ZIM Archive.
+        """Create a Search object for a query across all bound ZIM Archives.
 
         Returns:
-            A Search object for querying this Searcher's ZIM Archive.
+            A Search object for querying this Searcher's ZIM Archive(s).
         """
-        return Search.from_search(move(self.c_searcher.search(query.c_query)))
+        return Search.from_search(
+            move(self.c_searcher.search((<Query>query).c_query)),
+            self._archives
+        )
+
 
 search_module_doc = """libzim search module
 
 - Query to prepare a query from a string
-- Searcher to perform a search over a libzim.reader.Archive
+- Searcher to perform a search over one or more libzim.reader.Archive objects
+- Search to execute the query
+- SearchResult containing archive, path, title, and snippet
 
 Usage:
 
@@ -1796,11 +1860,12 @@ archive = libzim.reader.Archive(fpath)
 searcher = Searcher(archive)
 query = Query().set_query("foo")
 search = searcher.search(query)
-for path in search.get_results(10, 10) # get result from 10 to 20 (10 results)
-    print(path, archive.get_entry_by_path(path).title)
+for result in search.get_results(10, 10):
+    print(result.archive, result.path, result.title, result.snippet)
 ```"""
 search_public_objects = [
     Query,
+    SearchResult,
     SearchResultSet,
     Search,
     Searcher,
