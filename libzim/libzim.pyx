@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+# cython: freethreading_compatible = True
+
 # Make our libzim module a package by setting a __path__
 # There is no real path here, but it will be passed to our module finder.
 """openZIM's file format library binding
