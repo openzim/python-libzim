@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Declare the extension free-threading compatible so that importing it on a free-threaded CPython no longer forces the GIL back on (#240)
+
 ## [3.13.1] - 2026-10-05
 
 ### Changed
