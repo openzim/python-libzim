@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Declare the extension free-threading compatible so that importing it on a free-threaded CPython no longer forces the GIL back on (#240)
 
+### Removed
+
+- **Breaking**: `Creator.add_metadata` no longer auto-converts a `Date` metadata value passed as `datetime.date`/`datetime.datetime`; pass pre-formatted `str`/`bytes` instead (#188)
+
 ## [3.13.1] - 2026-10-05
 
 ### Changed
