@@ -391,6 +391,9 @@ def get_cython_extension() -> list[Extension]:
     define_macros: list[tuple[str, str | None]] = []
     compiler_directives = {"language_level": "3"}
 
+    if getattr(sys, "_is_gil_enabled", None) is not None and not sys._is_gil_enabled():
+        define_macros.append(("Py_GIL_DISABLED", "1"))
+
     if config.profiling:
         define_macros += [
             ("CYTHON_TRACE", "1"),

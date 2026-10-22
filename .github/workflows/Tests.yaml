@@ -1,5 +1,9 @@
 name: Tests
-on: [push]
+on:
+  pull_request:
+  push:
+    branches:
+      - main
 
 env:
   LIBZIM_DL_VERSION: "9.8.2-1"

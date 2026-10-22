@@ -159,16 +159,7 @@ with Creator(r"{fpath}").config_verbose({verbose}) as creator:
     pass
 """.replace("{fpath}", str(fpath)).replace("{verbose}", str(verbose))
 
-    # Build command with appropriate GIL settings for free-threaded Python
-    cmd = [sys.executable]
-
-    # Check if we're running in free-threaded mode (Python 3.13+)
-    if sys.version_info >= (3, 13) and hasattr(sys, "_is_gil_enabled"):
-        # If GIL is enabled, explicitly pass -X gil=1 to subprocess
-        if sys._is_gil_enabled():
-            cmd.extend(["-X", "gil=1"])
-
-    cmd.extend(["-c", code])
+    cmd = [sys.executable, "-c", code]
 
     ps = subprocess.run(
         cmd,
