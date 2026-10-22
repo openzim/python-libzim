@@ -18,10 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Breaking**: `Search.getResults()` renamed `Search.get_results()` (#200)
 - **Breaking**: `SuggestionSearch.getEstimatedMatches()` renamed `SuggestionSearch.get_estimated_matches()` (#200)
 - **Breaking**: `SuggestionSearch.getResults()` renamed `SuggestionSearch.get_results()` (#200)
+- Modernize type hints in `libzim.pyx` to use PEP 604/585 syntax (e.g. `str | bytes`, `dict[...]`) instead of `typing.Union`/`typing.Dict`/etc. (#281)
 
 ### Removed
 
 - **Breaking**: `Creator.add_metadata` no longer auto-converts a `Date` metadata value passed as `datetime.date`/`datetime.datetime`; pass pre-formatted `str`/`bytes` instead (#188)
+- **Breaking**: Drop support for Python 3.10 (#281)
 
 ### Fixed
 
@@ -30,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add a CI job building the documentation on every PR/push so this kind of breakage is caught automatically (#279)
+- Add support for Python 3.15 (#281)
 
 ## [3.13.1] - 2026-10-05
 
