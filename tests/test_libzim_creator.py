@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import base64
-import datetime
 import itertools
 import os
 import pathlib
@@ -417,12 +416,7 @@ def test_creator_metadata(fpath, lipsum_item):
     with Creator(fpath) as c:
         c.add_item(lipsum_item)
         for name, value in metadata.items():
-            if name == "Date":
-                continue
             c.add_metadata(name, value)
-
-        mdate = datetime.date(*[int(x) for x in metadata.get("Date", "").split("-")])
-        c.add_metadata("Date", mdate)
 
     zim = Archive(fpath)
     for name, value in metadata.items():
