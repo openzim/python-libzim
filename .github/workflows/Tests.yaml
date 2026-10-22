@@ -48,3 +48,32 @@ jobs:
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  build-docs: # validate that doc can be built
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          pip install -U pip hatch
+
+      - name: Build native extension
+        run: hatch run build-ext
+
+      - name: Build mkdocs documentation
+        run: hatch run docs:build
+
+      - name: Save doc artifact
+        uses: actions/upload-artifact@v7
+        with:
+          path: |
+            site/
+          name: doc
+          retention-days: 1
