@@ -83,13 +83,13 @@ plugins:
       handlers:
         python:
           # Set up cross-references to Python types
-          import:
+          inventories:
             - url: https://docs.python.org/3/objects.inv
               domains: [std, py]
             - https://typing-extensions.readthedocs.io/en/latest/objects.inv
+          load_external_modules: false
           options:
             heading_level: 2
-            load_external_modules: false
             show_submodules: false
             # force dynamic analysis from compiled module when loading data
             allow_inspection: true
