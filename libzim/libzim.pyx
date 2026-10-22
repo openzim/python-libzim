@@ -42,8 +42,9 @@ import sys
 import traceback
 import warnings
 from collections import OrderedDict
+from collections.abc import Generator, Iterator
 from types import ModuleType
-from typing import Dict, Generator, Iterator, List, Optional, Set, TextIO, Tuple, Union
+from typing import TextIO
 from uuid import UUID
 
 from cpython.buffer cimport PyBUF_WRITABLE
@@ -223,7 +224,7 @@ cdef class WritingBlob:
     cdef zim.Blob c_blob
     cdef bytes ref_content
 
-    def __cinit__(self, content: Union[str, bytes]):
+    def __cinit__(self, content: str | bytes):
         if isinstance(content, str):
             self.ref_content = content.encode('UTF-8')
         else:
@@ -346,7 +347,7 @@ class BaseWritingItem:
         """
         raise NotImplementedError("get_contentprovider must be implemented.")
 
-    def get_hints(self) -> Dict[Hint, pyint]:
+    def get_hints(self) -> dict[Hint, pyint]:
         """Get the Hints that help the Creator decide how to handle this item.
 
         Hints affects compression, presence in suggestion, random and search.
@@ -540,7 +541,7 @@ cdef class _Creator:
         with nogil:
             self.c_creator.addMetadata(_name, _content, _mimetype)
 
-    def add_redirection(self, str path: str, str title: str, str target_path: str, dict hints: Dict[Hint, pyint]):
+    def add_redirection(self, str path: str, str title: str, str target_path: str, dict hints: dict[Hint, pyint]):
         """Add redirection entry to the archive.
 
         Refer to https://wiki.openzim.org/wiki/ZIM_file_format#Redirect_Entry for more details.
@@ -565,7 +566,7 @@ cdef class _Creator:
         with nogil:
             self.c_creator.addRedirection(_path, _title, _targetPath, _hints)
 
-    def add_alias(self, str path: str, str title: str, str target_path: str, dict hints: Dict[Hint, pyint]):
+    def add_alias(self, str path: str, str title: str, str target_path: str, dict hints: dict[Hint, pyint]):
         """Alias the (existing) entry `target_path` as a new entry `path`.
 
         Args:
@@ -615,7 +616,7 @@ class StringProvider(ContentProvider):
     """ContentProvider for a single encoded-or-not UTF-8 string."""
 
     __module__ = writer_module_name
-    def __init__(self, content: Union[str, bytes]):
+    def __init__(self, content: str | bytes):
         super().__init__()
         self.content = content.encode("UTF-8") if isinstance(content, str) else content
 
@@ -630,7 +631,7 @@ class FileProvider(ContentProvider):
     """ContentProvider for a file using its local path."""
 
     __module__ = writer_module_name
-    def __init__(self, filepath: Union[pathlib.Path, str]):
+    def __init__(self, filepath: pathlib.Path | str):
         super().__init__()
         self.filepath = filepath
         self.size = os.path.getsize(self.filepath)
@@ -698,7 +699,7 @@ class IndexData:
 
         raise NotImplementedError("get_wordcount must be implemented.")
 
-    def get_geoposition(self) -> Optional[Tuple[float, float]]:
+    def get_geoposition(self) -> tuple[float, float] | None:
         """GeoPosition used to index the item.
 
         Returns:
@@ -711,13 +712,13 @@ class IndexData:
 class Creator(_Creator):
     """Creator to create ZIM files."""
     __module__ = writer_module_name
-    def config_compression(self, compression: Union[Compression, str]):
+    def config_compression(self, compression: Compression | str):
         if not isinstance(compression, Compression):
             compression = getattr(Compression, compression.lower())
         return super().config_compression(compression)
 
     def add_metadata(
-        self, name: str, content: Union[str, bytes],
+        self, name: str, content: str | bytes,
         mimetype: str = "text/plain;charset=UTF-8"
     ):
         if isinstance(content, str):
@@ -1116,7 +1117,7 @@ cdef class Archive:
         return Entry.from_entry(move(entry))
 
     @property
-    def metadata_keys(self) -> List[str]:
+    def metadata_keys(self) -> list[str]:
         """List of Metadata keys present in this archive.
 
         Returns:
@@ -1301,7 +1302,7 @@ cdef class Archive:
         """
         return self.c_archive.getMediaCount()
 
-    def get_illustration_sizes(self) -> Set[pyint]:
+    def get_illustration_sizes(self) -> set[pyint]:
         """Sizes for which an illustration is available (@1 scale only).
 
         .. deprecated:: 3.8.0
