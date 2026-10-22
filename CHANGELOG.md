@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Breaking**: `Creator.add_metadata` no longer auto-converts a `Date` metadata value passed as `datetime.date`/`datetime.datetime`; pass pre-formatted `str`/`bytes` instead (#188)
 - **Breaking**: Drop support for Python 3.10 (#281)
+- **Breaking**: `Archive._get_entry_by_id()` removed in favor of `Archive.get_entry_by_id()` (#225)
 
 ### Fixed
 

@@ -1148,7 +1148,7 @@ cdef class Archive:
         """
         return bytes(self.c_archive.getMetadata(name.encode('UTF-8')))
 
-    def _get_entry_by_id(self, entry_id: pyint) -> Entry:
+    def get_entry_by_id(self, entry_id: pyint) -> Entry:
         """Retrieves an entry by its ID.
 
         Args:
