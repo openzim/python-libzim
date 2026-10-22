@@ -17,7 +17,7 @@ jobs:
     strategy:
       matrix:
         os: [macos-15, macos-26, macos-15-intel, macos-26-intel, windows-2022, windows-2025, ubuntu-22.04, ubuntu-24.04, ubuntu-26.04]
-        python: ["3.10", "3.11", "3.12", "3.13", "3.14", "3.14t"]
+        python: ["3.11", "3.12", "3.13", "3.14", "3.14t", "3.15", "3.15t"]
 
     steps:
       - uses: actions/checkout@v7
@@ -43,14 +43,14 @@ jobs:
         run: inv coverage --args "-vvv"
 
       - name: Upload coverage report to codecov
-        if: matrix.os == 'ubuntu-26.04' && matrix.python == '3.14'
+        if: matrix.os == 'ubuntu-26.04' && matrix.python == '3.15'
         uses: codecov/codecov-action@v7
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
 
   build-docs: # validate that doc can be built
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     steps:
       - uses: actions/checkout@v7
@@ -58,7 +58,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
-          python-version: "3.13"
+          python-version: "3.14"
 
       - name: Install dependencies
         run: |
