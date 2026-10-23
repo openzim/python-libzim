@@ -39,8 +39,7 @@ jobs:
           path: ./wheelhouse/*.whl
 
   build_wheels_android:
-    name: Build Android wheels (experimental)
-    if: github.event_name == 'workflow_dispatch'
+    name: Build Android wheels
     runs-on: ubuntu-26.04
 
     steps:

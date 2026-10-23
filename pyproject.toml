@@ -145,7 +145,6 @@ test-skip = "*_x86_64"
 
 [tool.cibuildwheel.android]
 archs = ["arm64_v8a", "x86_64"]
-environment = { LIBZIM_DL_VERSION = "9.8.2-1" }
 
 [tool.hatch.build]
 exclude = [

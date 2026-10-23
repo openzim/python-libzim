@@ -57,7 +57,8 @@ class Config:
         "Android": ["arm64_v8a", "x86_64"],
     }
 
-    android_triplets = {  # noqa: RUF012
+    _android_triplets = frozenset({"aarch64-linux-android", "x86_64-linux-android"})
+    _android_arch_map = {
         "aarch64-linux-android": "arm64_v8a",
         "x86_64-linux-android": "x86_64",
     }
@@ -99,7 +100,7 @@ class Config:
     @property
     def platform(self) -> str:
         """Platform building for: Darwin, Linux, Android"""
-        if os.getenv("CIBW_HOST_TRIPLET") in self.android_triplets:
+        if os.getenv("CIBW_HOST_TRIPLET") in self._android_triplets:
             return "Android"
         return sysplatform.system()
 
@@ -117,8 +118,8 @@ class Config:
         # macOS x86_64|arm64 - linux x86_64|aarch64 - android arm64_v8a|x86_64
 
         host_triplet = os.getenv("CIBW_HOST_TRIPLET", "")
-        if host_triplet in self.android_triplets:
-            return self.android_triplets[host_triplet]
+        if host_triplet in self._android_triplets:
+            return self._android_arch_map[host_triplet]
 
         # when using cibuildwheel on macOS to cross-compile,
         # `_PYTHON_HOST_PLATFORM` contains
