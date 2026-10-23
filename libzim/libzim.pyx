@@ -42,8 +42,9 @@ import sys
 import traceback
 import warnings
 from collections import OrderedDict
-from collections.abc import Generator, Iterator
-from types import ModuleType
+from collections import namedtuple as _namedtuple
+from collections.abc import Generator, Iterator, Mapping
+from types import MappingProxyType, ModuleType
 from typing import TextIO
 from uuid import UUID
 
@@ -481,20 +482,63 @@ cdef class _Creator:
         self.c_creator.setMainPath(main_path.encode('UTF-8'))
         return self
 
-    def add_illustration(self, int size: pyint, content: bytes):
+    def add_illustration(
+        self,
+        content: bytes,
+        width: pyint,
+        height: pyint = None,
+        scale: float = 1.0,
+    ):
         """Add a PNG illustration to Archive.
+
+        Shortcut building an IllustrationInfo from width/height/scale and
+        calling :meth:`add_illustration_info`.
 
         Refer to https://wiki.openzim.org/wiki/Metadata for more details.
 
         Args:
-            size (int): The width of the square PNG illustration in pixels.
             content (bytes): The binary content of the PNG illustration.
+            width (int): Width in CSS pixels.
+            height (int): Height in CSS pixels. Defaults to width (square
+                illustration).
+            scale (float): Device pixel ratio. Defaults to 1.0.
 
         Raises:
-            RuntimeError: If an illustration with the same width already exists.
+            RuntimeError: If an illustration with the same attributes already exists.
+
+        Examples:
+            # Square illustration at scale 1
+            creator.add_illustration(png_data, 48)
+
+            # Explicit width, height and scale
+            creator.add_illustration(png_data, 48, 48, 2.0)
+        """
+        if height is None:
+            height = width
+        self.add_illustration_info(content, IllustrationInfo(width, height, scale))
+
+    def add_illustration_info(self, content: bytes, info: IllustrationInfo):
+        """Add a PNG illustration to Archive from an IllustrationInfo.
+
+        Mirrors libzim's own addIllustration(IllustrationInfo, content), for
+        full control over the illustration (e.g. extra attributes).
+
+        Refer to https://wiki.openzim.org/wiki/Metadata for more details.
+
+        Args:
+            content (bytes): The binary content of the PNG illustration.
+            info (IllustrationInfo): The illustration's metadata.
+
+        Raises:
+            RuntimeError: If an illustration with the same attributes already exists.
+
+        Examples:
+            info = IllustrationInfo(48, 48, 2.0)
+            creator.add_illustration_info(png_data, info)
         """
         cdef string _content = content
-        self.c_creator.addIllustration(size, _content)
+        cdef zim.IllustrationInfo c_ii = _illustration_info_to_c(info)
+        self.c_creator.addIllustration(c_ii, _content)
 
 #    def set_uuid(self, uuid) -> _Creator:
 #        self.c_creator.setUuid(uuid)
@@ -747,6 +791,7 @@ with Creator(pathlib.Path("myfile.zim")) as creator:
     # example
     creator.add_item(MyItemSubclass(path, title, mimetype, content)
     creator.set_mainpath(path)
+    creator.add_illustration(png_data, 48, 48, 2.0)
 ```"""
 writer_public_objects = [
     Creator,
@@ -760,6 +805,119 @@ writer_public_objects = [
     IndexData
 ]
 writer = create_module(writer_module_name, writer_module_doc, writer_public_objects)
+
+
+###############################################################################
+#   Illustration module                                                       #
+###############################################################################
+
+illustration_module_name = f"{__name__}.illustration"
+
+cdef zim.IllustrationInfo _illustration_info_to_c(info) except *:
+    """Convert a Python IllustrationInfo into the libzim C++ struct."""
+    cdef zim.IllustrationInfo c_info
+    c_info.width = info.width
+    c_info.height = info.height
+    c_info.scale = info.scale
+    c_info.extraAttributes = zim.Attributes({})
+    for key, val in info.extra_attributes.items():
+        c_info.extraAttributes[key.encode('UTF-8')] = val.encode('UTF-8')
+    return c_info
+
+cdef _illustration_info_from_c(zim.IllustrationInfo info):
+    """Convert a libzim C++ struct into a Python IllustrationInfo."""
+    extra_attributes = {}
+    for item in info.extraAttributes:
+        extra_attributes[item.first.decode('UTF-8')] = item.second.decode('UTF-8')
+    return IllustrationInfo(info.width, info.height, info.scale, extra_attributes)
+
+_IllustrationInfoTuple = _namedtuple(
+    "IllustrationInfo", ["width", "height", "scale", "extra_attributes"]
+)
+
+class IllustrationInfo(_IllustrationInfoTuple):
+    """Information about an illustration in a ZIM archive.
+
+    Attributes:
+        width (int): Width of the illustration in CSS pixels.
+        height (int): Height of the illustration in CSS pixels.
+        scale (float): Device pixel ratio (scale) of the illustration.
+        extra_attributes (Mapping[str, str]): Additional attributes as
+            key-value pairs.
+    """
+    __module__ = illustration_module_name
+    __slots__ = ()
+
+    def __new__(
+        cls,
+        width: pyint = 0,
+        height: pyint = 0,
+        scale: float = 1.0,
+        extra_attributes: Mapping[str, str] | None = None,
+    ):
+        """Create an IllustrationInfo.
+
+        Args:
+            width: Width of the illustration in CSS pixels.
+            height: Height of the illustration in CSS pixels.
+            scale: Device pixel ratio (default: 1.0).
+            extra_attributes: Additional attributes as key-value pairs
+                (optional). Copied into an immutable mapping, so later
+                mutating the dict passed in has no effect on the created
+                IllustrationInfo.
+        """
+        frozen_attributes = MappingProxyType(
+            dict(extra_attributes) if extra_attributes is not None else {}
+        )
+        return super().__new__(cls, width, height, scale, frozen_attributes)
+
+    @staticmethod
+    def from_metadata_item_name(name: str) -> "IllustrationInfo":
+        """Parse an illustration metadata item name into IllustrationInfo.
+
+        Args:
+            name: The metadata item name (e.g., "Illustration_48x48@2").
+
+        Returns:
+            The parsed IllustrationInfo.
+
+        Raises:
+            RuntimeError: If the name cannot be parsed.
+        """
+        cdef string _name = name.encode('UTF-8')
+        cdef zim.IllustrationInfo c_info = zim.IllustrationInfo.fromMetadataItemName(_name)
+        return _illustration_info_from_c(move(c_info))
+
+    def as_metadata_item_name(self) -> str:
+        """Convert this IllustrationInfo to a metadata item name.
+
+        Returns:
+            The metadata item name (e.g., "Illustration_48x48@2").
+        """
+        cdef zim.IllustrationInfo c_info = _illustration_info_to_c(self)
+        return c_info.asMetadataItemName().decode('UTF-8')
+
+
+illustration_module_doc = """Illustration data structures for ZIM archives
+
+This module provides classes for working with illustrations in ZIM archives.
+
+Usage:
+
+```python
+from libzim.illustration import IllustrationInfo
+
+# Create an IllustrationInfo
+info = IllustrationInfo(48, 48, 2.0)
+print(f"Metadata name: {info.as_metadata_item_name()}")
+
+# Parse from metadata name
+parsed = IllustrationInfo.from_metadata_item_name("Illustration_48x48@2")
+```"""
+illustration_public_objects = [
+    IllustrationInfo,
+]
+illustration = create_module(illustration_module_name, illustration_module_doc, illustration_public_objects)
 
 
 ###############################################################################
@@ -1306,14 +1464,14 @@ cdef class Archive:
         """Sizes for which an illustration is available (@1 scale only).
 
         .. deprecated:: 3.8.0
-            Use :meth:`get_illustration_infos` instead for full illustration metadata
+            Use :meth:`get_illustrations_info` instead for full illustration metadata
             including width, height, and scale information.
 
         Returns:
             The set of available sizes of the illustration.
         """
         warnings.warn(
-            "get_illustration_sizes() is deprecated, use get_illustration_infos() instead",
+            "get_illustration_sizes() is deprecated, use get_illustrations_info() instead",
             DeprecationWarning,
             stacklevel=2
         )
@@ -1329,18 +1487,100 @@ cdef class Archive:
             return self.c_archive.hasIllustration(size)
         return self.c_archive.hasIllustration()
 
-    def get_illustration_item(self, size: pyint = None) -> Item:
+    def get_illustration_item(
+        self,
+        width: pyint = None,
+        height: pyint = None,
+        scale: float = None,
+    ) -> Item:
         """Get the illustration Metadata item of the archive.
+
+        Shortcut building an IllustrationInfo from width/height/scale and
+        calling :meth:`get_illustration_item_info`.
+
+        Args:
+            width (int): Width in CSS pixels. If not provided, gets the
+                default illustration (48x48@1); `height` and `scale` must
+                not be passed in that case.
+            height (int): Height in CSS pixels. Defaults to width (square
+                illustration).
+            scale (float): Device pixel ratio. Defaults to 1.0.
 
         Returns:
             The illustration item.
+
+        Raises:
+            KeyError: If the requested illustration is not found.
+            ValueError: If height or scale is passed without width.
+
+        Examples:
+            # Get default illustration (48x48@1)
+            item = archive.get_illustration_item()
+
+            # Get illustration by size (square at scale 1)
+            item = archive.get_illustration_item(96)
+
+            # Get illustration by width, height and scale
+            item = archive.get_illustration_item(48, 48, 2.0)
         """
+        if width is None:
+            if height is not None or scale is not None:
+                raise ValueError("height and scale must only be provided with width")
+            return self.get_illustration_item_info(IllustrationInfo(48, 48, 1.0))
+        if height is None:
+            height = width
+        info = IllustrationInfo(width, height, scale if scale is not None else 1.0)
+        return self.get_illustration_item_info(info)
+
+    def get_illustration_item_info(self, info: IllustrationInfo) -> Item:
+        """Get the illustration Metadata item of the archive for an IllustrationInfo.
+
+        Mirrors libzim's own getIllustrationItem(IllustrationInfo).
+
+        Args:
+            info (IllustrationInfo): The illustration's metadata.
+
+        Returns:
+            The illustration item.
+
+        Raises:
+            KeyError: If the requested illustration is not found.
+
+        Examples:
+            info = IllustrationInfo(48, 48, 2.0)
+            item = archive.get_illustration_item_info(info)
+        """
+        cdef zim.IllustrationInfo c_ii = _illustration_info_to_c(info)
         try:
-            if size is not None:
-                return Item.from_item(move(self.c_archive.getIllustrationItem(size)))
-            return Item.from_item(move(self.c_archive.getIllustrationItem()))
+            return Item.from_item(move(self.c_archive.getIllustrationItem(c_ii)))
         except RuntimeError as e:
             raise KeyError(str(e))
+
+    def get_illustrations_info(self, width: pyint = None, height: pyint = None,
+                               min_scale: float = None) -> list[IllustrationInfo]:
+        """Get information about available illustrations.
+
+        Args:
+            width: Optional width to filter illustrations (must be provided with height).
+            height: Optional height to filter illustrations (must be provided with width).
+            min_scale: Optional minimum scale to filter illustrations (requires width and height).
+
+        Returns:
+            List of IllustrationInfo objects describing available illustrations.
+
+        Note:
+            - When called without arguments, returns all available illustrations.
+            - When called with width, height, and min_scale, filters illustrations.
+        """
+        cdef zim.Archive.IllustrationInfos infos
+        provided = (width, height, min_scale)
+        if all(v is not None for v in provided):
+            infos = self.c_archive.getIllustrationInfos(width, height, min_scale)
+        elif any(v is not None for v in provided):
+            raise ValueError("Either provide all of (width, height, min_scale) or none of them")
+        else:
+            infos = self.c_archive.getIllustrationInfos()
+        return [_illustration_info_from_c(info) for info in infos]
 
     @property
     def dirent_cache_max_size(self) -> pyint:
@@ -1380,7 +1620,7 @@ def get_cluster_cache_max_size() -> pyint:
     """Get the maximum size of the cluster cache.
 
     Returns:
-        (int): the maximum memory size used by the cluster cache (in bytes). 
+        (int): the maximum memory size used by the cluster cache (in bytes).
     """
     return zim.getClusterCacheMaxSize()
 
@@ -1400,7 +1640,7 @@ def get_cluster_cache_current_size() -> pyint:
     """Get the current size of the cluster cache.
 
     Returns:
-        (int): the current memory size (in bytes) used by the cluster cache. 
+        (int): the current memory size (in bytes) used by the cluster cache.
     """
     return zim.getClusterCacheCurrentSize()
 
@@ -1743,6 +1983,7 @@ class ModuleLoader(importlib.abc.Loader):
     @staticmethod
     def create_module(spec):
         return {
+            'libzim.illustration': illustration,
             'libzim.writer': writer,
             'libzim.reader': reader,
             'libzim.search': search,
@@ -1766,4 +2007,4 @@ class ModuleFinder(importlib.abc.MetaPathFinder):
 # register finder for our submodules
 sys.meta_path.insert(0, ModuleFinder())
 
-__all__ = ["writer", "reader", "search", "suggestion", "version"]
+__all__ = ["illustration", "writer", "reader", "search", "suggestion", "version"]
