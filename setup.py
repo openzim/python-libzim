@@ -57,8 +57,10 @@ class Config:
         "Android": ["arm64_v8a", "x86_64"],
     }
 
-    _android_triplets = frozenset({"aarch64-linux-android", "x86_64-linux-android"})
-    _android_arch_map = {
+    _android_triplets: frozenset[str] = frozenset(
+        {"aarch64-linux-android", "x86_64-linux-android"}
+    )
+    _android_arch_map: dict[str, str] = {
         "aarch64-linux-android": "arm64_v8a",
         "x86_64-linux-android": "x86_64",
     }
