@@ -90,6 +90,8 @@ cdef extern from "zim/search_iterator.h" namespace "zim":
         bint operator!=(SearchIterator)
         string getPath()
         string getTitle()
+        string getSnippet()
+        int getFileIndex()
 
 
 # Import the python wrappers (ObjWrapper) from libwrapper.
@@ -185,6 +187,7 @@ cdef extern from "libwrapper.h" namespace "wrapper":
     cdef cppclass Searcher:
         Searcher()
         Searcher(const Archive& archive) except +
+        void addArchive(const Archive& archive) except +
         setVerbose(bool verbose)
         Search search(Query query) except +
 

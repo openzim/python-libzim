@@ -14,7 +14,11 @@ import pytest
 
 import libzim.writer  # pyright: ignore [reportMissingModuleSource]
 from libzim.reader import Archive  # pyright: ignore [reportMissingModuleSource]
-from libzim.search import Query, Searcher  # pyright: ignore [reportMissingModuleSource]
+from libzim.search import (  # pyright: ignore [reportMissingModuleSource]
+    Query,
+    Searcher,
+    SearchResult,
+)
 from libzim.suggestion import (  # pyright: ignore [reportMissingModuleSource]
     SuggestionSearcher,
 )
@@ -879,3 +883,81 @@ def test_accented_search_from_libzim(fpath):
     accented_search = accented_searcher.search(accented_query)
     assert accented_search.get_estimated_matches() == zim.article_count
     assert list(accented_search.get_results(0, zim.article_count)) == ["path0", "path1"]
+
+
+def test_multi_archive_search_and_snippets(tmpdir):
+    p1 = pathlib.Path(tmpdir / "multi1.zim")
+    p2 = pathlib.Path(tmpdir / "multi2.zim")
+
+    item1 = StaticItem(
+        path="python_doc",
+        title="Python Guide",
+        content="Python is an open source programming language with clean syntax.",
+        mimetype="text/html",
+    )
+    item2 = StaticItem(
+        path="ruby_doc",
+        title="Ruby Guide",
+        content="Ruby is an open source programming language with elegant blocks.",
+        mimetype="text/html",
+    )
+
+    with Creator(p1).config_indexing(True, "eng") as c:
+        c.add_item(item1)
+
+    with Creator(p2).config_indexing(True, "eng") as c:
+        c.add_item(item2)
+
+    zim1 = Archive(p1)
+    zim2 = Archive(p2)
+
+    searcher = Searcher()
+    searcher.add_archive(zim1)
+    searcher.add_archive(zim2)
+
+    query = Query().set_query("programming")
+    search = searcher.search(query)
+
+    assert search.get_estimated_matches() == 2
+    results = list(search.get_results(0, 10))
+    assert len(results) == 2
+
+    for r in results:
+        assert isinstance(r, SearchResult)
+        assert r.path in ("python_doc", "ruby_doc")
+        assert isinstance(r.snippet, str)
+        assert len(r.snippet) > 0
+
+    archives_found = [r.archive for r in results]
+    assert zim1 in archives_found
+    assert zim2 in archives_found
+    assert len(set(results)) == 2
+
+    paths_found = {r.path for r in results}
+    assert paths_found == {"python_doc", "ruby_doc"}
+
+    r1, r2 = results[0], results[1]
+    assert repr(r1) == f"<SearchResult archive={r1.archive!r} path={r1.path!r}>"
+    assert str(r1) == r1.path
+
+    same_r1 = SearchResult(r1.archive, r1.path, r1.title, r1.snippet)
+    assert r1 == same_r1
+    assert r1 == r1.path
+    assert r1 != "other_doc"
+    assert r1 != SearchResult(r1.archive, "other_doc", r1.title, r1.snippet)
+    assert r1 != SearchResult(r2.archive, r1.path, r1.title, r1.snippet)
+    assert (r1 == 123) is False
+    assert (r1 == None) is False  # noqa: E711
+    assert (r1 == zim1) is False
+
+    assert hash(r1) == hash((r1.archive.filename.expanduser().resolve(), r1.path))
+    assert len({r1, same_r1}) == 1
+
+    multi_searcher = Searcher([zim1, zim2])
+    assert multi_searcher.search(query).get_estimated_matches() == 2
+
+    multi_searcher_extra = Searcher(zim1, zim2)
+    assert multi_searcher_extra.search(query).get_estimated_matches() == 2
+
+    multi_searcher_tuple = Searcher((zim1, zim2))
+    assert multi_searcher_tuple.search(query).get_estimated_matches() == 2
