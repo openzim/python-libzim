@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add a CI job building the documentation on every PR/push so this kind of breakage is caught automatically (#279)
 - Add support for Python 3.15 (#281)
 - Build wheels against the stable ABI (abi3) so a single wheel per platform covers all supported CPython versions (#263)
+- Add `libzim.illustration` module with the `IllustrationInfo` value object, and width/height/scale-aware illustration APIs: `Creator.add_illustration()`/`add_illustration_info()`, `Archive.get_illustration_item()`/`get_illustration_item_info()`, `Archive.get_illustrations_info()` (#232, #233)
 
 ## [3.13.1] - 2026-10-05
 
