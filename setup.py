@@ -24,6 +24,7 @@ import urllib.request
 import zipfile
 from ctypes.util import find_library
 from pathlib import Path
+from typing import ClassVar
 
 from Cython.Build import cythonize
 from Cython.Distutils.build_ext import new_build_ext as build_ext
@@ -49,7 +50,7 @@ class Config:
     # windows
     _msvc_debug: bool = bool(os.getenv("MSVC_DEBUG"))
 
-    supported_platforms = {  # noqa: RUF012
+    supported_platforms: ClassVar[dict[str, list[str]]] = {
         "Darwin": ["x86_64", "arm64"],
         "Linux": ["x86_64", "aarch64"],
         "Linux-musl": ["x86_64", "aarch64"],
@@ -57,10 +58,10 @@ class Config:
         "Android": ["arm64_v8a", "x86_64"],
     }
 
-    _android_triplets: frozenset[str] = frozenset(
+    _android_triplets: ClassVar[frozenset[str]] = frozenset(
         {"aarch64-linux-android", "x86_64-linux-android"}
     )
-    _android_arch_map: dict[str, str] = {
+    _android_arch_map: ClassVar[dict[str, str]] = {
         "aarch64-linux-android": "arm64_v8a",
         "x86_64-linux-android": "x86_64",
     }
