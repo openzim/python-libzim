@@ -38,6 +38,7 @@ classifiers = [
     "Typing :: Stubs Only",
     "Operating System :: MacOS",
     "Operating System :: POSIX",
+    "Operating System :: Android",
 ]
 
 [project.urls]
@@ -106,6 +107,7 @@ libzim = [
   "*.pyi",
   "libzim.9.dylib",
   "libzim.so.9",
+  "libzim.so",
   "zim-9.dll",
   "icuuc74.dll",
   "icutu74.dll",
@@ -140,6 +142,9 @@ archs = ["x86_64", "arm64"]
 # cibuildwheel skips it already. *_x86_64 this removes the warning
 # > requires changing wheel names
 test-skip = "*_x86_64"
+
+[tool.cibuildwheel.android]
+archs = ["arm64_v8a", "x86_64"]
 
 [tool.hatch.build]
 exclude = [
