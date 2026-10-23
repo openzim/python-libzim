@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add a CI job building the documentation on every PR/push so this kind of breakage is caught automatically (#279)
 - Add support for Python 3.15 (#281)
+- Build wheels against the stable ABI (abi3) so a single wheel per platform covers all supported CPython versions (#263)
 
 ## [3.13.1] - 2026-10-05
 
