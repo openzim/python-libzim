@@ -69,12 +69,12 @@ def create_module(name, doc, members):
     _all = []
     for obj in members:
         if isinstance(obj, tuple):
-            name = obj[0]
+            member_name = obj[0]
             obj = obj[1]
         else:
-            name = obj.__name__
-        setattr(module, name, obj)
-        _all.append(name)
+            member_name = obj.__name__
+        setattr(module, member_name, obj)
+        _all.append(member_name)
     module.__all__ = _all
     sys.modules[name] = module
     return module
@@ -1978,7 +1978,9 @@ for path in suggestion.get_results(10, 10) # get result from 10 to 20 (10 result
     print(path, archive.get_entry_by_path(path).title)
 ```"""
 suggestion_public_objects = [
-    SuggestionSearcher
+    SuggestionResultSet,
+    SuggestionSearch,
+    SuggestionSearcher,
 ]
 suggestion = create_module(suggestion_module_name, suggestion_module_doc, suggestion_public_objects)
 
