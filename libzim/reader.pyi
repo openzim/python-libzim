@@ -3,6 +3,8 @@ from __future__ import annotations
 import pathlib
 from uuid import UUID
 
+from libzim.illustration import IllustrationInfo
+
 class Item:
     @property
     def title(self) -> str: ...
@@ -76,7 +78,19 @@ class Archive:
     def media_count(self) -> int: ...
     def get_illustration_sizes(self) -> set[int]: ...
     def has_illustration(self, size: int | None = None) -> bool: ...
-    def get_illustration_item(self, size: int | None = None) -> Item: ...
+    def get_illustration_item(
+        self,
+        width: int | None = None,
+        height: int | None = None,
+        scale: float | None = None,
+    ) -> Item: ...
+    def get_illustration_item_info(self, info: IllustrationInfo) -> Item: ...
+    def get_illustrations_info(
+        self,
+        width: int | None = None,
+        height: int | None = None,
+        min_scale: float | None = None,
+    ) -> list[IllustrationInfo]: ...
     @property
     def dirent_cache_max_size(self) -> int: ...
     @dirent_cache_max_size.setter
