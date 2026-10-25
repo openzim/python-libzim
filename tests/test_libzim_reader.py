@@ -651,7 +651,7 @@ def test_cluster_cache(all_zims, filename):
     assert get_cluster_cache_current_size() <= new_value
 
     # restore default value for next tests
-    set_cluster_cache_max_size(default_value)
+    set_cluster_cache_max_size(size_in_bytes=default_value)
 
 
 @skip_if_offline

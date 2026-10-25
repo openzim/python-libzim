@@ -44,6 +44,11 @@ class TestIllustrationInfo:
                 "foo": "bar"
             }
 
+    def test_extra_attributes_none(self):
+        """Test that extra_attributes=None means no extra attributes."""
+        info = IllustrationInfo(48, 48, 1.0, extra_attributes=None)
+        assert info.extra_attributes == {}
+
     def test_extra_attributes_contruction(self):
         """Test setting extra attributes in constructor."""
         info = IllustrationInfo(48, 48, 1.0, {"foo": "bar", "baz": "qux"})
