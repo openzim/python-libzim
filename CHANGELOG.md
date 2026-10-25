@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Breaking**: `SuggestionSearch.getEstimatedMatches()` renamed `SuggestionSearch.get_estimated_matches()` (#200)
 - **Breaking**: `SuggestionSearch.getResults()` renamed `SuggestionSearch.get_results()` (#200)
 - Modernize type hints in `libzim.pyx` to use PEP 604/585 syntax (e.g. `str | bytes`, `dict[...]`) instead of `typing.Union`/`typing.Dict`/etc. (#281)
+- **Breaking**: `SearchResultSet` now yields `SearchResult` objects instead of entry path strings (#230, #226)
 
 ### Removed
 
@@ -36,6 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add support for Python 3.15 (#281)
 - Build wheels against the stable ABI (abi3) so a single wheel per platform covers all supported CPython versions (#263)
 - Add `libzim.illustration` module with the `IllustrationInfo` value object, and width/height/scale-aware illustration APIs: `Creator.add_illustration()`/`add_illustration_info()`, `Archive.get_illustration_item()`/`get_illustration_item_info()`, `Archive.get_illustrations_info()` (#232, #233)
+- Support multi-archive searching via `Searcher.add_archive()` (#230)
+- Add `SearchResult` object with `archive`, `path`, `title`, and `snippet` (#230, #226)
 
 ## [3.13.1] - 2026-10-05
 
