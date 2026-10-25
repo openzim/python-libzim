@@ -16,6 +16,8 @@ from libzim.reader import (  # pyright: ignore [reportMissingModuleSource]
 )
 from libzim.search import Query, Searcher  # pyright: ignore [reportMissingModuleSource]
 from libzim.suggestion import (  # pyright: ignore [reportMissingModuleSource]
+    SuggestionResultSet,
+    SuggestionSearch,
     SuggestionSearcher,
 )
 
@@ -492,6 +494,8 @@ def test_reader_suggest_search(
     if suggestion_string is not None:
         suggestion_searcher = SuggestionSearcher(zim)
         suggestion = suggestion_searcher.suggest(suggestion_string)
+        assert isinstance(suggestion, SuggestionSearch)
+        assert isinstance(suggestion.get_results(0, 1), SuggestionResultSet)
         assert suggestion.get_estimated_matches() == suggestion_count
         assert list(suggestion.get_results(0, suggestion_count)) == suggestion_result
 
