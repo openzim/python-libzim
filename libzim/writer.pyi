@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import datetime
 import enum
 import pathlib
 import types
@@ -70,7 +69,7 @@ class Creator:
     def add_metadata(
         self,
         name: str,
-        content: str | bytes | datetime.date | datetime.datetime,
+        content: str | bytes,
         mimetype: str = "text/plain;charset=UTF-8",
     ) -> None: ...
     def add_redirection(
