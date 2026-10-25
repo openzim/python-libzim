@@ -1,8 +1,10 @@
 from libzim import (
-    illustration,  # noqa: F401 # pyright: ignore[reportUnusedImport]
-    reader,  # noqa: F401 # pyright: ignore[reportUnusedImport]
-    search,  # noqa: F401 # pyright: ignore[reportUnusedImport]
-    suggestion,  # noqa: F401 # pyright: ignore[reportUnusedImport]
-    version,  # noqa: F401 # pyright: ignore[reportUnusedImport]
-    writer,  # noqa: F401 # pyright: ignore[reportUnusedImport]
+    illustration,  # pyright: ignore[reportUnusedImport]
+    reader,  # pyright: ignore[reportUnusedImport]
+    search,  # pyright: ignore[reportUnusedImport]
+    suggestion,  # pyright: ignore[reportUnusedImport]
+    version,  # pyright: ignore[reportUnusedImport]
+    writer,  # pyright: ignore[reportUnusedImport]
 )
+
+__all__ = ["illustration", "reader", "search", "suggestion", "version", "writer"]
