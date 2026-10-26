@@ -34,3 +34,9 @@ jobs:
 
       - name: Check pyright
         run: inv check-pyright
+
+      - name: Check stubs with stubtest
+        run: inv check-stubtest
+
+      - name: Check stubs annotations
+        run: inv check-stub-annotations

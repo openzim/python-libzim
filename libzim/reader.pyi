@@ -3,8 +3,20 @@ from __future__ import annotations
 import pathlib
 from uuid import UUID
 
+from typing_extensions import disjoint_base
+
 from libzim.illustration import IllustrationInfo
 
+__all__ = [
+    "Archive",
+    "Entry",
+    "Item",
+    "get_cluster_cache_current_size",
+    "get_cluster_cache_max_size",
+    "set_cluster_cache_max_size",
+]
+
+@disjoint_base
 class Item:
     @property
     def title(self) -> str: ...
@@ -20,6 +32,7 @@ class Item:
     def size(self) -> int: ...
     def __repr__(self) -> str: ...
 
+@disjoint_base
 class Entry:
     @property
     def title(self) -> str: ...
@@ -33,6 +46,7 @@ class Entry:
     def get_item(self) -> Item: ...
     def __repr__(self) -> str: ...
 
+@disjoint_base
 class Archive:
     def __init__(self, filename: pathlib.Path) -> None: ...
     @property
@@ -100,5 +114,5 @@ class Archive:
     def __repr__(self) -> str: ...
 
 def get_cluster_cache_max_size() -> int: ...
-def set_cluster_cache_max_size(nb_clusters: int): ...
+def set_cluster_cache_max_size(size_in_bytes: int): ...
 def get_cluster_cache_current_size() -> int: ...
