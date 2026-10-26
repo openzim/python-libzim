@@ -96,10 +96,29 @@ def check_pyright(ctx: Context, args: str = ""):
     ctx.run(f"pyright {args}", pty=use_pty)
 
 
+@task(optional=["args"], help={"args": "stubtest additional arguments"})
+def check_stubtest(ctx: Context, args: str = ""):
+    """check type stubs against the compiled module with mypy's stubtest"""
+    ctx.run("python -m mypy --version")
+    ctx.run(
+        "python -m mypy.stubtest libzim --allowlist scripts/stubtest-allowlist.txt "
+        f"{args}",
+        pty=use_pty,
+    )
+
+
+@task
+def check_stub_annotations(ctx: Context):
+    """check type stubs annotations against the compiled module ones"""
+    ctx.run("python -m scripts.check_stub_annotations", pty=use_pty)
+
+
 @task(optional=["args"], help={"args": "check tools (pyright) additional arguments"})
 def checkall(ctx: Context, args: str = ""):
-    """check static types"""
+    """check static types and type stubs"""
     check_pyright(ctx, args)
+    check_stubtest(ctx)
+    check_stub_annotations(ctx)
 
 
 @task(optional=["args"], help={"args": "black additional arguments"})

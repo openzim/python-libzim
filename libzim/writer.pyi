@@ -6,16 +6,31 @@ import types
 from collections.abc import Callable, Generator
 from typing import Self
 
+from typing_extensions import disjoint_base
+
 from libzim.illustration import IllustrationInfo
 
+__all__ = [
+    "Blob",
+    "Compression",
+    "ContentProvider",
+    "Creator",
+    "FileProvider",
+    "Hint",
+    "IndexData",
+    "Item",
+    "StringProvider",
+]
+
 class Compression(enum.Enum):
-    none: Self
-    zstd: Self
+    none = ...
+    zstd = ...
 
 class Hint(enum.Enum):
-    COMPRESS: Self
-    FRONT_ARTICLE: Self
+    COMPRESS = ...
+    FRONT_ARTICLE = ...
 
+@disjoint_base
 class Blob:
     def __init__(self, content: str | bytes) -> None: ...
     def size(self) -> int: ...
