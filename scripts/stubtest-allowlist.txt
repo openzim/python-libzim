@@ -1,0 +1,12 @@
+# mypy.stubtest allowlist: runtime objects intentionally absent from the stubs
+
+# Cython extension types take their constructor arguments in __cinit__: the
+# runtime signature is not introspectable (`(self, /, *args, **kwargs)`)
+libzim.reader.Archive.__init__
+libzim.search.Searcher.__init__
+libzim.suggestion.SuggestionSearcher.__init__
+libzim.writer.Blob.__init__
+
+# Cython auto-generated pickling support
+libzim\..*\.__reduce_cython__
+libzim\..*\.__setstate_cython__

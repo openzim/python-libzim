@@ -45,7 +45,7 @@ from collections import OrderedDict
 from collections import namedtuple as _namedtuple
 from collections.abc import Generator, Iterator, Mapping
 from types import MappingProxyType, ModuleType
-from typing import TextIO
+from typing import Self, TextIO
 from uuid import UUID
 
 from cpython.buffer cimport PyBUF_WRITABLE
@@ -69,12 +69,12 @@ def create_module(name, doc, members):
     _all = []
     for obj in members:
         if isinstance(obj, tuple):
-            name = obj[0]
+            member_name = obj[0]
             obj = obj[1]
         else:
-            name = obj.__name__
-        setattr(module, name, obj)
-        _all.append(name)
+            member_name = obj.__name__
+        setattr(module, member_name, obj)
+        _all.append(member_name)
     module.__all__ = _all
     sys.modules[name] = module
     return module
@@ -392,7 +392,7 @@ cdef class _Creator:
     def __init__(self, filename: pathlib.Path):
         pass
 
-    def config_verbose(self, bool verbose: bool) -> _Creator:
+    def config_verbose(self, bool verbose: bool) -> Self:
         """Set creator verbosity inside libzim (default: off).
 
         Args:
@@ -406,7 +406,7 @@ cdef class _Creator:
         self.c_creator.configVerbose(verbose)
         return self
 
-    def config_compression(self, compression: Compression) -> _Creator:
+    def config_compression(self, compression: Compression) -> Self:
         """Set compression algorithm to use.
 
         Check libzim for default setting. (Fall 2021 default: zstd).
@@ -422,7 +422,7 @@ cdef class _Creator:
         self.c_creator.configCompression(zim.comp_from_int(compression.value))
         return self
 
-    def config_clustersize(self, int size: pyint) -> _Creator:
+    def config_clustersize(self, int size: pyint) -> Self:
         """Set size of created clusters.
 
         Check libzim for default setting. (Fall 2021 default: 2Mib).
@@ -441,7 +441,7 @@ cdef class _Creator:
         self.c_creator.configClusterSize(size)
         return self
 
-    def config_indexing(self, bool indexing: bool, str language: str) -> _Creator:
+    def config_indexing(self, bool indexing: bool, str language: str) -> Self:
         """Configures the full-text indexing feature.
 
         Args:
@@ -456,7 +456,7 @@ cdef class _Creator:
         self.c_creator.configIndexing(indexing, language.encode('UTF-8'))
         return self
 
-    def config_nbworkers(self, int nb_workers: pyint) -> _Creator:
+    def config_nbworkers(self, int nb_workers: pyint) -> Self:
         """Configures the number of threads to use for internal workers (default: 4).
 
         Args:
@@ -470,7 +470,7 @@ cdef class _Creator:
         self.c_creator.configNbWorkers(nb_workers)
         return self
 
-    def set_mainpath(self, str main_path: str) -> _Creator:
+    def set_mainpath(self, str main_path: str) -> Self:
         """Set path of the main entry.
 
         Args:
@@ -486,7 +486,7 @@ cdef class _Creator:
         self,
         content: bytes,
         width: pyint,
-        height: pyint = None,
+        height: pyint | None = None,
         scale: float = 1.0,
     ):
         """Add a PNG illustration to Archive.
@@ -540,7 +540,7 @@ cdef class _Creator:
         cdef zim.IllustrationInfo c_ii = _illustration_info_to_c(info)
         self.c_creator.addIllustration(c_ii, _content)
 
-#    def set_uuid(self, uuid) -> _Creator:
+#    def set_uuid(self, uuid) -> Self:
 #        self.c_creator.setUuid(uuid)
 
     def add_item(self, writer_item not None: BaseWritingItem):
@@ -1477,7 +1477,7 @@ cdef class Archive:
         )
         return self.c_archive.getIllustrationSizes()
 
-    def has_illustration(self, size: pyint = None) -> pybool:
+    def has_illustration(self, size: pyint | None = None) -> pybool:
         """Whether Archive has an illustration metadata for this size.
 
         Returns:
@@ -1489,9 +1489,9 @@ cdef class Archive:
 
     def get_illustration_item(
         self,
-        width: pyint = None,
-        height: pyint = None,
-        scale: float = None,
+        width: pyint | None = None,
+        height: pyint | None = None,
+        scale: float | None = None,
     ) -> Item:
         """Get the illustration Metadata item of the archive.
 
@@ -1556,8 +1556,8 @@ cdef class Archive:
         except RuntimeError as e:
             raise KeyError(str(e))
 
-    def get_illustrations_info(self, width: pyint = None, height: pyint = None,
-                               min_scale: float = None) -> list[IllustrationInfo]:
+    def get_illustrations_info(self, width: pyint | None = None, height: pyint | None = None,
+                               min_scale: float | None = None) -> list[IllustrationInfo]:
         """Get information about available illustrations.
 
         Args:
@@ -1978,7 +1978,9 @@ for path in suggestion.get_results(10, 10) # get result from 10 to 20 (10 result
     print(path, archive.get_entry_by_path(path).title)
 ```"""
 suggestion_public_objects = [
-    SuggestionSearcher
+    SuggestionResultSet,
+    SuggestionSearch,
+    SuggestionSearcher,
 ]
 suggestion = create_module(suggestion_module_name, suggestion_module_doc, suggestion_public_objects)
 
