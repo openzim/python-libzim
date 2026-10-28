@@ -17,8 +17,6 @@ import platform
 import subprocess
 import sys
 
-import pytest
-
 import libzim.writer  # pyright: ignore [reportMissingModuleSource]
 from libzim.illustration import (  # pyright: ignore [reportMissingModuleSource]
     IllustrationInfo,

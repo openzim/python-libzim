@@ -12,8 +12,6 @@ import pathlib
 import uuid
 from urllib.request import urlretrieve
 
-import pytest
-
 from libzim.reader import (  # pyright: ignore [reportMissingModuleSource]
     Archive,
     Entry,
