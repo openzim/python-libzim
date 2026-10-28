@@ -5,6 +5,7 @@ from libzim import (
     suggestion,  # pyright: ignore[reportUnusedImport]
     version,  # pyright: ignore[reportUnusedImport]
 )
+
 try:
     from libzim import writer  # pyright: ignore[reportUnusedImport]
     __all__ = ["illustration", "reader", "search", "suggestion", "version", "writer"]
