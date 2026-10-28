@@ -1,3 +1,13 @@
+import pytest
+
+try:
+    import libzim.writer  # pyright: ignore [reportMissingModuleSource]
+    HAS_WRITER = True
+except ImportError:
+    HAS_WRITER = False
+
+pytestmark = pytest.mark.skipif(not HAS_WRITER, reason="writer support not available")
+
 from __future__ import annotations
 
 import itertools
