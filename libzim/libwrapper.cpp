@@ -28,7 +28,10 @@
 #include <cstdlib>
 #include <iostream>
 #include <zim/blob.h>
+#include <zim/zim_config.h>
+#ifndef LIBZIM_WITHOUT_WRITER
 #include <zim/writer/creator.h>
+#endif
 
 
 ObjWrapper::ObjWrapper(PyObject* obj)
@@ -96,6 +99,7 @@ zim::Blob _callMethodOnObj(PyObject *obj, const std::string& methodName, std::st
   return blob_cy_call_fct(obj, methodName, &error);
 }
 
+#ifndef LIBZIM_WITHOUT_WRITER
 template<>
 std::unique_ptr<zim::writer::ContentProvider>
 _callMethodOnObj(PyObject *obj, const std::string& methodName, std::string& error) {
@@ -119,6 +123,7 @@ zim::writer::IndexData::GeoPosition
 _callMethodOnObj(PyObject *obj, const std::string& methodName, std::string& error) {
   return geoposition_cy_call_fct(obj, methodName, &error);
 }
+#endif // LIBZIM_WITHOUT_WRITER
 
 // This cpp function call a python method on a python object.
 // It checks that we are in a valid state and handle any potential error coming from python.
@@ -174,6 +179,7 @@ std::string IndexDataWrapper::getContent() const
   return callMethodOnObj<std::string>(m_obj, "get_content");
 }
 
+#ifndef LIBZIM_WITHOUT_WRITER
 std::string IndexDataWrapper::getKeywords() const
 {
   return callMethodOnObj<std::string>(m_obj, "get_keywords");
@@ -238,6 +244,7 @@ zim::writer::Hints WriterItemWrapper::getHints() const
 {
   return callMethodOnObj<zim::writer::Hints>(m_obj, "get_hints");
 }
+#endif // LIBZIM_WITHOUT_WRITER
 
 zim::Compression comp_from_int(int compValue)
 {

@@ -399,6 +399,39 @@ def get_cython_extension() -> list[Extension]:
     if getattr(sys, "_is_gil_enabled", None) is not None and not sys._is_gil_enabled():
         define_macros.append(("Py_GIL_DISABLED", "1"))
 
+    # Detect if libzim is built without writer support (e.g. Android builds)
+    # Check for LIBZIM_WITHOUT_WRITER in zim_config.h or absence of writer headers
+    zim_config_paths = [
+        config.base_dir / "include" / "zim" / "zim_config.h",
+        Path("/usr/include/zim/zim_config.h"),
+        Path("/usr/local/include/zim/zim_config.h"),
+        Path("/usr/include/x86_64-linux-gnu/zim/zim_config.h"),
+        Path("/usr/include/aarch64-linux-gnu/zim/zim_config.h"),
+    ]
+    without_writer = False
+    try:
+        for zim_config_path in zim_config_paths:
+            if zim_config_path.exists():
+                with open(zim_config_path, 'r') as f:
+                    config_content = f.read()
+                if 'LIBZIM_WITHOUT_WRITER' in config_content:
+                    without_writer = True
+                    break
+    except Exception:
+        pass
+    if not without_writer:
+        # Also check if writer headers exist
+        writer_header_paths = [
+            config.base_dir / "include" / "zim" / "writer" / "creator.h",
+            Path("/usr/include/zim/writer/creator.h"),
+            Path("/usr/local/include/zim/writer/creator.h"),
+        ]
+        if not any(p.exists() for p in writer_header_paths):
+            without_writer = True
+    if without_writer:
+        define_macros.append(("LIBZIM_WITHOUT_WRITER", "1"))
+        print("Detected libzim built without writer support.")
+
     if config.profiling:
         define_macros += [
             ("CYTHON_TRACE", "1"),

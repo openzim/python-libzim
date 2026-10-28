@@ -1,10 +1,19 @@
 import pytest
 
+try:
+    from libzim.writer import Creator  # pyright: ignore [reportMissingModuleSource]
+    HAS_WRITER = True
+except ImportError:
+    HAS_WRITER = False
+
+pytestmark = pytest.mark.skipif(not HAS_WRITER, reason="writer support not available")
+
+import pytest
+
 from libzim.illustration import (  # pyright: ignore [reportMissingModuleSource]
     IllustrationInfo,
 )
 from libzim.reader import Archive  # pyright: ignore [reportMissingModuleSource]
-from libzim.writer import Creator  # pyright: ignore [reportMissingModuleSource]
 
 
 @pytest.fixture(scope="function")
