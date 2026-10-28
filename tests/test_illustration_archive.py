@@ -8,8 +8,6 @@ except ImportError:
 
 pytestmark = pytest.mark.skipif(not HAS_WRITER, reason="writer support not available")
 
-import pytest
-
 from libzim.illustration import (  # pyright: ignore [reportMissingModuleSource]
     IllustrationInfo,
 )
