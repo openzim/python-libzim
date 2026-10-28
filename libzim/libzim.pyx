@@ -417,12 +417,12 @@ IF not LIBZIM_WITHOUT_WRITER:
         cdef object _started
 
         def __cinit__(self, object filename: pathlib.Path, *args, **kwargs):
-        self._filename = pathlib.Path(filename)
-        self._started = False
-        # fail early if destination is not writable
-        parent = self._filename.expanduser().resolve().parent
-        if not os.access(parent, mode=os.W_OK, effective_ids=(os.access in os.supports_effective_ids)):
-            raise IOError(f"Unable to write ZIM file at {self._filename}")
+            self._filename = pathlib.Path(filename)
+            self._started = False
+            # fail early if destination is not writable
+            parent = self._filename.expanduser().resolve().parent
+            if not os.access(parent, mode=os.W_OK, effective_ids=(os.access in os.supports_effective_ids)):
+                raise IOError(f"Unable to write ZIM file at {self._filename}")
 
     def __init__(self, filename: pathlib.Path):
         pass
