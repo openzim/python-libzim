@@ -422,13 +422,18 @@ def _has_writer_support() -> bool:
 def get_cython_extension() -> list[Extension]:
     define_macros: list[tuple[str, str | None]] = []
     compiler_directives = {"language_level": "3"}
+    compile_time_env: dict[str, object] = {}
 
     if getattr(sys, "_is_gil_enabled", None) is not None and not sys._is_gil_enabled():
         define_macros.append(("Py_GIL_DISABLED", "1"))
 
-    if not _has_writer_support():
+    without_writer = not _has_writer_support()
+    if without_writer:
         define_macros.append(("LIBZIM_WITHOUT_WRITER", "1"))
+        compile_time_env["LIBZIM_WITHOUT_WRITER"] = 1
         print("Detected libzim built without writer support.")
+    else:
+        compile_time_env["LIBZIM_WITHOUT_WRITER"] = 0
 
     if config.profiling:
         define_macros += [
@@ -498,7 +503,11 @@ def get_cython_extension() -> list[Extension]:
         define_macros=define_macros,
         py_limited_api=config.can_use_limited_api,
     )
-    return cythonize([wrapper_extension], compiler_directives=compiler_directives)
+    return cythonize(
+        [wrapper_extension],
+        compiler_directives=compiler_directives,
+        compile_time_env=compile_time_env,
+    )
 
 
 class LibzimBuildExt(build_ext):
