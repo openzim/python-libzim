@@ -4,7 +4,13 @@ from libzim import (
     search,  # pyright: ignore[reportUnusedImport]
     suggestion,  # pyright: ignore[reportUnusedImport]
     version,  # pyright: ignore[reportUnusedImport]
-    writer,  # pyright: ignore[reportUnusedImport]
 )
 
-__all__ = ["illustration", "reader", "search", "suggestion", "version", "writer"]
+__all__ = ["illustration", "reader", "search", "suggestion", "version"]
+
+try:
+    from libzim import writer as writer
+
+    __all__.append("writer")
+except ImportError:
+    pass

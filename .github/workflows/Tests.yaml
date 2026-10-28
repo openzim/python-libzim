@@ -49,6 +49,30 @@ jobs:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
 
+  test-reader-only:
+    runs-on: ubuntu-26.04
+    env:
+      LIBZIM_WITHOUT_WRITER: "1"
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+
+      - name: Display Python version
+        run: python -VV
+
+      - name: Install dependencies (and project)
+        run: |
+          pip install -U pip
+          pip install -e .[test,scripts]
+
+      - name: Run the tests
+        run: inv coverage --args "-vvv"
+
   build-docs: # validate that doc can be built
     runs-on: ubuntu-26.04
 

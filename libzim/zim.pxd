@@ -54,7 +54,7 @@ cdef extern from "zim/zim.h" namespace "zim":
         Zstd "zim::Compression::Zstd"
 
 
-cdef extern from "zim/writer/item.h" namespace "zim::writer":
+cdef extern from "writer_headers.h" namespace "zim::writer":
     cdef cppclass WriterItem "zim::writer::Item":
         pass
     ctypedef enum HintKeys:
@@ -64,17 +64,17 @@ cdef extern from "zim/writer/item.h" namespace "zim::writer":
     cdef cppclass IndexData:
         pass
 
-cdef extern from "zim/writer/item.h" namespace "zim::writer::IndexData":
+cdef extern from "writer_headers.h" namespace "zim::writer::IndexData":
     cppclass GeoPosition:
         GeoPosition()
         GeoPosition(bool, double, double)
 
-cdef extern from "zim/writer/contentProvider.h" namespace "zim::writer":
+cdef extern from "writer_headers.h" namespace "zim::writer":
     cdef cppclass ContentProvider:
         pass
 
 
-cdef extern from "zim/writer/creator.h" namespace "zim::writer":
+cdef extern from "writer_headers.h" namespace "zim::writer":
     cdef cppclass ZimCreator "zim::writer::Creator":
         void configVerbose(bint verbose)
         void configCompression(Compression compression)

@@ -1,12 +1,18 @@
+import pytest
+
+try:
+    import libzim.writer  # pyright: ignore [reportMissingModuleSource]
+
+    HAS_WRITER = True
+except ImportError:
+    HAS_WRITER = False
+
 import gc
 import os
 import pathlib
 import uuid
 from urllib.request import urlretrieve
 
-import pytest
-
-import libzim.writer  # pyright: ignore [reportMissingModuleSource]
 from libzim.reader import (  # pyright: ignore [reportMissingModuleSource]
     Archive,
     Entry,
@@ -287,6 +293,8 @@ def all_zims(tmpdir_factory):
         urlretrieve(url, temp_dir / os.path.basename(url))  # noqa: S310  # nosec
 
     # create blank using pylibzim
+    if not HAS_WRITER:
+        pytest.skip("writer support not available")
     creator = libzim.writer.Creator(temp_dir / "blank.zim")
     with creator:
         pass

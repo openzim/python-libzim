@@ -33,6 +33,8 @@ Free-threaded CPython is supported: the extension declares itself free-threading
 
 Users on other platforms can install the source distribution (see [Building](#Building) below). 
 
+Writer support is decided when the extension is built, not when it is installed: there is no install-time extra for it. Set `LIBZIM_WITHOUT_WRITER=1` when building against a libzim compiled without writer support; such a build exposes the reader, search, suggestion, illustration and version modules only. Import `libzim.writer` in a `try`/`except ImportError` block to detect writer support at runtime.
+
 
 ## Contributions
 

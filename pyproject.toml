@@ -300,7 +300,7 @@ ban-relative-imports = "all"
 
 [tool.ruff.lint.per-file-ignores]
 # Tests can use magic values, assertions, and relative imports, and print
-"tests/**/*" = ["PLR2004", "S101", "TID252", "T201", "ARG001", "ARG002", "N803"]
+"tests/**/*" = ["PLR2004", "S101", "TID252", "T201", "ARG001", "ARG002", "N803", "E402"]
 "setup.py" = ["T201"]
 "libzim/*.pyi" = ["FBT001"]
 
