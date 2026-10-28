@@ -54,73 +54,59 @@ cdef extern from "zim/zim.h" namespace "zim":
         Zstd "zim::Compression::Zstd"
 
 
-cdef extern from "zim/writer/item.h" namespace "zim::writer":
-    cdef cppclass WriterItem "zim::writer::Item":
-        pass
-    ctypedef enum HintKeys:
-        COMPRESS
-        FRONT_ARTICLE
+# Include zim_config to detect if writer support is compiled out
+cdef extern from "zim/zim_config.h":
+    pass
 
-    cdef cppclass IndexData:
-        pass
+IF not LIBZIM_WITHOUT_WRITER:
+    cdef extern from "zim/writer/item.h" namespace "zim::writer":
+        cdef cppclass WriterItem "zim::writer::Item":
+            pass
+        ctypedef enum HintKeys:
+            COMPRESS
+            FRONT_ARTICLE
 
-cdef extern from "zim/writer/item.h" namespace "zim::writer::IndexData":
-    cppclass GeoPosition:
-        GeoPosition()
-        GeoPosition(bool, double, double)
+        cdef cppclass IndexData:
+            pass
 
-cdef extern from "zim/writer/contentProvider.h" namespace "zim::writer":
-    cdef cppclass ContentProvider:
-        pass
+    cdef extern from "zim/writer/item.h" namespace "zim::writer::IndexData":
+        cppclass GeoPosition:
+            GeoPosition()
+            GeoPosition(bool, double, double)
 
-
-cdef extern from "zim/writer/creator.h" namespace "zim::writer":
-    cdef cppclass ZimCreator "zim::writer::Creator":
-        void configVerbose(bint verbose)
-        void configCompression(Compression compression)
-        void configClusterSize(int size)
-        void configIndexing(bint indexing, string language)
-        void configNbWorkers(int nbWorkers)
-        void startZimCreation(string filepath) except + nogil
-        void addItem(shared_ptr[WriterItem] item) except + nogil
-        void addMetadata(string name, string content, string mimetype) except + nogil
-        void addRedirection(string path, string title, string targetpath, map[HintKeys, uint64_t] hints) except + nogil
-        void addAlias(string path, string title, string targetpath, map[HintKeys, uint64_t] hints) except + nogil
-        void finishZimCreation() except + nogil
-        void setMainPath(string mainPath)
-        void addIllustration(unsigned int size, string content) except + nogil
-        void addIllustration(const IllustrationInfo& ii, string content) except + nogil
-
-cdef extern from "zim/search.h" namespace "zim":
-    cdef cppclass Query:
-        Query()
-        Query& setQuery(string query)
-        Query& setGeorange(float latitude, float longitude, float distance)
+    cdef extern from "zim/writer/contentProvider.h" namespace "zim::writer":
+        cdef cppclass ContentProvider:
+            pass
 
 
-cdef extern from "zim/search_iterator.h" namespace "zim":
-    cdef cppclass SearchIterator:
-        SearchIterator()
-        SearchIterator operator++()
-        bint operator==(SearchIterator)
-        bint operator!=(SearchIterator)
-        string getPath()
-        string getTitle()
-        string getSnippet()
-        int getFileIndex()
-
-
-# Import the python wrappers (ObjWrapper) from libwrapper.
+    cdef extern from "zim/writer/creator.h" namespace "zim::writer":
+        cdef cppclass ZimCreator "zim::writer::Creator":
+            void configVerbose(bint verbose)
+            void configCompression(Compression compression)
+            void configClusterSize(int size)
+            void configIndexing(bint indexing, string language)
+            void configNbWorkers(int nbWorkers)
+            void startZimCreation(string filepath) except + nogil
+            void addItem(shared_ptr[WriterItem] item) except + nogil
+            void addMetadata(string name, string content, string mimetype) except + nogil
+            void addRedirection(string path, string title, string targetpath, map[HintKeys, uint64_t] hints) except + nogil
+            void addAlias(string path, string title, string targetpath, map[HintKeys, uint64_t] hints) except + nogil
+            void finishZimCreation() except + nogil
+            void setMainPath(string mainPath)
+            void addIllustration(unsigned int size, string content) except + nogil
+            void addIllustration(const IllustrationInfo& ii, string content) except + nogil
+ENDIF
 # The only thing we need to know here is how to create the wrappers.
 # Other (cpp) methods must exists (to be called from cpp side),
 # but we don't care about them as we will not call them in python side.
 cdef extern from "libwrapper.h":
-    cdef cppclass ContentProviderWrapper(ContentProvider):
-        ContentProviderWrapper(PyObject* obj) except +
-    cdef cppclass WriterItemWrapper:
-        WriterItemWrapper(PyObject* obj) except +
-    cdef cppclass IndexDataWrapper(IndexData):
-        IndexDataWrapper(PyObject* obj) except +
+    IF not LIBZIM_WITHOUT_WRITER:
+        cdef cppclass ContentProviderWrapper(ContentProvider):
+            ContentProviderWrapper(PyObject* obj) except +
+        cdef cppclass WriterItemWrapper:
+            WriterItemWrapper(PyObject* obj) except +
+        cdef cppclass IndexDataWrapper(IndexData):
+            IndexDataWrapper(PyObject* obj) except +
 
     Compression comp_from_int(int)
 

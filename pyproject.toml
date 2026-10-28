@@ -45,6 +45,7 @@ Homepage = "https://github.com/openzim/python-libzim"
 Donate = "https://www.kiwix.org/en/support-us/"
 
 [project.optional-dependencies]
+writer = []
 scripts = [
   "invoke==3.0.3",
 ]

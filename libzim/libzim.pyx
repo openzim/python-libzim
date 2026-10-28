@@ -125,30 +125,45 @@ cdef public api:
 
         return move(zim.Blob())
 
-    zim.ContentProvider* contentprovider_cy_call_fct(object obj, string method, string *error) with gil:
-        """Lookup and execute a pure virtual method on object returning a ContentProvider"""
-        try:
-            contentProvider = call_method(obj, method)
-            if not contentProvider:
-                raise RuntimeError("ContentProvider is None")
-            return new zim.ContentProviderWrapper(<PyObject*>contentProvider)
-        except Exception as e:
-            error[0] = traceback.format_exc().encode('UTF-8')
+    IF not LIBZIM_WITHOUT_WRITER:
+        zim.ContentProvider* contentprovider_cy_call_fct(object obj, string method, string *error) with gil:
+            """Lookup and execute a pure virtual method on object returning a ContentProvider"""
+            try:
+                contentProvider = call_method(obj, method)
+                if not contentProvider:
+                    raise RuntimeError("ContentProvider is None")
+                return new zim.ContentProviderWrapper(<PyObject*>contentProvider)
+            except Exception as e:
+                error[0] = traceback.format_exc().encode('UTF-8')
 
-        return NULL
+            return NULL
 
-    zim.IndexData* indexdata_cy_call_fct(object obj, string method, string *error) with gil:
-        """Lookup and execute a pure virtual method on object returning a IndexData"""
-        try:
-            indexData = call_method(obj, method)
-            if not indexData:
-                # indexData is none
-                return NULL;
-            return new zim.IndexDataWrapper(<PyObject*>indexData)
-        except Exception as e:
-            error[0] = traceback.format_exc().encode('UTF-8')
+        zim.IndexData* indexdata_cy_call_fct(object obj, string method, string *error) with gil:
+            """Lookup and execute a pure virtual method on object returning a IndexData"""
+            try:
+                indexData = call_method(obj, method)
+                if not indexData:
+                    # indexData is none
+                    return NULL;
+                return new zim.IndexDataWrapper(<PyObject*>indexData)
+            except Exception as e:
+                error[0] = traceback.format_exc().encode('UTF-8')
 
-        return NULL
+            return NULL
+    ELSE:
+        zim.ContentProvider* contentprovider_cy_call_fct(object obj, string method, string *error) with gil:
+            try:
+                error[0] = traceback.format_exc().encode('UTF-8')
+            except Exception:
+                pass
+            return NULL
+
+        zim.IndexData* indexdata_cy_call_fct(object obj, string method, string *error) with gil:
+            try:
+                error[0] = traceback.format_exc().encode('UTF-8')
+            except Exception:
+                pass
+            return NULL
 
     bool bool_cy_call_fct(object obj, string method, string *error) with gil:
         """Lookup and execute a pure virtual method on object returning a bool"""
@@ -177,42 +192,61 @@ cdef public api:
 
         return 0
 
-    zim.GeoPosition geoposition_cy_call_fct(object obj, string method, string *error) with gil:
-        """Lookup and execute a pure virtual method on object returning a GeoPosition"""
-        try:
-            geoPosition = call_method(obj, method)
-            if geoPosition:
-                return zim.GeoPosition(True, geoPosition[0], geoPosition[1]);
-        except Exception as e:
-            error[0] = traceback.format_exc().encode('UTF-8')
+    IF not LIBZIM_WITHOUT_WRITER:
+        zim.GeoPosition geoposition_cy_call_fct(object obj, string method, string *error) with gil:
+            """Lookup and execute a pure virtual method on object returning a GeoPosition"""
+            try:
+                geoPosition = call_method(obj, method)
+                if geoPosition:
+                    return zim.GeoPosition(True, geoPosition[0], geoPosition[1]);
+            except Exception as e:
+                error[0] = traceback.format_exc().encode('UTF-8')
 
-        return zim.GeoPosition(False, 0, 0)
+            return zim.GeoPosition(False, 0, 0)
 
-    map[zim.HintKeys, uint64_t] convertToCppHints(dict hintsDict):
-        """C++ Hints from Python dict"""
-        cdef map[zim.HintKeys, uint64_t] ret;
-        for key, value in hintsDict.items():
-            ret[key.value] = <uint64_t>value
-        return ret
+        map[zim.HintKeys, uint64_t] convertToCppHints(dict hintsDict):
+            """C++ Hints from Python dict"""
+            cdef map[zim.HintKeys, uint64_t] ret;
+            for key, value in hintsDict.items():
+                ret[key.value] = <uint64_t>value
+            return ret
 
-    map[zim.HintKeys, uint64_t] hints_cy_call_fct(object obj, string method, string* error) with gil:
-        """Lookup and execute a pure virtual method on object returning Hints"""
-        cdef map[zim.HintKeys, uint64_t] ret;
-        try:
-            func = getattr(obj, method.decode('UTF-8'))
-            hintsDict = {k: pybool(v) for k, v in func().items() if isinstance(k, Hint)}
-            return convertToCppHints(hintsDict)
-        except Exception as e:
-            error[0] = traceback.format_exc().encode('UTF-8')
+        map[zim.HintKeys, uint64_t] hints_cy_call_fct(object obj, string method, string* error) with gil:
+            """Lookup and execute a pure virtual method on object returning Hints"""
+            cdef map[zim.HintKeys, uint64_t] ret;
+            try:
+                func = getattr(obj, method.decode('UTF-8'))
+                hintsDict = {k: pybool(v) for k, v in func().items() if isinstance(k, Hint)}
+                return convertToCppHints(hintsDict)
+            except Exception as e:
+                error[0] = traceback.format_exc().encode('UTF-8')
 
-        return ret
+            return ret
+    ELSE:
+        zim.GeoPosition geoposition_cy_call_fct(object obj, string method, string *error) with gil:
+            try:
+                error[0] = traceback.format_exc().encode('UTF-8')
+            except Exception:
+                pass
+            return zim.GeoPosition(False, 0, 0)
+
+        map[zim.HintKeys, uint64_t] hints_cy_call_fct(object obj, string method, string* error) with gil:
+            cdef map[zim.HintKeys, uint64_t] ret;
+            try:
+                error[0] = traceback.format_exc().encode('UTF-8')
+            except Exception:
+                pass
+            return ret
 
 
 ###############################################################################
-#   Creator module                                                            #
+#   Creator module                                                            #
 ###############################################################################
 
-writer_module_name = f"{__name__}.writer"
+IF not LIBZIM_WITHOUT_WRITER:
+    writer_module_name = f"{__name__}.writer"
+ELSE:
+    writer_module_name = None
 
 cdef class WritingBlob:
     """A writable blob of data.
@@ -364,24 +398,25 @@ class BaseWritingItem:
             f"title={self.get_title()})"
         )
 
-cdef class _Creator:
-    """ZIM Creator.
+IF not LIBZIM_WITHOUT_WRITER:
+    cdef class _Creator:
+        """ZIM Creator.
 
-    Args:
-        filename: Full path to a zim file.
+        Args:
+            filename: Full path to a zim file.
 
-    Attributes:
-        *c_creator (zim.ZimCreator): a pointer to the C++ Creator object
-        _filename (pathlib.Path): path to create the ZIM file at.
-        _started (bool): flag if the creator has started.
-    """
-    __module__ = writer_module_name
+        Attributes:
+            *c_creator (zim.ZimCreator): a pointer to the C++ Creator object
+            _filename (pathlib.Path): path to create the ZIM file at.
+            _started (bool): flag if the creator has started.
+        """
+        __module__ = writer_module_name
 
-    cdef zim.ZimCreator c_creator
-    cdef object _filename
-    cdef object _started
+        cdef zim.ZimCreator c_creator
+        cdef object _filename
+        cdef object _started
 
-    def __cinit__(self, object filename: pathlib.Path, *args, **kwargs):
+        def __cinit__(self, object filename: pathlib.Path, *args, **kwargs):
         self._filename = pathlib.Path(filename)
         self._started = False
         # fail early if destination is not writable
@@ -543,24 +578,28 @@ cdef class _Creator:
 #    def set_uuid(self, uuid) -> Self:
 #        self.c_creator.setUuid(uuid)
 
-    def add_item(self, writer_item not None: BaseWritingItem):
-        """Add an item to the Creator object.
+    IF not LIBZIM_WITHOUT_WRITER:
+        def add_item(self, writer_item not None: BaseWritingItem):
+            """Add an item to the Creator object.
 
-        Args:
-            item (WriterItem): The item to add to the archive.
+            Args:
+                item (WriterItem): The item to add to the archive.
 
-        Raises:
-            RuntimeError: If an item with the same path already exists.
-            RuntimeError: If the ZimCreator has already been finalized.
-        """
-        if not self._started:
-            raise RuntimeError("Creator not started")
+            Raises:
+                RuntimeError: If an item with the same path already exists.
+                RuntimeError: If the ZimCreator has already been finalized.
+            """
+            if not self._started:
+                raise RuntimeError("Creator not started")
 
-        # Make a shared pointer to ZimArticleWrapper from the ZimArticle object
-        cdef shared_ptr[zim.WriterItem] item = shared_ptr[zim.WriterItem](
-            new zim.WriterItemWrapper(<PyObject*>writer_item));
-        with nogil:
-            self.c_creator.addItem(item)
+            # Make a shared pointer to ZimArticleWrapper from the ZimArticle object
+            cdef shared_ptr[zim.WriterItem] item = shared_ptr[zim.WriterItem](
+                new zim.WriterItemWrapper(<PyObject*>writer_item));
+            with nogil:
+                self.c_creator.addItem(item)
+    ELSE:
+        def add_item(self, writer_item not None):
+            raise NotImplementedError("Writer support not available in this build")
 
     def add_metadata(self, str name: str, bytes content: bytes, str mimetype: str):
         """Adds a metadata entry to the archive.
@@ -753,10 +792,11 @@ class IndexData:
         return None
 
 
-class Creator(_Creator):
-    """Creator to create ZIM files."""
-    __module__ = writer_module_name
-    def config_compression(self, compression: Compression | str):
+IF not LIBZIM_WITHOUT_WRITER:
+    class Creator(_Creator):
+        """Creator to create ZIM files."""
+        __module__ = writer_module_name
+        def config_compression(self, compression: Compression | str):
         if not isinstance(compression, Compression):
             compression = getattr(Compression, compression.lower())
         return super().config_compression(compression)
@@ -772,39 +812,47 @@ class Creator(_Creator):
     def __repr__(self) -> str:
         return f"Creator(filename={self.filename})"
 
-writer_module_doc = """libzim writer module
+IF not LIBZIM_WITHOUT_WRITER:
+    writer_module_doc = """libzim writer module
 
-- Creator to create ZIM files
-- Item to store ZIM articles metadata
-- ContentProvider to store an Item's content
-- Blob to store actual content
-- StringProvider to store an Item's content from a string
-- FileProvider to store an Item's content from a file path
-- Compression to select the algorithm to compress ZIM archive with
+    - Creator to create ZIM files
+    - Item to store ZIM articles metadata
+    - ContentProvider to store an Item's content
+    - Blob to store actual content
+    - StringProvider to store an Item's content from a string
+    - FileProvider to store an Item's content from a file path
+    - Compression to select the algorithm to compress ZIM archive with
 
-Usage:
+    Usage:
 
-```python
-with Creator(pathlib.Path("myfile.zim")) as creator:
-    creator.config_verbose(False)
-    creator.add_metadata("Name", b"my name")
-    # example
-    creator.add_item(MyItemSubclass(path, title, mimetype, content)
-    creator.set_mainpath(path)
-    creator.add_illustration(png_data, 48, 48, 2.0)
-```"""
-writer_public_objects = [
-    Creator,
-    Compression,
-    ('Blob', WritingBlob),
-    Hint,
-    ('Item', BaseWritingItem),
-    ContentProvider,
-    FileProvider,
-    StringProvider,
-    IndexData
-]
-writer = create_module(writer_module_name, writer_module_doc, writer_public_objects)
+    ```python
+    with Creator(pathlib.Path("myfile.zim")) as creator:
+        creator.config_verbose(False)
+        creator.add_metadata("Name", b"my name")
+        # example
+        creator.add_item(MyItemSubclass(path, title, mimetype, content)
+        creator.set_mainpath(path)
+        creator.add_illustration(png_data, 48, 48, 2.0)
+    ```"""
+    writer_public_objects = [
+        Creator,
+        Compression,
+        ('Blob', WritingBlob),
+        Hint,
+        ('Item', BaseWritingItem),
+        ContentProvider,
+        FileProvider,
+        StringProvider,
+        IndexData
+    ]
+    writer = create_module(writer_module_name, writer_module_doc, writer_public_objects)
+ELSE:
+    writer_module_doc = """libzim writer module
+
+    Writer support is not available in this build of libzim.
+    """
+    writer_public_objects = []
+    writer = create_module(writer_module_name, writer_module_doc, writer_public_objects)
 
 
 ###############################################################################
@@ -2074,4 +2122,7 @@ class ModuleFinder(importlib.abc.MetaPathFinder):
 # register finder for our submodules
 sys.meta_path.insert(0, ModuleFinder())
 
-__all__ = ["illustration", "writer", "reader", "search", "suggestion", "version"]
+IF not LIBZIM_WITHOUT_WRITER:
+    __all__ = ["illustration", "writer", "reader", "search", "suggestion", "version"]
+ELSE:
+    __all__ = ["illustration", "reader", "search", "suggestion", "version"]
