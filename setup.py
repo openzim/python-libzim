@@ -392,14 +392,7 @@ class Config:
 config = Config()
 
 
-def get_cython_extension() -> list[Extension]:
-    define_macros: list[tuple[str, str | None]] = []
-    compiler_directives = {"language_level": "3"}
-
-    if getattr(sys, "_is_gil_enabled", None) is not None and not sys._is_gil_enabled():
-        define_macros.append(("Py_GIL_DISABLED", "1"))
-
-    # Detect if libzim is built without writer support (e.g. Android builds)
+def _has_writer_support() -> bool:
     zim_config_paths = [
         config.base_dir / "include" / "zim" / "zim_config.h",
         Path("/usr/include/zim/zim_config.h"),
@@ -407,27 +400,33 @@ def get_cython_extension() -> list[Extension]:
         Path("/usr/include/x86_64-linux-gnu/zim/zim_config.h"),
         Path("/usr/include/aarch64-linux-gnu/zim/zim_config.h"),
     ]
-    without_writer = False
     for zim_config_path in zim_config_paths:
         if not zim_config_path.exists():
             continue
         try:
             with open(zim_config_path) as f:
-                config_content = f.read()
-            if 'LIBZIM_WITHOUT_WRITER' in config_content:
-                without_writer = True
-                break
+                if 'LIBZIM_WITHOUT_WRITER' in f.read():
+                    return False
         except OSError:
             continue
-    if not without_writer:
-        writer_header_paths = [
-            config.base_dir / "include" / "zim" / "writer" / "creator.h",
-            Path("/usr/include/zim/writer/creator.h"),
-            Path("/usr/local/include/zim/writer/creator.h"),
-        ]
-        if not any(p.exists() for p in writer_header_paths):
-            without_writer = True
-    if without_writer:
+    writer_header_paths = [
+        config.base_dir / "include" / "zim" / "writer" / "creator.h",
+        Path("/usr/include/zim/writer/creator.h"),
+        Path("/usr/local/include/zim/writer/creator.h"),
+    ]
+    if not any(p.exists() for p in writer_header_paths):
+        return False
+    return True
+
+
+def get_cython_extension() -> list[Extension]:
+    define_macros: list[tuple[str, str | None]] = []
+    compiler_directives = {"language_level": "3"}
+
+    if getattr(sys, "_is_gil_enabled", None) is not None and not sys._is_gil_enabled():
+        define_macros.append(("Py_GIL_DISABLED", "1"))
+
+    if not _has_writer_support():
         define_macros.append(("LIBZIM_WITHOUT_WRITER", "1"))
         print("Detected libzim built without writer support.")
 
