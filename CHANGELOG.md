@@ -5,11 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [4.0.0] - 2026-10-29
+
+### Added
+
+- Add support for Python 3.15 (#281)
+- Build wheels against the stable ABI (abi3) so a single wheel per platform covers all supported CPython versions (#264)
+- Add `libzim.illustration` module with the `IllustrationInfo` value object, and width/height/scale-aware illustration APIs: `Creator.add_illustration()`/`add_illustration_info()`, `Archive.get_illustration_item()`/`get_illustration_item_info()`, `Archive.get_illustrations_info()` (#232)
+- Support multi-archive searching via `Searcher.add_archive()` (#230)
+- Add `SearchResult` object with `archive`, `path`, `title`, and `snippet` (#226)
 
 ### Changed
 
-- Declare the extension free-threading compatible so that importing it on a free-threaded CPython no longer forces the GIL back on (#240)
+- **Breaking**: `SearchResultSet` now yields `SearchResult` objects instead of entry path strings (#226)
 - **Breaking**: `Creator.config_nbworkers()` param `nbWorkers` renamed `nb_workers` (#200)
 - **Breaking**: `Creator.set_mainpath()` param `mainPath` renamed `main_path` (#200)
 - **Breaking**: `Creator.add_redirection()` param `targetPath` renamed `target_path` (#200)
@@ -18,27 +26,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Breaking**: `Search.getResults()` renamed `Search.get_results()` (#200)
 - **Breaking**: `SuggestionSearch.getEstimatedMatches()` renamed `SuggestionSearch.get_estimated_matches()` (#200)
 - **Breaking**: `SuggestionSearch.getResults()` renamed `SuggestionSearch.get_results()` (#200)
+- Declare the extension free-threading compatible so that importing it on a free-threaded CPython no longer forces the GIL back on (#240)
 - Modernize type hints in `libzim.pyx` to use PEP 604/585 syntax (e.g. `str | bytes`, `dict[...]`) instead of `typing.Union`/`typing.Dict`/etc. (#281)
-- **Breaking**: `SearchResultSet` now yields `SearchResult` objects instead of entry path strings (#230, #226)
 
 ### Removed
 
-- **Breaking**: `Creator.add_metadata` no longer auto-converts a `Date` metadata value passed as `datetime.date`/`datetime.datetime`; pass pre-formatted `str`/`bytes` instead (#188)
 - **Breaking**: Drop support for Python 3.10 (#281)
+- **Breaking**: `Creator.add_metadata` no longer auto-converts a `Date` metadata value passed as `datetime.date`/`datetime.datetime`; pass pre-formatted `str`/`bytes` instead (#188)
 - **Breaking**: `Archive._get_entry_by_id()` removed in favor of `Archive.get_entry_by_id()` (#225)
 
 ### Fixed
 
 - Fix documentation build broken by mkdocstrings-python `import`/`load_external_modules` config changes and a stale CI badge URL (#279)
-
-### Added
-
-- Add a CI job building the documentation on every PR/push so this kind of breakage is caught automatically (#279)
-- Add support for Python 3.15 (#281)
-- Build wheels against the stable ABI (abi3) so a single wheel per platform covers all supported CPython versions (#263)
-- Add `libzim.illustration` module with the `IllustrationInfo` value object, and width/height/scale-aware illustration APIs: `Creator.add_illustration()`/`add_illustration_info()`, `Archive.get_illustration_item()`/`get_illustration_item_info()`, `Archive.get_illustrations_info()` (#232, #233)
-- Support multi-archive searching via `Searcher.add_archive()` (#230)
-- Add `SearchResult` object with `archive`, `path`, `title`, and `snippet` (#230, #226)
+- `get_illustration_sizes()` deprecation warning now points to the existing `get_illustrations_info()` method (#272)
+- `Creator.add_metadata` type stub no longer advertises `datetime` values (#285)
+- `libzim.suggestion` now exports `SuggestionSearch` and `SuggestionResultSet` at runtime, as declared in type stubs (#286)
+- Fix type stubs drifting from the compiled module: `set_cluster_cache_max_size` parameter name, `IllustrationInfo` `extra_attributes` default, enum members, `Creator.config_*()` return type (#286)
+- Submodules are no longer also registered in `sys.modules` under their last member name (e.g. `sys.modules["Searcher"]`) (#286)
 
 ## [3.13.1] - 2026-10-05
 
