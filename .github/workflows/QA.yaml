@@ -40,3 +40,6 @@ jobs:
 
       - name: Check stubs annotations
         run: inv check-stub-annotations
+
+      - name: Check build deps are in sync
+        run: inv check-build-deps-sync

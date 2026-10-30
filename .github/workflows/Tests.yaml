@@ -73,6 +73,28 @@ jobs:
       - name: Run the tests
         run: inv coverage --args "-vvv"
 
+  build-floor-versions: # validate that the floor of our build deps ranges still works
+    runs-on: ubuntu-26.04
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+
+      - name: Install floor versions of build dependencies
+        run: |
+          pip install -U pip packaging
+          pip install $(python3 scripts/floor_versions.py)
+
+      - name: Install project against floor versions (no build isolation)
+        run: pip install -e .[test,scripts] --no-build-isolation
+
+      - name: Run the tests
+        run: inv coverage --args "-vvv"
+
   build-docs: # validate that doc can be built
     runs-on: ubuntu-26.04
 

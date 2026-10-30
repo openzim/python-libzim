@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Relax `setuptools`/`wheel`/`cython` build dependency pins to `>=floor,<next major>` ranges instead of exact versions, easing downstream packaging; `delocate` stays exactly pinned (#288)
+
 ## [4.0.0] - 2026-10-29
 
 ### Added
