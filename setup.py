@@ -34,6 +34,7 @@ class Config:
     libzim_dl_version: str = os.getenv("LIBZIM_DL_VERSION", "9.8.2-1")
     use_system_libzim: bool = bool(os.getenv("USE_SYSTEM_LIBZIM") or False)
     download_libzim: bool = not bool(os.getenv("DONT_DOWNLOAD_LIBZIM") or False)
+    without_writer: bool = bool(os.getenv("LIBZIM_WITHOUT_WRITER") or False)
 
     # toggle profiling for coverage report in Cython
     profiling: bool = os.getenv("PROFILE", "0") == "1"
@@ -395,9 +396,15 @@ config = Config()
 def get_cython_extension() -> list[Extension]:
     define_macros: list[tuple[str, str | None]] = []
     compiler_directives = {"language_level": "3"}
+    compile_time_env = {}
 
     if getattr(sys, "_is_gil_enabled", None) is not None and not sys._is_gil_enabled():
         define_macros.append(("Py_GIL_DISABLED", "1"))
+
+    if config.without_writer:
+        define_macros.append(("LIBZIM_WITHOUT_WRITER", "1"))
+        print("Building without writer support.")
+    compile_time_env["LIBZIM_WITHOUT_WRITER"] = int(config.without_writer)
 
     if config.profiling:
         define_macros += [
@@ -467,7 +474,11 @@ def get_cython_extension() -> list[Extension]:
         define_macros=define_macros,
         py_limited_api=config.can_use_limited_api,
     )
-    return cythonize([wrapper_extension], compiler_directives=compiler_directives)
+    return cythonize(
+        [wrapper_extension],
+        compiler_directives=compiler_directives,
+        compile_time_env=compile_time_env,
+    )
 
 
 class LibzimBuildExt(build_ext):

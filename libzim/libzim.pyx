@@ -125,30 +125,31 @@ cdef public api:
 
         return move(zim.Blob())
 
-    zim.ContentProvider* contentprovider_cy_call_fct(object obj, string method, string *error) with gil:
-        """Lookup and execute a pure virtual method on object returning a ContentProvider"""
-        try:
-            contentProvider = call_method(obj, method)
-            if not contentProvider:
-                raise RuntimeError("ContentProvider is None")
-            return new zim.ContentProviderWrapper(<PyObject*>contentProvider)
-        except Exception as e:
-            error[0] = traceback.format_exc().encode('UTF-8')
+    IF not LIBZIM_WITHOUT_WRITER:
+        zim.ContentProvider* contentprovider_cy_call_fct(object obj, string method, string *error) with gil:
+            """Lookup and execute a pure virtual method on object returning a ContentProvider"""
+            try:
+                contentProvider = call_method(obj, method)
+                if not contentProvider:
+                    raise RuntimeError("ContentProvider is None")
+                return new zim.ContentProviderWrapper(<PyObject*>contentProvider)
+            except Exception as e:
+                error[0] = traceback.format_exc().encode('UTF-8')
 
-        return NULL
+            return NULL
 
-    zim.IndexData* indexdata_cy_call_fct(object obj, string method, string *error) with gil:
-        """Lookup and execute a pure virtual method on object returning a IndexData"""
-        try:
-            indexData = call_method(obj, method)
-            if not indexData:
-                # indexData is none
-                return NULL;
-            return new zim.IndexDataWrapper(<PyObject*>indexData)
-        except Exception as e:
-            error[0] = traceback.format_exc().encode('UTF-8')
+        zim.IndexData* indexdata_cy_call_fct(object obj, string method, string *error) with gil:
+            """Lookup and execute a pure virtual method on object returning a IndexData"""
+            try:
+                indexData = call_method(obj, method)
+                if not indexData:
+                    # indexData is none
+                    return NULL;
+                return new zim.IndexDataWrapper(<PyObject*>indexData)
+            except Exception as e:
+                error[0] = traceback.format_exc().encode('UTF-8')
 
-        return NULL
+            return NULL
 
     bool bool_cy_call_fct(object obj, string method, string *error) with gil:
         """Lookup and execute a pure virtual method on object returning a bool"""
@@ -177,39 +178,40 @@ cdef public api:
 
         return 0
 
-    zim.GeoPosition geoposition_cy_call_fct(object obj, string method, string *error) with gil:
-        """Lookup and execute a pure virtual method on object returning a GeoPosition"""
-        try:
-            geoPosition = call_method(obj, method)
-            if geoPosition:
-                return zim.GeoPosition(True, geoPosition[0], geoPosition[1]);
-        except Exception as e:
-            error[0] = traceback.format_exc().encode('UTF-8')
+    IF not LIBZIM_WITHOUT_WRITER:
+        zim.GeoPosition geoposition_cy_call_fct(object obj, string method, string *error) with gil:
+            """Lookup and execute a pure virtual method on object returning a GeoPosition"""
+            try:
+                geoPosition = call_method(obj, method)
+                if geoPosition:
+                    return zim.GeoPosition(True, geoPosition[0], geoPosition[1]);
+            except Exception as e:
+                error[0] = traceback.format_exc().encode('UTF-8')
 
-        return zim.GeoPosition(False, 0, 0)
+            return zim.GeoPosition(False, 0, 0)
 
-    map[zim.HintKeys, uint64_t] convertToCppHints(dict hintsDict):
-        """C++ Hints from Python dict"""
-        cdef map[zim.HintKeys, uint64_t] ret;
-        for key, value in hintsDict.items():
-            ret[key.value] = <uint64_t>value
-        return ret
+        map[zim.HintKeys, uint64_t] convertToCppHints(dict hintsDict):
+            """C++ Hints from Python dict"""
+            cdef map[zim.HintKeys, uint64_t] ret;
+            for key, value in hintsDict.items():
+                ret[key.value] = <uint64_t>value
+            return ret
 
-    map[zim.HintKeys, uint64_t] hints_cy_call_fct(object obj, string method, string* error) with gil:
-        """Lookup and execute a pure virtual method on object returning Hints"""
-        cdef map[zim.HintKeys, uint64_t] ret;
-        try:
-            func = getattr(obj, method.decode('UTF-8'))
-            hintsDict = {k: pybool(v) for k, v in func().items() if isinstance(k, Hint)}
-            return convertToCppHints(hintsDict)
-        except Exception as e:
-            error[0] = traceback.format_exc().encode('UTF-8')
+        map[zim.HintKeys, uint64_t] hints_cy_call_fct(object obj, string method, string* error) with gil:
+            """Lookup and execute a pure virtual method on object returning Hints"""
+            cdef map[zim.HintKeys, uint64_t] ret;
+            try:
+                func = getattr(obj, method.decode('UTF-8'))
+                hintsDict = {k: pybool(v) for k, v in func().items() if isinstance(k, Hint)}
+                return convertToCppHints(hintsDict)
+            except Exception as e:
+                error[0] = traceback.format_exc().encode('UTF-8')
 
-        return ret
+            return ret
 
 
 ###############################################################################
-#   Creator module                                                            #
+#   Creator module                                                            #
 ###############################################################################
 
 writer_module_name = f"{__name__}.writer"
@@ -251,11 +253,12 @@ class Compression(enum.Enum):
     zstd = 1
 
 
-class Hint(enum.Enum):
-    """Generic way to pass information to the creator on how to handle item/redirection."""
-    __module__ = writer_module_name
-    COMPRESS = zim.HintKeys.COMPRESS
-    FRONT_ARTICLE = zim.HintKeys.FRONT_ARTICLE
+IF not LIBZIM_WITHOUT_WRITER:
+    class Hint(enum.Enum):
+        """Generic way to pass information to the creator on how to handle item/redirection."""
+        __module__ = writer_module_name
+        COMPRESS = zim.HintKeys.COMPRESS
+        FRONT_ARTICLE = zim.HintKeys.FRONT_ARTICLE
 
 
 class ContentProvider:
@@ -364,296 +367,297 @@ class BaseWritingItem:
             f"title={self.get_title()})"
         )
 
-cdef class _Creator:
-    """ZIM Creator.
-
-    Args:
-        filename: Full path to a zim file.
-
-    Attributes:
-        *c_creator (zim.ZimCreator): a pointer to the C++ Creator object
-        _filename (pathlib.Path): path to create the ZIM file at.
-        _started (bool): flag if the creator has started.
-    """
-    __module__ = writer_module_name
-
-    cdef zim.ZimCreator c_creator
-    cdef object _filename
-    cdef object _started
-
-    def __cinit__(self, object filename: pathlib.Path, *args, **kwargs):
-        self._filename = pathlib.Path(filename)
-        self._started = False
-        # fail early if destination is not writable
-        parent = self._filename.expanduser().resolve().parent
-        if not os.access(parent, mode=os.W_OK, effective_ids=(os.access in os.supports_effective_ids)):
-            raise IOError(f"Unable to write ZIM file at {self._filename}")
-
-    def __init__(self, filename: pathlib.Path):
-        pass
-
-    def config_verbose(self, bool verbose: bool) -> Self:
-        """Set creator verbosity inside libzim (default: off).
+IF not LIBZIM_WITHOUT_WRITER:
+    cdef class _Creator:
+        """ZIM Creator.
 
         Args:
-            verbose (bool): Whether to enable verbosity.
+            filename: Full path to a zim file.
 
-        Returns:
-            The Creator instance with updated verbosity settings.
+        Attributes:
+            *c_creator (zim.ZimCreator): a pointer to the C++ Creator object
+            _filename (pathlib.Path): path to create the ZIM file at.
+            _started (bool): flag if the creator has started.
         """
-        if self._started:
-            raise RuntimeError("Creator started")
-        self.c_creator.configVerbose(verbose)
-        return self
+        __module__ = writer_module_name
 
-    def config_compression(self, compression: Compression) -> Self:
-        """Set compression algorithm to use.
+        cdef zim.ZimCreator c_creator
+        cdef object _filename
+        cdef object _started
 
-        Check libzim for default setting. (Fall 2021 default: zstd).
+        def __cinit__(self, object filename: pathlib.Path, *args, **kwargs):
+            self._filename = pathlib.Path(filename)
+            self._started = False
+            # fail early if destination is not writable
+            parent = self._filename.expanduser().resolve().parent
+            if not os.access(parent, mode=os.W_OK, effective_ids=(os.access in os.supports_effective_ids)):
+                raise IOError(f"Unable to write ZIM file at {self._filename}")
 
-        Args:
-            compression: The compression algorithm to set.
+        def __init__(self, filename: pathlib.Path):
+            pass
 
-        Returns:
-            The Creator instance with updated compression settings.
-        """
-        if self._started:
-            raise RuntimeError("Creator started")
-        self.c_creator.configCompression(zim.comp_from_int(compression.value))
-        return self
+        def config_verbose(self, bool verbose: bool) -> Self:
+            """Set creator verbosity inside libzim (default: off).
 
-    def config_clustersize(self, int size: pyint) -> Self:
-        """Set size of created clusters.
+            Args:
+                verbose (bool): Whether to enable verbosity.
 
-        Check libzim for default setting. (Fall 2021 default: 2Mib).
+            Returns:
+                The Creator instance with updated verbosity settings.
+            """
+            if self._started:
+                raise RuntimeError("Creator started")
+            self.c_creator.configVerbose(verbose)
+            return self
 
-        libzim will store at most this value per cluster before creating
-        another one.
+        def config_compression(self, compression: Compression) -> Self:
+            """Set compression algorithm to use.
 
-        Args:
-            size (int): The maximum size (in bytes) for each cluster.
+            Check libzim for default setting. (Fall 2021 default: zstd).
 
-        Returns:
-            The Creator instance with updated cluster size settings.
-        """
-        if self._started:
-            raise RuntimeError("Creator started")
-        self.c_creator.configClusterSize(size)
-        return self
+            Args:
+                compression: The compression algorithm to set.
 
-    def config_indexing(self, bool indexing: bool, str language: str) -> Self:
-        """Configures the full-text indexing feature.
+            Returns:
+                The Creator instance with updated compression settings.
+            """
+            if self._started:
+                raise RuntimeError("Creator started")
+            self.c_creator.configCompression(zim.comp_from_int(compression.value))
+            return self
 
-        Args:
-            indexing (bool): whether to create a full-text index of the content
-            language (str): language (ISO-639-3 code) to assume content in during indexation.
+        def config_clustersize(self, int size: pyint) -> Self:
+            """Set size of created clusters.
 
-        Returns:
-            The Creator instance with updated indexing settings.
-        """
-        if self._started:
-            raise RuntimeError("Creator started")
-        self.c_creator.configIndexing(indexing, language.encode('UTF-8'))
-        return self
+            Check libzim for default setting. (Fall 2021 default: 2Mib).
 
-    def config_nbworkers(self, int nb_workers: pyint) -> Self:
-        """Configures the number of threads to use for internal workers (default: 4).
+            libzim will store at most this value per cluster before creating
+            another one.
 
-        Args:
-            nb_workers (int): The number of threads to allocate.
+            Args:
+                size (int): The maximum size (in bytes) for each cluster.
 
-        Returns:
-            The Creator instance with updated worker thread settings.
-        """
-        if self._started:
-            raise RuntimeError("Creator started")
-        self.c_creator.configNbWorkers(nb_workers)
-        return self
+            Returns:
+                The Creator instance with updated cluster size settings.
+            """
+            if self._started:
+                raise RuntimeError("Creator started")
+            self.c_creator.configClusterSize(size)
+            return self
 
-    def set_mainpath(self, str main_path: str) -> Self:
-        """Set path of the main entry.
+        def config_indexing(self, bool indexing: bool, str language: str) -> Self:
+            """Configures the full-text indexing feature.
 
-        Args:
-            main_path (str): The path of the main entry.
+            Args:
+                indexing (bool): whether to create a full-text index of the content
+                language (str): language (ISO-639-3 code) to assume content in during indexation.
 
-        Returns:
-            The Creator instance with the updated main entry path.
-        """
-        self.c_creator.setMainPath(main_path.encode('UTF-8'))
-        return self
+            Returns:
+                The Creator instance with updated indexing settings.
+            """
+            if self._started:
+                raise RuntimeError("Creator started")
+            self.c_creator.configIndexing(indexing, language.encode('UTF-8'))
+            return self
 
-    def add_illustration(
-        self,
-        content: bytes,
-        width: pyint,
-        height: pyint | None = None,
-        scale: float = 1.0,
-    ):
-        """Add a PNG illustration to Archive.
+        def config_nbworkers(self, int nb_workers: pyint) -> Self:
+            """Configures the number of threads to use for internal workers (default: 4).
 
-        Shortcut building an IllustrationInfo from width/height/scale and
-        calling :meth:`add_illustration_info`.
+            Args:
+                nb_workers (int): The number of threads to allocate.
 
-        Refer to https://wiki.openzim.org/wiki/Metadata for more details.
+            Returns:
+                The Creator instance with updated worker thread settings.
+            """
+            if self._started:
+                raise RuntimeError("Creator started")
+            self.c_creator.configNbWorkers(nb_workers)
+            return self
 
-        Args:
-            content (bytes): The binary content of the PNG illustration.
-            width (int): Width in CSS pixels.
-            height (int): Height in CSS pixels. Defaults to width (square
-                illustration).
-            scale (float): Device pixel ratio. Defaults to 1.0.
+        def set_mainpath(self, str main_path: str) -> Self:
+            """Set path of the main entry.
 
-        Raises:
-            RuntimeError: If an illustration with the same attributes already exists.
+            Args:
+                main_path (str): The path of the main entry.
 
-        Examples:
-            # Square illustration at scale 1
-            creator.add_illustration(png_data, 48)
+            Returns:
+                The Creator instance with the updated main entry path.
+            """
+            self.c_creator.setMainPath(main_path.encode('UTF-8'))
+            return self
 
-            # Explicit width, height and scale
-            creator.add_illustration(png_data, 48, 48, 2.0)
-        """
-        if height is None:
-            height = width
-        self.add_illustration_info(content, IllustrationInfo(width, height, scale))
+        def add_illustration(
+            self,
+            content: bytes,
+            width: pyint,
+            height: pyint | None = None,
+            scale: float = 1.0,
+        ):
+            """Add a PNG illustration to Archive.
 
-    def add_illustration_info(self, content: bytes, info: IllustrationInfo):
-        """Add a PNG illustration to Archive from an IllustrationInfo.
+            Shortcut building an IllustrationInfo from width/height/scale and
+            calling :meth:`add_illustration_info`.
 
-        Mirrors libzim's own addIllustration(IllustrationInfo, content), for
-        full control over the illustration (e.g. extra attributes).
+            Refer to https://wiki.openzim.org/wiki/Metadata for more details.
 
-        Refer to https://wiki.openzim.org/wiki/Metadata for more details.
+            Args:
+                content (bytes): The binary content of the PNG illustration.
+                width (int): Width in CSS pixels.
+                height (int): Height in CSS pixels. Defaults to width (square
+                    illustration).
+                scale (float): Device pixel ratio. Defaults to 1.0.
 
-        Args:
-            content (bytes): The binary content of the PNG illustration.
-            info (IllustrationInfo): The illustration's metadata.
+            Raises:
+                RuntimeError: If an illustration with the same attributes already exists.
 
-        Raises:
-            RuntimeError: If an illustration with the same attributes already exists.
+            Examples:
+                # Square illustration at scale 1
+                creator.add_illustration(png_data, 48)
 
-        Examples:
-            info = IllustrationInfo(48, 48, 2.0)
-            creator.add_illustration_info(png_data, info)
-        """
-        cdef string _content = content
-        cdef zim.IllustrationInfo c_ii = _illustration_info_to_c(info)
-        self.c_creator.addIllustration(c_ii, _content)
+                # Explicit width, height and scale
+                creator.add_illustration(png_data, 48, 48, 2.0)
+            """
+            if height is None:
+                height = width
+            self.add_illustration_info(content, IllustrationInfo(width, height, scale))
 
-#    def set_uuid(self, uuid) -> Self:
-#        self.c_creator.setUuid(uuid)
+        def add_illustration_info(self, content: bytes, info: IllustrationInfo):
+            """Add a PNG illustration to Archive from an IllustrationInfo.
 
-    def add_item(self, writer_item not None: BaseWritingItem):
-        """Add an item to the Creator object.
+            Mirrors libzim's own addIllustration(IllustrationInfo, content), for
+            full control over the illustration (e.g. extra attributes).
 
-        Args:
-            item (WriterItem): The item to add to the archive.
+            Refer to https://wiki.openzim.org/wiki/Metadata for more details.
 
-        Raises:
-            RuntimeError: If an item with the same path already exists.
-            RuntimeError: If the ZimCreator has already been finalized.
-        """
-        if not self._started:
-            raise RuntimeError("Creator not started")
+            Args:
+                content (bytes): The binary content of the PNG illustration.
+                info (IllustrationInfo): The illustration's metadata.
 
-        # Make a shared pointer to ZimArticleWrapper from the ZimArticle object
-        cdef shared_ptr[zim.WriterItem] item = shared_ptr[zim.WriterItem](
-            new zim.WriterItemWrapper(<PyObject*>writer_item));
-        with nogil:
-            self.c_creator.addItem(item)
+            Raises:
+                RuntimeError: If an illustration with the same attributes already exists.
 
-    def add_metadata(self, str name: str, bytes content: bytes, str mimetype: str):
-        """Adds a metadata entry to the archive.
+            Examples:
+                info = IllustrationInfo(48, 48, 2.0)
+                creator.add_illustration_info(png_data, info)
+            """
+            cdef string _content = content
+            cdef zim.IllustrationInfo c_ii = _illustration_info_to_c(info)
+            self.c_creator.addIllustration(c_ii, _content)
 
-        Refer to https://wiki.openzim.org/wiki/Metadata for more details.
+    #    def set_uuid(self, uuid) -> Self:
+    #        self.c_creator.setUuid(uuid)
 
-        Args:
-            name (str): The name of the metadata entry.
-            content (bytes): The binary content of the metadata entry.
-            mimetype (str): The MIME type of the metadata entry.
+        def add_item(self, writer_item not None: BaseWritingItem):
+            """Add an item to the Creator object.
 
-        Raises:
-            RuntimeError: If a metadata entry with the same name already exists.
-        """
+            Args:
+                item (WriterItem): The item to add to the archive.
 
-        if not self._started:
-            raise RuntimeError("Creator not started")
+            Raises:
+                RuntimeError: If an item with the same path already exists.
+                RuntimeError: If the ZimCreator has already been finalized.
+            """
+            if not self._started:
+                raise RuntimeError("Creator not started")
 
-        cdef string _name = name.encode('UTF-8')
-        cdef string _content = content
-        cdef string _mimetype = mimetype.encode('UTF-8')
-        with nogil:
-            self.c_creator.addMetadata(_name, _content, _mimetype)
-
-    def add_redirection(self, str path: str, str title: str, str target_path: str, dict hints: dict[Hint, pyint]):
-        """Add redirection entry to the archive.
-
-        Refer to https://wiki.openzim.org/wiki/ZIM_file_format#Redirect_Entry for more details.
-
-        Args:
-            path (str): The path of the redirection entry.
-            title (str): The title associated with the redirection.
-            target_path (str): The target path for the redirection.
-            hints (dict[Hint, int]): A dictionary of hints for the redirection.
-
-        Raises:
-            RuntimeError: If a redirection entry exists with the same path.
-        """
-
-        if not self._started:
-            raise RuntimeError("Creator not started")
-
-        cdef string _path = path.encode('UTF-8')
-        cdef string _title = title.encode('UTF-8')
-        cdef string _targetPath = target_path.encode('UTF-8')
-        cdef map[zim.HintKeys, uint64_t] _hints = convertToCppHints(hints)
-        with nogil:
-            self.c_creator.addRedirection(_path, _title, _targetPath, _hints)
-
-    def add_alias(self, str path: str, str title: str, str target_path: str, dict hints: dict[Hint, pyint]):
-        """Alias the (existing) entry `target_path` as a new entry `path`.
-
-        Args:
-            path (str): The path for the new alias.
-            title (str): The title associated with the alias.
-            target_path (str): The existing entry to be aliased.
-            hints (dict[Hint, int]): A dictionary of hints for the alias.
-
-        Raises:
-            RuntimeError: If the `target_path` entry doesn't exist.
-        """
-
-        if not self._started:
-            raise RuntimeError("Creator not started")
-
-        cdef string _path = path.encode('UTF-8')
-        cdef string _title = title.encode('UTF-8')
-        cdef string _targetPath = target_path.encode('UTF-8')
-        cdef map[zim.HintKeys, uint64_t] _hints = convertToCppHints(hints)
-        with nogil:
-            self.c_creator.addAlias(_path, _title, _targetPath, _hints)
-
-    def __enter__(self):
-        cdef string _path = str(self._filename).encode('UTF-8')
-        with nogil:
-            self.c_creator.startZimCreation(_path)
-        self._started = True
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if True or exc_type is None:
+            # Make a shared pointer to ZimArticleWrapper from the ZimArticle object
+            cdef shared_ptr[zim.WriterItem] item = shared_ptr[zim.WriterItem](
+                new zim.WriterItemWrapper(<PyObject*>writer_item));
             with nogil:
-                self.c_creator.finishZimCreation()
-        self._started = False
+                self.c_creator.addItem(item)
 
-    @property
-    def filename(self) -> pathlib.Path:
-        """Path of the ZIM Archive on the filesystem.
+        def add_metadata(self, str name: str, bytes content: bytes, str mimetype: str):
+            """Adds a metadata entry to the archive.
 
-        Returns:
-            (pathlib.Path): Path of the ZIM Archive on the filesystem.
-        """
-        return self._filename
+            Refer to https://wiki.openzim.org/wiki/Metadata for more details.
+
+            Args:
+                name (str): The name of the metadata entry.
+                content (bytes): The binary content of the metadata entry.
+                mimetype (str): The MIME type of the metadata entry.
+
+            Raises:
+                RuntimeError: If a metadata entry with the same name already exists.
+            """
+
+            if not self._started:
+                raise RuntimeError("Creator not started")
+
+            cdef string _name = name.encode('UTF-8')
+            cdef string _content = content
+            cdef string _mimetype = mimetype.encode('UTF-8')
+            with nogil:
+                self.c_creator.addMetadata(_name, _content, _mimetype)
+
+        def add_redirection(self, str path: str, str title: str, str target_path: str, dict hints: dict[Hint, pyint]):
+            """Add redirection entry to the archive.
+
+            Refer to https://wiki.openzim.org/wiki/ZIM_file_format#Redirect_Entry for more details.
+
+            Args:
+                path (str): The path of the redirection entry.
+                title (str): The title associated with the redirection.
+                target_path (str): The target path for the redirection.
+                hints (dict[Hint, int]): A dictionary of hints for the redirection.
+
+            Raises:
+                RuntimeError: If a redirection entry exists with the same path.
+            """
+
+            if not self._started:
+                raise RuntimeError("Creator not started")
+
+            cdef string _path = path.encode('UTF-8')
+            cdef string _title = title.encode('UTF-8')
+            cdef string _targetPath = target_path.encode('UTF-8')
+            cdef map[zim.HintKeys, uint64_t] _hints = convertToCppHints(hints)
+            with nogil:
+                self.c_creator.addRedirection(_path, _title, _targetPath, _hints)
+
+        def add_alias(self, str path: str, str title: str, str target_path: str, dict hints: dict[Hint, pyint]):
+            """Alias the (existing) entry `target_path` as a new entry `path`.
+
+            Args:
+                path (str): The path for the new alias.
+                title (str): The title associated with the alias.
+                target_path (str): The existing entry to be aliased.
+                hints (dict[Hint, int]): A dictionary of hints for the alias.
+
+            Raises:
+                RuntimeError: If the `target_path` entry doesn't exist.
+            """
+
+            if not self._started:
+                raise RuntimeError("Creator not started")
+
+            cdef string _path = path.encode('UTF-8')
+            cdef string _title = title.encode('UTF-8')
+            cdef string _targetPath = target_path.encode('UTF-8')
+            cdef map[zim.HintKeys, uint64_t] _hints = convertToCppHints(hints)
+            with nogil:
+                self.c_creator.addAlias(_path, _title, _targetPath, _hints)
+
+        def __enter__(self):
+            cdef string _path = str(self._filename).encode('UTF-8')
+            with nogil:
+                self.c_creator.startZimCreation(_path)
+            self._started = True
+            return self
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            if True or exc_type is None:
+                with nogil:
+                    self.c_creator.finishZimCreation()
+            self._started = False
+
+        @property
+        def filename(self) -> pathlib.Path:
+            """Path of the ZIM Archive on the filesystem.
+
+            Returns:
+                (pathlib.Path): Path of the ZIM Archive on the filesystem.
+            """
+            return self._filename
 
 
 class StringProvider(ContentProvider):
@@ -753,58 +757,60 @@ class IndexData:
         return None
 
 
-class Creator(_Creator):
-    """Creator to create ZIM files."""
-    __module__ = writer_module_name
-    def config_compression(self, compression: Compression | str):
-        if not isinstance(compression, Compression):
-            compression = getattr(Compression, compression.lower())
-        return super().config_compression(compression)
+IF not LIBZIM_WITHOUT_WRITER:
+    class Creator(_Creator):
+        """Creator to create ZIM files."""
+        __module__ = writer_module_name
+        def config_compression(self, compression: Compression | str):
+            if not isinstance(compression, Compression):
+                compression = getattr(Compression, compression.lower())
+            return super().config_compression(compression)
 
-    def add_metadata(
-        self, name: str, content: str | bytes,
-        mimetype: str = "text/plain;charset=UTF-8"
-    ):
-        if isinstance(content, str):
-            content = content.encode("UTF-8")
-        super().add_metadata(name=name, content=content, mimetype=mimetype)
+        def add_metadata(
+            self, name: str, content: str | bytes,
+            mimetype: str = "text/plain;charset=UTF-8"
+        ):
+            if isinstance(content, str):
+                content = content.encode("UTF-8")
+            super().add_metadata(name=name, content=content, mimetype=mimetype)
 
-    def __repr__(self) -> str:
-        return f"Creator(filename={self.filename})"
+        def __repr__(self) -> str:
+            return f"Creator(filename={self.filename})"
 
-writer_module_doc = """libzim writer module
+IF not LIBZIM_WITHOUT_WRITER:
+    writer_module_doc = """libzim writer module
 
-- Creator to create ZIM files
-- Item to store ZIM articles metadata
-- ContentProvider to store an Item's content
-- Blob to store actual content
-- StringProvider to store an Item's content from a string
-- FileProvider to store an Item's content from a file path
-- Compression to select the algorithm to compress ZIM archive with
+    - Creator to create ZIM files
+    - Item to store ZIM articles metadata
+    - ContentProvider to store an Item's content
+    - Blob to store actual content
+    - StringProvider to store an Item's content from a string
+    - FileProvider to store an Item's content from a file path
+    - Compression to select the algorithm to compress ZIM archive with
 
-Usage:
+    Usage:
 
-```python
-with Creator(pathlib.Path("myfile.zim")) as creator:
-    creator.config_verbose(False)
-    creator.add_metadata("Name", b"my name")
-    # example
-    creator.add_item(MyItemSubclass(path, title, mimetype, content)
-    creator.set_mainpath(path)
-    creator.add_illustration(png_data, 48, 48, 2.0)
-```"""
-writer_public_objects = [
-    Creator,
-    Compression,
-    ('Blob', WritingBlob),
-    Hint,
-    ('Item', BaseWritingItem),
-    ContentProvider,
-    FileProvider,
-    StringProvider,
-    IndexData
-]
-writer = create_module(writer_module_name, writer_module_doc, writer_public_objects)
+    ```python
+    with Creator(pathlib.Path("myfile.zim")) as creator:
+        creator.config_verbose(False)
+        creator.add_metadata("Name", b"my name")
+        # example
+        creator.add_item(MyItemSubclass(path, title, mimetype, content)
+        creator.set_mainpath(path)
+        creator.add_illustration(png_data, 48, 48, 2.0)
+    ```"""
+    writer_public_objects = [
+        Creator,
+        Compression,
+        ('Blob', WritingBlob),
+        Hint,
+        ('Item', BaseWritingItem),
+        ContentProvider,
+        FileProvider,
+        StringProvider,
+        IndexData
+    ]
+    writer = create_module(writer_module_name, writer_module_doc, writer_public_objects)
 
 
 ###############################################################################
@@ -2049,14 +2055,18 @@ class ModuleLoader(importlib.abc.Loader):
     # Create our module. Easy, just return the created module
     @staticmethod
     def create_module(spec):
-        return {
+        modules = {
             'libzim.illustration': illustration,
-            'libzim.writer': writer,
             'libzim.reader': reader,
             'libzim.search': search,
             'libzim.suggestion': suggestion,
             'libzim.version': version
-        }.get(spec.name, None)
+        }
+        IF not LIBZIM_WITHOUT_WRITER:
+            modules['libzim.writer'] = writer
+        if spec.name not in modules:
+            raise ImportError(f"No module named '{spec.name}'", name=spec.name)
+        return modules[spec.name]
 
     @staticmethod
     def exec_module(module):
@@ -2074,4 +2084,6 @@ class ModuleFinder(importlib.abc.MetaPathFinder):
 # register finder for our submodules
 sys.meta_path.insert(0, ModuleFinder())
 
-__all__ = ["illustration", "writer", "reader", "search", "suggestion", "version"]
+__all__ = ["illustration", "reader", "search", "suggestion", "version"]
+IF not LIBZIM_WITHOUT_WRITER:
+    __all__.append("writer")

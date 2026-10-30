@@ -27,10 +27,14 @@
 #include <zim/entry.h>
 #include <zim/item.h>
 #include <zim/illustration.h>
-#include <zim/writer/item.h>
-#include <zim/writer/contentProvider.h>
 #include <zim/search.h>
 #include <zim/suggestion.h>
+#include <zim/zim_config.h>
+
+#ifndef LIBZIM_WITHOUT_WRITER
+#include <zim/writer/item.h>
+#include <zim/writer/contentProvider.h>
+#endif
 
 struct _object;
 typedef _object PyObject;
@@ -313,6 +317,7 @@ class ObjWrapper
     PyObject* m_obj;
 };
 
+#ifndef LIBZIM_WITHOUT_WRITER
 class WriterItemWrapper : public zim::writer::Item, private ObjWrapper
 {
   public:
@@ -347,6 +352,7 @@ class IndexDataWrapper: public zim::writer::IndexData, private ObjWrapper
     uint32_t getWordCount() const override;
     IndexData::GeoPosition getGeoPosition() const override;
 };
+#endif // LIBZIM_WITHOUT_WRITER
 
 
 // Small helpers

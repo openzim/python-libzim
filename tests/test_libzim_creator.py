@@ -1,5 +1,25 @@
 from __future__ import annotations
 
+import pytest
+
+try:
+    from libzim.writer import (  # pyright: ignore [reportMissingModuleSource]
+        Blob,
+        ContentProvider,
+        Creator,
+        FileProvider,
+        Hint,
+        IndexData,
+        Item,
+        StringProvider,
+    )
+
+    HAS_WRITER = True
+except ImportError:
+    HAS_WRITER = False
+
+pytestmark = pytest.mark.skipif(not HAS_WRITER, reason="writer support not available")
+
 import itertools
 import os
 import pathlib
@@ -7,9 +27,7 @@ import platform
 import subprocess
 import sys
 
-import pytest
-
-import libzim.writer  # pyright: ignore [reportMissingModuleSource]
+import libzim
 from libzim.illustration import (  # pyright: ignore [reportMissingModuleSource]
     IllustrationInfo,
 )
@@ -22,42 +40,33 @@ from libzim.search import (  # pyright: ignore [reportMissingModuleSource]
 from libzim.suggestion import (  # pyright: ignore [reportMissingModuleSource]
     SuggestionSearcher,
 )
-from libzim.writer import (  # pyright: ignore [reportMissingModuleSource]
-    Blob,
-    ContentProvider,
-    Creator,
-    FileProvider,
-    Hint,
-    IndexData,
-    Item,
-    StringProvider,
-)
 
 HOME_PATH = "lorem_ipsum"
 
+if HAS_WRITER:
 
-class StaticItem(libzim.writer.Item):
-    def __init__(self, **kwargs):
-        super().__init__()
-        for k, v in kwargs.items():
-            setattr(self, k, v)
+    class StaticItem(Item):
+        def __init__(self, **kwargs):
+            super().__init__()
+            for k, v in kwargs.items():
+                setattr(self, k, v)
 
-    def get_path(self) -> str:
-        return getattr(self, "path", "")
+        def get_path(self) -> str:
+            return getattr(self, "path", "")
 
-    def get_title(self) -> str:
-        return getattr(self, "title", "")
+        def get_title(self) -> str:
+            return getattr(self, "title", "")
 
-    def get_mimetype(self) -> str:
-        return getattr(self, "mimetype", "")
+        def get_mimetype(self) -> str:
+            return getattr(self, "mimetype", "")
 
-    def get_contentprovider(self) -> libzim.writer.ContentProvider:
-        if getattr(self, "filepath", None):
-            return FileProvider(filepath=getattr(self, "filepath", ""))
-        return StringProvider(content=getattr(self, "content", ""))
+        def get_contentprovider(self) -> ContentProvider:
+            if getattr(self, "filepath", None):
+                return FileProvider(filepath=getattr(self, "filepath", ""))
+            return StringProvider(content=getattr(self, "content", ""))
 
-    def get_hints(self) -> dict[Hint, int]:
-        return getattr(self, "hints", {Hint.FRONT_ARTICLE: True})
+        def get_hints(self) -> dict[Hint, int]:
+            return getattr(self, "hints", {Hint.FRONT_ARTICLE: True})
 
 
 @pytest.fixture(scope="function")
@@ -564,6 +573,8 @@ def test_creator_alias(fpath, lipsum_item):
     c = Creator(fpath)
     with pytest.raises(RuntimeError, match="not started"):
         c.add_redirection("home", "hello", HOME_PATH, {Hint.FRONT_ARTICLE: True})
+    with pytest.raises(RuntimeError, match="not started"):
+        c.add_alias("home", "hello", HOME_PATH, {Hint.FRONT_ARTICLE: True})
     del c
 
     with Creator(fpath) as c:
