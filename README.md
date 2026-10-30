@@ -60,6 +60,10 @@ entry = zim.get_entry_by_path("home/fr")
 print(f"Entry {entry.title} at {entry.path} is {entry.get_item().size}b.")
 print(bytes(entry.get_item().content).decode("UTF-8"))
 
+# iterating over all entries (in the most efficient order to read them)
+for entry in zim:
+    print(entry.path, entry.title)
+
 # searching using full-text index
 search_string = "Welcome"
 query = Query().set_query(search_string)
