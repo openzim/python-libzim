@@ -1324,6 +1324,107 @@ cdef class Archive:
         cdef zim.Entry entry = move(self.c_archive.getEntryByPath(<zim.entry_index_type>entry_id))
         return Entry.from_entry(move(entry))
 
+    def iter_by_path(self) -> Iterator[Entry]:
+        """Iterate over all user entries, in path order.
+
+        If Archive doesn't support “user entries” then this iterates on all
+        entries in the ZIM file.
+
+        Yields:
+            Entry: Each entry, in path order.
+        """
+        cdef zim.PathEntryRange c_range = move(self.c_archive.iterByPath())
+        cdef zim.PathEntryIterator current = c_range.begin()
+        cdef zim.PathEntryIterator end = c_range.end()
+        while current != end:
+            yield Entry.from_entry(move(current.getEntry()))
+            preincrement(current)
+
+    def iter_by_title(self) -> Iterator[Entry]:
+        """Iterate over all articles, in title order.
+
+        The definition of "article" depends on the ZIM archive: on recent
+        archives this is all entries marked as `FRONT_ARTICLE` at creation
+        time; on old archives this is all entries in the `A` namespace.
+
+        Yields:
+            Entry: Each article, in title order.
+        """
+        cdef zim.TitleEntryRange c_range = move(self.c_archive.iterByTitle())
+        cdef zim.TitleEntryIterator current = c_range.begin()
+        cdef zim.TitleEntryIterator end = c_range.end()
+        while current != end:
+            yield Entry.from_entry(move(current.getEntry()))
+            preincrement(current)
+
+    def iter_efficient(self) -> Iterator[Entry]:
+        """Iterate over all user entries, in the most efficient order to read them.
+
+        If Archive doesn't support “user entries” then this iterates on all
+        entries in the ZIM file.
+
+        Yields:
+            Entry: Each entry, in an unspecified but efficient-to-read order.
+        """
+        cdef zim.EfficientEntryRange c_range = move(self.c_archive.iterEfficient())
+        cdef zim.EfficientEntryIterator current = c_range.begin()
+        cdef zim.EfficientEntryIterator end = c_range.end()
+        while current != end:
+            yield Entry.from_entry(move(current.getEntry()))
+            preincrement(current)
+
+    def __iter__(self) -> Iterator[Entry]:
+        """Iterate over all user entries, in the most efficient order to read them.
+
+        Equivalent to :meth:`iter_efficient`.
+
+        Yields:
+            Entry: Each entry, in an unspecified but efficient-to-read order.
+        """
+        return self.iter_efficient()
+
+    def find_by_path(self, path: str) -> Iterator[Entry]:
+        """Iterate over all entries whose path starts with `path`.
+
+        Unlike `get_entry_by_path`, there is no compatibility layer: `path`
+        must follow the archive's namespace scheme (see `has_new_namespace_scheme`).
+
+        Args:
+            path: The path prefix to search for.
+
+        Yields:
+            Entry: Each entry whose path starts with `path`, in path order.
+        """
+        cdef zim.PathEntryRange c_range = move(
+            self.c_archive.findByPath(<string>path.encode('UTF-8'))
+        )
+        cdef zim.PathEntryIterator current = c_range.begin()
+        cdef zim.PathEntryIterator end = c_range.end()
+        while current != end:
+            yield Entry.from_entry(move(current.getEntry()))
+            preincrement(current)
+
+    def find_by_title(self, title: str) -> Iterator[Entry]:
+        """Iterate over all articles whose title starts with `title`.
+
+        Case and diacritic sensitive; cannot find a pattern in the middle of
+        a title (only prefixes).
+
+        Args:
+            title: The title prefix to search for.
+
+        Yields:
+            Entry: Each article whose title starts with `title`, in title order.
+        """
+        cdef zim.TitleEntryRange c_range = move(
+            self.c_archive.findByTitle(<string>title.encode('UTF-8'))
+        )
+        cdef zim.TitleEntryIterator current = c_range.begin()
+        cdef zim.TitleEntryIterator end = c_range.end()
+        while current != end:
+            yield Entry.from_entry(move(current.getEntry()))
+            preincrement(current)
+
     @property
     def has_main_entry(self) -> pybool:
         """Whether Archive has a main entry set.

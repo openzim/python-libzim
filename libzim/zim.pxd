@@ -145,6 +145,45 @@ cdef extern from "libwrapper.h" namespace "wrapper":
 
         int getIndex() except +
 
+    cdef cppclass PathEntryIterator:
+        PathEntryIterator()
+        PathEntryIterator operator++()
+        bint operator==(PathEntryIterator)
+        bint operator!=(PathEntryIterator)
+        Entry getEntry() except +
+
+    cdef cppclass PathEntryRange:
+        PathEntryRange()
+        PathEntryIterator begin()
+        PathEntryIterator end()
+        int size()
+
+    cdef cppclass TitleEntryIterator:
+        TitleEntryIterator()
+        TitleEntryIterator operator++()
+        bint operator==(TitleEntryIterator)
+        bint operator!=(TitleEntryIterator)
+        Entry getEntry() except +
+
+    cdef cppclass TitleEntryRange:
+        TitleEntryRange()
+        TitleEntryIterator begin()
+        TitleEntryIterator end()
+        int size()
+
+    cdef cppclass EfficientEntryIterator:
+        EfficientEntryIterator()
+        EfficientEntryIterator operator++()
+        bint operator==(EfficientEntryIterator)
+        bint operator!=(EfficientEntryIterator)
+        Entry getEntry() except +
+
+    cdef cppclass EfficientEntryRange:
+        EfficientEntryRange()
+        EfficientEntryIterator begin()
+        EfficientEntryIterator end()
+        int size()
+
     cdef cppclass Item:
         string getTitle() except +
         string getPath() except +
@@ -167,6 +206,12 @@ cdef extern from "libwrapper.h" namespace "wrapper":
         Entry getEntryByPath(string path) except +
         Entry getEntryByPath(entry_index_type idx) except +
         Entry getEntryByTitle(string title) except +
+
+        PathEntryRange iterByPath() except +
+        TitleEntryRange iterByTitle() except +
+        EfficientEntryRange iterEfficient() except +
+        PathEntryRange findByPath(string path) except +
+        TitleEntryRange findByTitle(string title) except +
 
         string getMetadata(string name) except +
         Item getMetadataItem(string name) except +
