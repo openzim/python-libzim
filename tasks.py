@@ -113,12 +113,19 @@ def check_stub_annotations(ctx: Context):
     ctx.run("python -m scripts.check_stub_annotations", pty=use_pty)
 
 
+@task
+def check_build_deps_sync(ctx: Context):
+    """check that build-system.requires and the build extra are in sync"""
+    ctx.run("python -m scripts.check_build_deps_sync", pty=use_pty)
+
+
 @task(optional=["args"], help={"args": "check tools (pyright) additional arguments"})
 def checkall(ctx: Context, args: str = ""):
     """check static types and type stubs"""
     check_pyright(ctx, args)
     check_stubtest(ctx)
     check_stub_annotations(ctx)
+    check_build_deps_sync(ctx)
 
 
 @task(optional=["args"], help={"args": "black additional arguments"})

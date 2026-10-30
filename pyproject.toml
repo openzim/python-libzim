@@ -1,8 +1,17 @@
 [build-system]
 requires = [
-  "setuptools == 84.2.1",
-  "wheel == 0.48.0",
-  "cython == 3.3.0",
+  # this list must stay byte-for-byte identical to [project.optional-dependencies].build
+  # below. PEP 518 requires build-system.requires to be static TOML, parsed before any
+  # project/build-backend code runs, so it cannot reference the `build` extra (or vice
+  # versa): the duplication is unavoidable and is checked by
+  # scripts/check_build_deps_sync.py (run in CI).
+  #
+  # floor versions below are read by scripts/floor_versions.py and
+  # validated by the "build-floor-versions" CI job; when bumping, only move
+  # the floor if actually required, not on every bump
+  "setuptools >=84.2.1,<85",
+  "wheel >=0.48.0,<0.49",
+  "cython >=3.3.0,<3.4",
   # https://github.com/pypa/cibuildwheel/blob/v2.22/cibuildwheel/resources/constraints.txt
   "delocate == 0.13.0 ; platform_system=='Windows'",
 ]
@@ -69,9 +78,11 @@ test = [
   "libzim[build]",
 ]
 build = [
-  "setuptools == 84.2.1",
-  "wheel == 0.48.0",
-  "cython == 3.3.0",
+  # must stay byte-for-byte identical to [build-system].requires above; see the
+  # comment there
+  "setuptools >=84.2.1,<85",
+  "wheel >=0.48.0,<0.49",
+  "cython >=3.3.0,<3.4",
   "delocate == 0.13.0 ; platform_system=='Windows'",
 ]
 docs = [
