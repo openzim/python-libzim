@@ -24,6 +24,7 @@ import urllib.request
 import zipfile
 from ctypes.util import find_library
 from pathlib import Path
+from typing import ClassVar
 
 from Cython.Build import cythonize
 from Cython.Distutils.build_ext import new_build_ext as build_ext
@@ -50,11 +51,20 @@ class Config:
     # windows
     _msvc_debug: bool = bool(os.getenv("MSVC_DEBUG"))
 
-    supported_platforms = {  # noqa: RUF012
+    supported_platforms: ClassVar[dict[str, list[str]]] = {
         "Darwin": ["x86_64", "arm64"],
         "Linux": ["x86_64", "aarch64"],
         "Linux-musl": ["x86_64", "aarch64"],
         "Windows": ["amd64"],
+        "Android": ["arm64_v8a", "x86_64"],
+    }
+
+    _android_triplets: ClassVar[frozenset[str]] = frozenset(
+        {"aarch64-linux-android", "x86_64-linux-android"}
+    )
+    _android_arch_map: ClassVar[dict[str, str]] = {
+        "aarch64-linux-android": "arm64_v8a",
+        "x86_64-linux-android": "x86_64",
     }
 
     base_dir: pathlib.Path = Path(__file__).parent
@@ -93,19 +103,27 @@ class Config:
 
     @property
     def platform(self) -> str:
-        """Platform building for: Darwin, Linux"""
+        """Platform building for: Darwin, Linux, Android"""
+        if os.getenv("CIBW_HOST_TRIPLET") in self._android_triplets:
+            return "Android"
         return sysplatform.system()
 
     @property
     def platform_libc(self) -> str:
         """Platform adjusted for libc variant: Darwin, Linux, Linux-musl"""
+        if self.platform == "Android":
+            return "Android"
         if self.platform == "Linux" and self.is_musl:
             return "Linux-musl"
         return self.platform
 
     @property
     def arch(self) -> str:
-        # macOS x86_64|arm64 - linux x86_64|aarch64
+        # macOS x86_64|arm64 - linux x86_64|aarch64 - android arm64_v8a|x86_64
+
+        host_triplet = os.getenv("CIBW_HOST_TRIPLET", "")
+        if host_triplet in self._android_triplets:
+            return self._android_arch_map[host_triplet]
 
         # when using cibuildwheel on macOS to cross-compile,
         # `_PYTHON_HOST_PLATFORM` contains
@@ -134,6 +152,7 @@ class Config:
             "Darwin": f"libzim.{self.libzim_major}.dylib",
             "Linux": f"libzim.so.{self.libzim_major}",
             "Windows": f"zim-{self.libzim_major}.dll",
+            "Android": "libzim.so",
         }[self.platform]
 
     @property
@@ -149,6 +168,8 @@ class Config:
     @property
     def is_musl(self) -> bool:
         """whether running on a musl system (Alpine)"""
+        if self.platform == "Android":
+            return False
         ps = subprocess.run(
             ["/usr/bin/env", "ldd", "--version"],
             capture_output=True,
@@ -183,13 +204,19 @@ class Config:
         if self.platform == "Windows" and arch == "amd64":
             arch = "x86_64"
 
-        lzplatform = {"Darwin": "macos", "Linux": "linux", "Windows": "win"}.get(
-            self.platform
-        )
+        if self.platform == "Android":
+            android_arch_map = {"arm64_v8a": "arm64", "x86_64": "x86_64"}
+            arch = android_arch_map.get(arch, arch)
+            lzplatform = "android"
+            variant = ""
+        else:
+            lzplatform = {"Darwin": "macos", "Linux": "linux", "Windows": "win"}.get(
+                self.platform
+            )
 
-        variant = ""
-        if self.platform == "Linux":
-            variant = "-musl" if self.is_musl else "-manylinux"
+            variant = ""
+            if self.platform == "Linux":
+                variant = "-musl" if self.is_musl else "-manylinux"
 
         if self.is_latest_nightly:
             version_suffix = ""
@@ -448,7 +475,9 @@ def get_cython_extension() -> list[Extension]:
         include_dirs.append("include")
         library_dirs = ["libzim"]
 
-        if config.platform != "Windows":
+        if config.platform == "Android":
+            runtime_library_dirs = ["$ORIGIN/libzim/"]
+        elif config.platform != "Windows":
             runtime_library_dirs = (
                 [f"@loader_path/libzim/{config.libzim_fname}"]
                 if config.platform == "Darwin"

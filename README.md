@@ -26,6 +26,7 @@ Our [PyPI wheels](https://pypi.org/project/libzim/) bundle a [recent release](ht
 - GNU/Linux for `x86_64`, `armhf` and `aarch64`
 - Linux+musl for `x86_64` and `aarch64`
 - Windows for `x64`
+- Android for `arm64_v8a` and `x86_64` with CPython 3.13+
 
 Wheels are available for CPython only (but can be built for Pypy).
 
@@ -33,7 +34,7 @@ Free-threaded CPython is supported: the extension declares itself free-threading
 
 Users on other platforms can install the source distribution (see [Building](#Building) below). 
 
-Writer support is decided when the extension is built, not when it is installed: there is no install-time extra for it. Set `LIBZIM_WITHOUT_WRITER=1` when building against a libzim compiled without writer support; such a build exposes the reader, search, suggestion, illustration and version modules only. Import `libzim.writer` in a `try`/`except ImportError` block to detect writer support at runtime.
+Writer support is decided when the extension is built, not when it is installed: there is no install-time extra for it. Set `LIBZIM_WITHOUT_WRITER=1` when building against a libzim compiled without writer support; such a build exposes the reader, search, suggestion, illustration and version modules only. Import `libzim.writer` in a `try`/`except ImportError` block to detect writer support at runtime. Android wheels are built without writer support, since libzim is compiled without it for Android.
 
 
 ## Contributions
