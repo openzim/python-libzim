@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add Android wheels support via cibuildwheel for arm64_v8a and x86_64 with CPython 3.13+; these wheels are reader-only since libzim is compiled without writer support on Android (#167)
+
 ### Changed
 
 - Relax `setuptools`/`wheel`/`cython` build dependency pins to `>=floor,<next major>` ranges instead of exact versions, easing downstream packaging; `delocate` stays exactly pinned (#288)

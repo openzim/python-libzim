@@ -780,6 +780,8 @@ IF not LIBZIM_WITHOUT_WRITER:
 IF not LIBZIM_WITHOUT_WRITER:
     writer_module_doc = """libzim writer module
 
+    Not available on Android, where libzim is built without writer support.
+
     - Creator to create ZIM files
     - Item to store ZIM articles metadata
     - ContentProvider to store an Item's content
