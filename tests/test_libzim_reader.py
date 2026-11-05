@@ -597,6 +597,86 @@ def test_reader_by_id(all_zims, filename):
 
 
 @skip_if_offline
+@pytest.mark.parametrize(*parametrize_for(["filename"]))
+def test_reader_iter_by_path(all_zims, filename):
+    zim = Archive(all_zims / filename)
+
+    entries = list(zim.iter_by_path())
+    assert len(entries) == zim.entry_count
+    paths = [entry.path for entry in entries]
+    assert paths == sorted(paths)
+    assert len(set(paths)) == len(paths)
+
+    assert {zim.get_entry_by_id(index).path for index in range(zim.entry_count)} == set(
+        paths
+    )
+
+
+@skip_if_offline
+@pytest.mark.parametrize(*parametrize_for(["filename"]))
+def test_reader_iter_by_title(all_zims, filename):
+    zim = Archive(all_zims / filename)
+
+    entries = list(zim.iter_by_title())
+    titles = [entry.title for entry in entries]
+    assert titles == sorted(titles)
+    assert len({entry.path for entry in entries}) == len(entries)
+
+
+@skip_if_offline
+@pytest.mark.parametrize(*parametrize_for(["filename"]))
+def test_reader_iter_efficient(all_zims, filename):
+    zim = Archive(all_zims / filename)
+
+    entries = list(zim.iter_efficient())
+    assert len(entries) == zim.entry_count
+    assert {entry.path for entry in entries} == {
+        entry.path for entry in zim.iter_by_path()
+    }
+
+
+@skip_if_offline
+@pytest.mark.parametrize(*parametrize_for(["filename"]))
+def test_reader_dunder_iter(all_zims, filename):
+    zim = Archive(all_zims / filename)
+
+    assert [entry.path for entry in zim] == [
+        entry.path for entry in zim.iter_efficient()
+    ]
+
+
+@skip_if_offline
+@pytest.mark.parametrize(*parametrize_for(["filename", "test_path"]))
+def test_reader_find_by_path(all_zims, filename, test_path):
+    zim = Archive(all_zims / filename)
+
+    assert list(zim.find_by_path("___missing_prefix___")) == []
+
+    if test_path:
+        prefix = test_path[:3]
+        found = list(zim.find_by_path(prefix))
+        assert found
+        assert all(entry.path.startswith(prefix) for entry in found)
+        assert test_path in {entry.path for entry in found}
+
+
+@skip_if_offline
+@pytest.mark.parametrize(*parametrize_for(["filename", "test_title"]))
+def test_reader_find_by_title(all_zims, filename, test_title):
+    zim = Archive(all_zims / filename)
+
+    assert list(zim.find_by_title("___missing_prefix___")) == []
+
+    # example.zim cannot be queried by title, see test_reader_get_entries
+    if test_title and filename != "example.zim":
+        prefix = test_title[:3]
+        found = list(zim.find_by_title(prefix))
+        assert found
+        assert all(entry.title.startswith(prefix) for entry in found)
+        assert test_title in {entry.title for entry in found}
+
+
+@skip_if_offline
 def test_archive_equality(all_zims):
     class Different:
         def __init__(self, filename):

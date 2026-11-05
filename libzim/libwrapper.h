@@ -138,6 +138,40 @@ class Entry : public Wrapper<zim::Entry>
     FORWARD(zim::entry_index_type, getIndex)
 };
 
+// Wrapping of the templated zim::Archive::iterator<order> / zim::Archive::EntryRange<order>.
+// Both lack a default constructor, so (as explained above) they must go through Wrapper.
+// The template parameter (a zim::EntryOrder, i.e. a non-type parameter) is resolved at
+// compile time; we only need one concrete type per order, named below for Cython to pick up.
+template<zim::EntryOrder order>
+class EntryIterator : public Wrapper<zim::Archive::iterator<order>>
+{
+  public:
+    EntryIterator() = default;
+    EntryIterator(const zim::Archive::iterator<order>& o) : Wrapper<zim::Archive::iterator<order>>(o) {};
+    bool operator==(const EntryIterator& it) const { return *this->mp_base == *it.mp_base; }
+    bool operator!=(const EntryIterator& it) const { return *this->mp_base != *it.mp_base; }
+    EntryIterator& operator++() { ++(*this->mp_base); return *this; }
+    wrapper::Entry getEntry() const { return this->mp_base->operator*(); }
+};
+
+template<zim::EntryOrder order>
+class EntryRange : public Wrapper<zim::Archive::EntryRange<order>>
+{
+  public:
+    EntryRange() = default;
+    EntryRange(const zim::Archive::EntryRange<order>& o) : Wrapper<zim::Archive::EntryRange<order>>(o) {};
+    EntryIterator<order> begin() const { return this->mp_base->begin(); }
+    EntryIterator<order> end() const { return this->mp_base->end(); }
+    int size() const { return this->mp_base->size(); }
+};
+
+typedef EntryIterator<zim::EntryOrder::pathOrder> PathEntryIterator;
+typedef EntryRange<zim::EntryOrder::pathOrder> PathEntryRange;
+typedef EntryIterator<zim::EntryOrder::titleOrder> TitleEntryIterator;
+typedef EntryRange<zim::EntryOrder::titleOrder> TitleEntryRange;
+typedef EntryIterator<zim::EntryOrder::efficientOrder> EfficientEntryIterator;
+typedef EntryRange<zim::EntryOrder::efficientOrder> EfficientEntryRange;
+
 class Archive : public Wrapper<zim::Archive>
 {
   public:
@@ -152,6 +186,11 @@ class Archive : public Wrapper<zim::Archive>
     FORWARD(wrapper::Entry, getEntryByTitle)
     FORWARD(wrapper::Entry, getMainEntry)
     FORWARD(wrapper::Entry, getRandomEntry)
+    FORWARD(wrapper::PathEntryRange, iterByPath)
+    FORWARD(wrapper::TitleEntryRange, iterByTitle)
+    FORWARD(wrapper::EfficientEntryRange, iterEfficient)
+    FORWARD(wrapper::PathEntryRange, findByPath)
+    FORWARD(wrapper::TitleEntryRange, findByTitle)
     FORWARD(wrapper::Item, getIllustrationItem)
     FORWARD(std::set<unsigned int>, getIllustrationSizes)
     FORWARD(zim::Archive::IllustrationInfos, getIllustrationInfos)

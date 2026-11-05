@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add Android wheels support via cibuildwheel for arm64_v8a and x86_64 with CPython 3.13+; these wheels are reader-only since libzim is compiled without writer support on Android (#167)
+- Add `Archive.iter_by_path()`, `Archive.iter_by_title()`, `Archive.iter_efficient()`, `Archive.__iter__()` (alias for `iter_efficient()`), `Archive.find_by_path()` and `Archive.find_by_title()` to iterate over entries without `get_entry_by_id()` (#94, #294)
 
 ### Changed
 
