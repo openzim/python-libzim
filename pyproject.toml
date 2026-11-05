@@ -60,21 +60,21 @@ scripts = [
 ]
 lint = [
   "black==26.10.1",
-  "ruff==0.17.2",
+  "ruff==0.17.3",
   "libzim",
   "libzim[build]",
 ]
 check = [
   "pyright==1.1.414",
-  "mypy==2.4.0",
+  "mypy==2.4.1",
   "libzim",
   "libzim[build]",
   "libzim[test]",
-  "types-setuptools",
+  "types-setuptools==84.2.0.20261104",
 ]
 test = [
-  "pytest==9.1.1",
-  "coverage==7.17.0",
+  "pytest==9.2.0",
+  "coverage==7.17.2",
   # for cython coverage plugin
   "libzim[build]",
 ]
@@ -98,8 +98,8 @@ docs = [
 ]
 dev = [
   "pre-commit==4.7.0",
-  "ipython==9.17.1",
-  "types-setuptools",
+  "ipython==9.18.1",
+  "types-setuptools==84.2.0.20261104",
   "libzim[scripts]",
   "libzim[lint]",
   "libzim[test]",
