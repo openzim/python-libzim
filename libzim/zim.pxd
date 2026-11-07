@@ -104,10 +104,10 @@ cdef extern from "zim/search_iterator.h" namespace "zim":
         SearchIterator operator++()
         bint operator==(SearchIterator)
         bint operator!=(SearchIterator)
-        string getPath()
-        string getTitle()
-        string getSnippet()
-        int getFileIndex()
+        string getPath() except +
+        string getTitle() except +
+        string getSnippet() except +
+        int getFileIndex() except +
 
 
 # Import the python wrappers (ObjWrapper) from libwrapper.
