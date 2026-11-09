@@ -101,13 +101,13 @@ cdef extern from "zim/search.h" namespace "zim":
 cdef extern from "zim/search_iterator.h" namespace "zim":
     cdef cppclass SearchIterator:
         SearchIterator()
-        SearchIterator operator++()
-        bint operator==(SearchIterator)
-        bint operator!=(SearchIterator)
-        string getPath()
-        string getTitle()
-        string getSnippet()
-        int getFileIndex()
+        SearchIterator operator++() except + nogil
+        bint operator==(SearchIterator) except + nogil
+        bint operator!=(SearchIterator) except + nogil
+        string getPath() except + nogil
+        string getTitle() except + nogil
+        string getSnippet() except + nogil
+        int getFileIndex() except + nogil
 
 
 # Import the python wrappers (ObjWrapper) from libwrapper.
@@ -199,7 +199,7 @@ cdef extern from "libwrapper.h" namespace "wrapper":
         ctypedef vector[IllustrationInfo] IllustrationInfos
 
         Archive() except +
-        Archive(string filename) except +
+        Archive(string filename) except + nogil
 
         uint64_t getFilesize() except +
 
@@ -258,13 +258,13 @@ cdef extern from "libwrapper.h" namespace "wrapper":
         Search search(Query query) except +
 
     cdef cppclass Search:
-        int getEstimatedMatches() except +
-        SearchResultSet getResults(int start, int count) except +
+        int getEstimatedMatches() except + nogil
+        SearchResultSet getResults(int start, int count) except + nogil
 
     cdef cppclass SearchResultSet:
-        SearchIterator begin()
-        SearchIterator end()
-        int size()
+        SearchIterator begin() except + nogil
+        SearchIterator end() except + nogil
+        int size() except + nogil
 
     cdef cppclass SuggestionItem:
         string getPath()

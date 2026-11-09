@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add keyword-only `include_snippets=True` to `Search.get_results()`; passing `False` skips native snippet generation and leaves `SearchResult.snippet` empty (#298)
+
+### Changed
+
+- Release the GIL around archive construction and native full-text search operations, allowing independent reader workers to search concurrently (#298)
+
 ## [4.1.0] - 2026-11-05
 
 ### Added
