@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Translate C++ exceptions raised during entry, search, and suggestion iteration and query parsing; omit exception translation from simple Blob accessors
+
 ## [4.1.0] - 2026-11-05
 
 ### Added
