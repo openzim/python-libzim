@@ -94,20 +94,20 @@ cdef extern from "writer_headers.h" namespace "zim::writer":
 cdef extern from "zim/search.h" namespace "zim":
     cdef cppclass Query:
         Query()
-        Query& setQuery(string query)
-        Query& setGeorange(float latitude, float longitude, float distance)
+        Query& setQuery(string query) except +
+        Query& setGeorange(float latitude, float longitude, float distance) except +
 
 
 cdef extern from "zim/search_iterator.h" namespace "zim":
     cdef cppclass SearchIterator:
         SearchIterator()
-        SearchIterator operator++()
-        bint operator==(SearchIterator)
-        bint operator!=(SearchIterator)
-        string getPath()
-        string getTitle()
-        string getSnippet()
-        int getFileIndex()
+        SearchIterator operator++() except +
+        bint operator==(SearchIterator) except +
+        bint operator!=(SearchIterator) except +
+        string getPath() except +
+        string getTitle() except +
+        string getSnippet() except +
+        int getFileIndex() except +
 
 
 # Import the python wrappers (ObjWrapper) from libwrapper.
@@ -130,15 +130,15 @@ cdef extern from "libwrapper.h" namespace "wrapper":
     cdef cppclass Blob:
         Blob() except +
         Blob(const char* data, uint64_t size) except +
-        const char* data() except +
-        const char* end() except +
-        uint64_t size() except +
+        const char* data()
+        const char* end()
+        uint64_t size()
 
     cdef cppclass Entry:
-        string getTitle()
+        string getTitle() except +
         string getPath() except +
 
-        bint isRedirect()
+        bint isRedirect() except +
         Item getItem(bint follow) except +
         Item getRedirect() except +
         Entry getRedirectEntry() except +
@@ -147,41 +147,41 @@ cdef extern from "libwrapper.h" namespace "wrapper":
 
     cdef cppclass PathEntryIterator:
         PathEntryIterator()
-        PathEntryIterator operator++()
-        bint operator==(PathEntryIterator)
-        bint operator!=(PathEntryIterator)
+        PathEntryIterator operator++() except +
+        bint operator==(PathEntryIterator) except +
+        bint operator!=(PathEntryIterator) except +
         Entry getEntry() except +
 
     cdef cppclass PathEntryRange:
         PathEntryRange()
-        PathEntryIterator begin()
-        PathEntryIterator end()
+        PathEntryIterator begin() except +
+        PathEntryIterator end() except +
         int size()
 
     cdef cppclass TitleEntryIterator:
         TitleEntryIterator()
-        TitleEntryIterator operator++()
-        bint operator==(TitleEntryIterator)
-        bint operator!=(TitleEntryIterator)
+        TitleEntryIterator operator++() except +
+        bint operator==(TitleEntryIterator) except +
+        bint operator!=(TitleEntryIterator) except +
         Entry getEntry() except +
 
     cdef cppclass TitleEntryRange:
         TitleEntryRange()
-        TitleEntryIterator begin()
-        TitleEntryIterator end()
+        TitleEntryIterator begin() except +
+        TitleEntryIterator end() except +
         int size()
 
     cdef cppclass EfficientEntryIterator:
         EfficientEntryIterator()
-        EfficientEntryIterator operator++()
-        bint operator==(EfficientEntryIterator)
-        bint operator!=(EfficientEntryIterator)
+        EfficientEntryIterator operator++() except +
+        bint operator==(EfficientEntryIterator) except +
+        bint operator!=(EfficientEntryIterator) except +
         Entry getEntry() except +
 
     cdef cppclass EfficientEntryRange:
         EfficientEntryRange()
-        EfficientEntryIterator begin()
-        EfficientEntryIterator end()
+        EfficientEntryIterator begin() except +
+        EfficientEntryIterator end() except +
         int size()
 
     cdef cppclass Item:
@@ -262,23 +262,23 @@ cdef extern from "libwrapper.h" namespace "wrapper":
         SearchResultSet getResults(int start, int count) except +
 
     cdef cppclass SearchResultSet:
-        SearchIterator begin()
-        SearchIterator end()
+        SearchIterator begin() except +
+        SearchIterator end() except +
         int size()
 
     cdef cppclass SuggestionItem:
-        string getPath()
-        string getTitle()
-        string getSnippet()
-        bool hasSnippet()
+        string getPath() except +
+        string getTitle() except +
+        string getSnippet() except +
+        bool hasSnippet() except +
 
     cdef cppclass SuggestionIterator:
         SuggestionIterator()
-        SuggestionIterator operator++()
-        bint operator==(SuggestionIterator)
-        bint operator!=(SuggestionIterator)
-        SuggestionItem getSuggestionItem()
-        Entry getEntry()
+        SuggestionIterator operator++() except +
+        bint operator==(SuggestionIterator) except +
+        bint operator!=(SuggestionIterator) except +
+        SuggestionItem getSuggestionItem() except +
+        Entry getEntry() except +
 
     cdef cppclass SuggestionSearcher:
         SuggestionSearcher()
@@ -291,8 +291,8 @@ cdef extern from "libwrapper.h" namespace "wrapper":
         SuggestionResultSet getResults(int start, int count) except +
 
     cdef cppclass SuggestionResultSet:
-        SuggestionIterator begin()
-        SuggestionIterator end()
+        SuggestionIterator begin() except +
+        SuggestionIterator end() except +
         int size()
 
 cdef extern from "zim/version.h" namespace "zim":
