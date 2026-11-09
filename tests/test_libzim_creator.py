@@ -26,6 +26,8 @@ import pathlib
 import platform
 import subprocess
 import sys
+import threading
+from concurrent.futures import ThreadPoolExecutor
 
 import libzim
 from libzim.illustration import (  # pyright: ignore [reportMissingModuleSource]
@@ -1117,6 +1119,11 @@ def test_multi_archive_search_and_snippets(tmpdir):
     assert search.get_estimated_matches() == 2
     results = list(search.get_results(0, 10))
     assert len(results) == 2
+    without_snippets = list(search.get_results(0, 10, include_snippets=False))
+    assert [(r.archive, r.path, r.title) for r in without_snippets] == [
+        (r.archive, r.path, r.title) for r in results
+    ]
+    assert all(r.snippet == "" for r in without_snippets)
 
     for r in results:
         assert isinstance(r, SearchResult)
@@ -1157,3 +1164,81 @@ def test_multi_archive_search_and_snippets(tmpdir):
 
     multi_searcher_tuple = Searcher((zim1, zim2))
     assert multi_searcher_tuple.search(query).get_estimated_matches() == 2
+
+
+@pytest.mark.parametrize("include_snippets", [False, True])
+def test_concurrent_search_with_independent_handles(fpath, include_snippets):
+    with Creator(fpath).config_indexing(True, "eng") as creator:
+        for index in range(8):
+            creator.add_item(
+                StaticItem(
+                    path=f"article{index}",
+                    title=f"Article {index}",
+                    content=f"<p>Searchable content for article {index}</p>",
+                    mimetype="text/html",
+                )
+            )
+
+    ready = threading.Barrier(4)
+
+    def search_worker(_):
+        archive = Archive(fpath)
+        searcher = Searcher(archive)
+        ready.wait(timeout=10)
+        batches = []
+        for _ in range(5):
+            search = searcher.search(Query().set_query("searchable"))
+            assert search.get_estimated_matches() == 8
+            batches.append(
+                [
+                    (r.path, r.title, r.snippet)
+                    for r in search.get_results(0, 8, include_snippets=include_snippets)
+                ]
+            )
+        return batches
+
+    with ThreadPoolExecutor(4) as executor:
+        batches = list(executor.map(search_worker, range(4)))
+    assert all(batch == batches[0][0] for worker in batches for batch in worker)
+    assert len(batches[0][0]) == 8
+
+
+def test_search_iteration_releases_gil(fpath):
+    if hasattr(sys, "_is_gil_enabled") and not sys._is_gil_enabled():
+        pytest.skip("requires a GIL-enabled interpreter")
+    with Creator(fpath).config_indexing(True, "eng") as creator:
+        creator.add_item(
+            StaticItem(
+                path="article",
+                title="Article",
+                content="<p>Searchable content. </p>" * 100000,
+                mimetype="text/html",
+            )
+        )
+
+    archive = Archive(fpath)
+    search = Searcher(archive).search(Query().set_query("searchable"))
+    results = search.get_results(0, 1)
+    stop = threading.Event()
+    ready = threading.Event()
+    ticks = []
+
+    def observer():
+        ready.set()
+        while not stop.wait(0.0001):
+            ticks.append(None)
+
+    thread = threading.Thread(target=observer)
+    thread.start()
+    ready.wait(timeout=5)
+    interval = sys.getswitchinterval()
+    try:
+        sys.setswitchinterval(60)
+        before = len(ticks)
+        assert next(iter(results)).snippet
+        progressed = len(ticks) > before
+    finally:
+        sys.setswitchinterval(interval)
+        stop.set()
+        thread.join(timeout=5)
+    assert progressed

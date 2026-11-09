@@ -1171,7 +1171,9 @@ cdef class Archive:
                 filename : Full path to a zim file
         """
 
-        self.c_archive = move(zim.Archive(str(filename).encode('UTF-8')))
+        cdef string _filename = str(filename).encode('UTF-8')
+        with nogil:
+            self.c_archive = move(zim.Archive(_filename))
         self._filename = pathlib.Path(self.c_archive.getFilename().decode("UTF-8", "strict"))
 
     def __eq__(self, other) -> pybool:
@@ -1839,29 +1841,39 @@ cdef class SearchResultSet:
     __module__ = search_module_name
     cdef zim.SearchResultSet c_resultset
     cdef list _archives
+    cdef bool _include_snippets
 
     @staticmethod
-    cdef from_resultset(zim.SearchResultSet _resultset, list archives):
+    cdef from_resultset(zim.SearchResultSet _resultset, list archives, bool include_snippets):
         cdef SearchResultSet resultset = SearchResultSet()
         resultset.c_resultset = move(_resultset)
         resultset._archives = archives
+        resultset._include_snippets = include_snippets
         return resultset
 
     def __iter__(self) -> Iterator[SearchResult]:
         """Search results found in Archive(s) for Search"""
-        cdef zim.SearchIterator current = self.c_resultset.begin()
-        cdef zim.SearchIterator end = self.c_resultset.end()
+        cdef zim.SearchIterator current, end
         cdef int archive_idx
         cdef Archive archive
-        cdef str path, title, snippet
+        cdef string path, title, snippet
+        with nogil:
+            current = self.c_resultset.begin()
+            end = self.c_resultset.end()
         while current != end:
-            archive_idx = current.getFileIndex()
+            with nogil:
+                archive_idx = current.getFileIndex()
+                path = current.getPath()
+                title = current.getTitle()
+                if self._include_snippets:
+                    snippet = current.getSnippet()
             archive = self._archives[archive_idx]
-            path = current.getPath().decode('UTF-8')
-            title = current.getTitle().decode('UTF-8')
-            snippet = current.getSnippet().decode('UTF-8')
-            yield SearchResult(archive, path, title, snippet)
-            preincrement(current)
+            yield SearchResult(
+                archive, path.decode('UTF-8'), title.decode('UTF-8'),
+                snippet.decode('UTF-8')
+            )
+            with nogil:
+                preincrement(current)
 
 
 cdef class Search:
@@ -1883,22 +1895,30 @@ cdef class Search:
         Returns:
             The number of estimated results for this search.
         """
-        return self.c_search.getEstimatedMatches()
+        cdef int matches
+        with nogil:
+            matches = self.c_search.getEstimatedMatches()
+        return matches
 
-    def get_results(self, start: pyint, count: pyint) -> SearchResultSet:
+    def get_results(
+        self, start: pyint, count: pyint, *, bool include_snippets=True
+    ) -> SearchResultSet:
         """Iterator over search results found in Archive(s) for the search.
 
         Args:
             start (int): The beginning of the range to get (offset of the first result).
             count (int): The number of results to return.
+            include_snippets (bool): Generate result snippets (default: True).
 
         Returns:
             A set of results for this search.
         """
-        return SearchResultSet.from_resultset(
-            move(self.c_search.getResults(start, count)),
-            self._archives
-        )
+        cdef int _start = start
+        cdef int _count = count
+        cdef zim.SearchResultSet results
+        with nogil:
+            results = move(self.c_search.getResults(_start, _count))
+        return SearchResultSet.from_resultset(move(results), self._archives, include_snippets)
 
 
 cdef class Searcher:
@@ -1951,7 +1971,7 @@ cdef class Searcher:
         """
         return Search.from_search(
             move(self.c_searcher.search((<Query>query).c_query)),
-            self._archives
+            self._archives.copy()
         )
 
 

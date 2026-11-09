@@ -159,9 +159,21 @@ with Creator("test.zim").config_indexing(True, "eng") as creator:
 
 #### Thread safety
 
-> The reading part of the libzim is most of the time thread safe. Searching and creating part are not. [libzim documentation](https://libzim.readthedocs.io/en/latest/usage.html#introduction)
+Archive construction, full-text result retrieval and match estimation, and native
+full-text result iteration release the [GIL](https://wiki.python.org/moin/GlobalInterpreterLock).
+Other reader accessors and suggestions do not generally release it.
 
-`python-libzim` disables the [GIL](https://wiki.python.org/moin/GlobalInterpreterLock) on most of C++ libzim calls. You **must prevent concurrent access** yourself. This is easily done by wrapping all creator calls with a [`threading.Lock()`](https://docs.python.org/3/library/threading.html#lock-objects)
+For parallel full-text searches, use a native libzim build with the
+`InternalDataBase::lock()` mutex-acquisition fix, and give each worker its own
+`Archive` opened from the filename, `Searcher`, query, and result iterator.
+Separate searchers built from the same archive can share native database state
+and serialize on its locks. Do not concurrently mutate a shared query or
+searcher, or advance the same iterator. GIL release is not a blanket
+thread-safety guarantee.
+
+The writer also releases the GIL around its blocking calls. You **must prevent
+concurrent creator access** yourself, for example with a
+[`threading.Lock()`](https://docs.python.org/3/library/threading.html#lock-objects):
 
 ```py
 lock = threading.Lock()

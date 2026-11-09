@@ -7,7 +7,13 @@ from typing_extensions import disjoint_base
 
 from libzim.reader import Archive
 
-__all__ = ["Query", "Search", "SearchResult", "SearchResultSet", "Searcher"]
+__all__ = [
+    "Query",
+    "Search",
+    "SearchResult",
+    "SearchResultSet",
+    "Searcher",
+]
 
 @disjoint_base
 class Query:
@@ -30,7 +36,9 @@ class SearchResultSet:
 @disjoint_base
 class Search:
     def get_estimated_matches(self) -> int: ...
-    def get_results(self, start: int, count: int) -> SearchResultSet: ...
+    def get_results(
+        self, start: int, count: int, *, include_snippets: bool = True
+    ) -> SearchResultSet: ...
 
 @disjoint_base
 class Searcher:
