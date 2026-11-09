@@ -1235,10 +1235,17 @@ def test_search_iteration_releases_gil(fpath):
     try:
         sys.setswitchinterval(60)
         before = len(ticks)
-        assert next(iter(results)).snippet
+        # A single snippet may be too short for the observer to be scheduled
+        # after the GIL is released. Retry a few times so the test is not
+        # dependent on one scheduling window; if the GIL is never released,
+        # ticks cannot advance at all under the raised switch interval.
+        for _ in range(10):
+            assert next(iter(results)).snippet
+            if len(ticks) > before:
+                break
         progressed = len(ticks) > before
     finally:
         sys.setswitchinterval(interval)
         stop.set()
         thread.join(timeout=5)
-    assert progressed
+    assert progressed, "GIL was not released while generating snippets"
