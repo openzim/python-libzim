@@ -229,8 +229,8 @@ python3 -m build
 ```sh
 # using system-installed C++ libzim
 brew install libzim  # macOS
-apt-get install libzim-devel  # debian
-dnf install libzim-dev  # fedora
+apt-get install libzim-dev  # debian
+dnf install libzim-devel  # fedora
 USE_SYSTEM_LIBZIM=1 python3 -m build --wheel
 
 # using a specific C++ libzim
@@ -241,6 +241,8 @@ DYLD_LIBRARY_PATH="/usr/local/lib" \
 LD_LIBRARY_PATH="/usr/local/lib" \
 python3 -m build --wheel
 ```
+
+Building against a system libzim requires C++ libzim 9.x: python-libzim has built against libzim 9 since 3.3.0 and the bundled build downloads 9.8.2, so an older distribution package — for example `libzim-dev` 8.2.1 on Ubuntu 24.04 — lacks headers this version uses (e.g. `zim/illustration.h`). If your distribution only ships an older libzim, use the default bundled build instead of `USE_SYSTEM_LIBZIM=1`.
 
 #### Other platforms
 
