@@ -242,7 +242,7 @@ LD_LIBRARY_PATH="/usr/local/lib" \
 python3 -m build --wheel
 ```
 
-Building against a system libzim requires C++ libzim 9.x: python-libzim has built against libzim 9 since 3.3.0 and the bundled build downloads 9.8.2, so an older distribution package — for example `libzim-dev` 8.2.1 on Ubuntu 24.04 — lacks headers this version uses (e.g. `zim/illustration.h`). If your distribution only ships an older libzim, use the default bundled build instead of `USE_SYSTEM_LIBZIM=1`.
+Building against a system libzim requires a C++ libzim compatible with this release (9.x — the bundled build uses 9.8.2). Distributions do not all ship a recent enough libzim, so if yours only provides an older one, use the default bundled build instead of `USE_SYSTEM_LIBZIM=1`.
 
 #### Other platforms
 
