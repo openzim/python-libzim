@@ -242,7 +242,7 @@ LD_LIBRARY_PATH="/usr/local/lib" \
 python3 -m build --wheel
 ```
 
-Building against a system libzim requires a C++ libzim compatible with this release (9.x — the bundled build uses 9.8.2). Distributions do not all ship a recent enough libzim, so if yours only provides an older one, use the default bundled build instead of `USE_SYSTEM_LIBZIM=1`.
+Setting `USE_SYSTEM_LIBZIM=1` builds against the libzim installed on your system, which must be a version compatible with this version of python-libzim. Many distributions ship an older libzim. If yours does, leave `USE_SYSTEM_LIBZIM` unset, and the build will download and bundle a compatible libzim automatically.
 
 #### Other platforms
 
