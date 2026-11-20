@@ -229,8 +229,8 @@ python3 -m build
 ```sh
 # using system-installed C++ libzim
 brew install libzim  # macOS
-apt-get install libzim-devel  # debian
-dnf install libzim-dev  # fedora
+apt-get install libzim-dev  # debian
+dnf install libzim-devel  # fedora
 USE_SYSTEM_LIBZIM=1 python3 -m build --wheel
 
 # using a specific C++ libzim
@@ -241,6 +241,8 @@ DYLD_LIBRARY_PATH="/usr/local/lib" \
 LD_LIBRARY_PATH="/usr/local/lib" \
 python3 -m build --wheel
 ```
+
+Setting `USE_SYSTEM_LIBZIM=1` builds against the libzim installed on your system, which must be a version compatible with this version of python-libzim. Many distributions ship an older libzim. If yours does, leave `USE_SYSTEM_LIBZIM` unset, and the build will download and bundle a compatible libzim automatically.
 
 #### Other platforms
 
